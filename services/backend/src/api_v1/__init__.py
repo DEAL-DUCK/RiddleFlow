@@ -1,0 +1,7 @@
+from fastapi import APIRouter
+from .hackathons.views import router as hackathons_router
+from .olympiads.views import router as olympiads_router
+
+router = APIRouter()
+router.include_router(router=hackathons_router, prefix="/hackathons")
+router.include_router(router=olympiads_router, prefix="/olympiads")
