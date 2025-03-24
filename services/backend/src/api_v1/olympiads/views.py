@@ -9,7 +9,7 @@ from services.backend.src.api_v1.olympiads.schemas import (
 )
 from services.backend.src.core.models import db_helper
 
-router = APIRouter()
+router = APIRouter(tags=["Олимпиады"])
 
 
 @router.get("/", response_model=list[OlympiadSchema])

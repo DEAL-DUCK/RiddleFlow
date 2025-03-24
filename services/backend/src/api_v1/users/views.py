@@ -8,7 +8,7 @@ from services.backend.src.api_v1.users.schemas import (
 )
 from services.backend.src.core.models import db_helper
 
-router = APIRouter()
+router = APIRouter(tags=["Пользователь"])
 
 
 @router.get("/", response_model=list[UserSchema])

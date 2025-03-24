@@ -9,7 +9,7 @@ from services.backend.src.api_v1.hackathons.schemas import (
 )
 from services.backend.src.core.models import db_helper
 
-router = APIRouter()
+router = APIRouter(tags=["Хакатоны"])
 
 
 @router.get("/", response_model=list[HackathonSchema])
