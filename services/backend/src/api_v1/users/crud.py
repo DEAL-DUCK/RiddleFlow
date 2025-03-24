@@ -2,8 +2,7 @@ from sqlalchemy import select, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.backend.src.api_v1.users.schemas import UserCreateSchema
-from services.backend.src.core.models import User
-
+from services.backend.src.core.models import User, Profile
 
 async def get_users(session: AsyncSession) -> list[User]:
     stmt = select(User).order_by(User.id)
@@ -20,6 +19,10 @@ async def create_user(
     session: AsyncSession, user_in: UserCreateSchema
 ) -> User:
     user = User(**user_in.model_dump())
+
     session.add(user)
+    await session.commit()
+    profile = Profile(user_id=user.id)
+    session.add(profile)
     await session.commit()
     return user
