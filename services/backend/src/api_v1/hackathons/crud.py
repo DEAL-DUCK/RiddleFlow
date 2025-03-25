@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from services.backend.src.api_v1.hackathons.schemas import (
     HackathonCreateSchema,
 )
-from services.backend.src.core.models import Hackathon, User
+from services.backend.src.core.models import Hackathon, User, HackathonUserAssociation
+from services.backend.src.core.models.hackathon_user_association import (
+    ParticipationStatus,
+)
 
 
 async def get_hackathons(session: AsyncSession) -> list[Hackathon]:
@@ -20,7 +23,8 @@ async def get_hackathon(session: AsyncSession, hackathon_id: int) -> Hackathon |
 
 
 async def create_hackathon(
-    session: AsyncSession, hackathon_in: HackathonCreateSchema
+    session: AsyncSession,
+    hackathon_in: HackathonCreateSchema,
 ) -> Hackathon:
     hackathon = Hackathon(**hackathon_in.model_dump())
     session.add(hackathon)
@@ -33,19 +37,29 @@ async def add_user_in_hackathon(
     hackathon: Hackathon,
     user: User,
 ):
-    hackathon = await session.scalar(
-        select(Hackathon)
-        .where(Hackathon.id == hackathon.id)
-        .options(selectinload(Hackathon.users)),
+    existing_association = await session.scalar(
+        select(HackathonUserAssociation)
+        .where(HackathonUserAssociation.hackathon_id == hackathon.id)
+        .where(HackathonUserAssociation.user_id == user.id)
     )
-    if user not in hackathon.users:
-        hackathon.users.append(user)
-        await session.commit()
-        return hackathon.users
-    raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail=f"User {user.id} is already participating in this hackathon",
+
+    if existing_association:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"User  {user.id} is already participating in this hackathon",
+        )
+
+    # Создаем новую ассоциацию
+    association = HackathonUserAssociation(
+        hackathon_id=hackathon.id,
+        user_id=user.id,
+        user_role=user.role.value.upper(),
+        user_status=ParticipationStatus.REGISTERED,
     )
+
+    session.add(association)
+    await session.commit()
+    return association
 
 
 async def delete_user_in_hackathon(
@@ -53,18 +67,20 @@ async def delete_user_in_hackathon(
     hackathon: Hackathon,
     user: User,
 ):
-    hackathon = await session.scalar(
-        select(Hackathon)
-        .where(Hackathon.id == hackathon.id)
-        .options(selectinload(Hackathon.users)),
+    # Находим ассоциацию между пользователем и хакатоном
+    association = await session.scalar(
+        select(HackathonUserAssociation)
+        .where(HackathonUserAssociation.hackathon_id == hackathon.id)
+        .where(HackathonUserAssociation.user_id == user.id)
     )
-    if user in hackathon.users:
-        hackathon.users.remove(user)
+
+    if association:
+        await session.delete(association)
         await session.commit()
-        return hackathon.users
+        return association
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"User {user.id} is not participating in this hackathon",
+        detail=f"User  {user.id} is not participating in this hackathon",
     )
 
 
@@ -72,9 +88,16 @@ async def get_users_in_hackathon(
     session: AsyncSession,
     hackathon: Hackathon,
 ):
-    hackathon = await session.scalar(
-        select(Hackathon)
-        .where(Hackathon.id == hackathon.id)
-        .options(selectinload(Hackathon.users)),
+    associations = await session.execute(
+        select(HackathonUserAssociation)
+        .where(HackathonUserAssociation.hackathon_id == hackathon.id)
+        .options(selectinload(HackathonUserAssociation.user))
     )
-    return hackathon.users
+    return [
+        {
+            "user": association.user,
+            "status": association.user_status,
+            "role": association.user_role,
+        }
+        for association in associations.scalars()
+    ]
