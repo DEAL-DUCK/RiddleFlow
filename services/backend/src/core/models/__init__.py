@@ -4,6 +4,8 @@ __all__ = {
     "Profile",
     # "Olympiad",
     "Hackathon",
+    "HackathonUserAssociation",
+    "Task",
     "Base",
 }
 
@@ -12,4 +14,6 @@ from .profile import Profile
 from .user import User
 from .db_helper import db_helper
 from .hackathon import Hackathon
+from .hackathon_user_association import HackathonUserAssociation
+from .task import Task
 from .base import Base
