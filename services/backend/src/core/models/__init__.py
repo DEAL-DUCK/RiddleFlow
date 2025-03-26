@@ -6,6 +6,7 @@ __all__ = {
     "Hackathon",
     "HackathonUserAssociation",
     "Task",
+    "Submission",
     "Base",
 }
 
@@ -17,3 +18,4 @@ from .hackathon import Hackathon
 from .hackathon_user_association import HackathonUserAssociation
 from .task import Task
 from .base import Base
+from .submission import Submission

@@ -10,6 +10,7 @@ import enum
 if TYPE_CHECKING:
     from .hackathon_user_association import HackathonUserAssociation
     from .user import User
+    from .task import Task
 
 
 class HackathonStatus(enum.Enum):
@@ -52,6 +53,10 @@ class Hackathon(Base):
         lazy="selectin",
     )
     users_details: Mapped[list["HackathonUserAssociation"]] = relationship(
+        back_populates="hackathon",
+        cascade="all, delete-orphan",
+    )
+    tasks: Mapped[list["Task"]] = relationship(
         back_populates="hackathon",
         cascade="all, delete-orphan",
     )

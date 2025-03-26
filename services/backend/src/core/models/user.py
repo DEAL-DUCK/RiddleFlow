@@ -12,6 +12,7 @@ import datetime
 if TYPE_CHECKING:
     from .profile import Profile
     from .hackathon import Hackathon
+    from .submission import Submission
 
 
 class UserRole(enum.Enum):
@@ -50,5 +51,9 @@ class User(Base):
     hackathons_details: Mapped[list["HackathonUserAssociation"]] = relationship(
         back_populates="user",
         lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+    submissions: Mapped[list["Submission"]] = relationship(
+        back_populates="user",
         cascade="all, delete-orphan",
     )

@@ -12,12 +12,13 @@ from sqlalchemy import (
     Enum,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from .base import Base  # Ваша базовая модель
+from .base import Base
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .hackathon import Hackathon
     from .user import User
+    from .submission import Submission
 
 
 class TaskType(enum.Enum):
@@ -42,6 +43,10 @@ class Task(Base):
     )
 
     hackathon: Mapped["Hackathon"] = relationship(back_populates="tasks")
+    submissions: Mapped[list["Submission"]] = relationship(
+        back_populates="task",
+        cascade="all, delete-orphan",
+    )
 
     # max_score: Mapped[int] = mapped_column(Integer, default=100)
     # deadline: Mapped[datetime] = mapped_column(DateTime, nullable=True)
