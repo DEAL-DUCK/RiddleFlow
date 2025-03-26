@@ -1,9 +1,11 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
+from datetime import date
 
 
 class ProfileBaseSchema(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
+    birth_date: date | None
     user_id: int
     bio: str | None = None
     country: str | None = None
