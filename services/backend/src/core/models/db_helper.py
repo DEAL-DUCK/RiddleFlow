@@ -15,6 +15,10 @@ class DatabaseHelper:
         self.engine = create_async_engine(
             url=url,
             echo=echo,
+            pool_size=20,
+            max_overflow=10,
+            pool_timeout=30,
+            pool_recycle=3600,
         )
         self.session_factory = async_sessionmaker(
             bind=self.engine,
