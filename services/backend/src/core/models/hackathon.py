@@ -1,17 +1,57 @@
 from .base import Base
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Text
+from typing import TYPE_CHECKING
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Text, DateTime, Enum, Integer, ForeignKey, Index
+from sqlalchemy.sql import func
+from datetime import datetime
+import enum
+
+
+if TYPE_CHECKING:
+    from .hackathon_user_association import HackathonUserAssociation
+    from .user import User
+
+
+class HackathonStatus(enum.Enum):
+    PLANNED = "PLANNED"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    CANCELED = "CANCELED"
 
 
 class Hackathon(Base):
-    name: Mapped[str] = mapped_column(String(40), unique=True)
-    description: Mapped[str] = mapped_column(Text(900))
-    theme: Mapped[str] = mapped_column(String(40))
-    # start_time: Mapped[str] = mapped_column(String(40), unique=True)
-    # end_time: Mapped[str] = mapped_column(String(40), unique=True)
-    # max_person_count: Mapped[str] = mapped_column(String(40), unique=True)
-    # current_person_count: Mapped[str] = mapped_column(String(40), unique=True)
-    # status: Mapped[str] = mapped_column(String(40), unique=True)
-    # logo: Mapped[str] = mapped_column(String(40), unique=True)
-    # tags: Mapped[str] = mapped_column(String(40), unique=True)
-    # terms: Mapped[str] = mapped_column(String(40), unique=True)
+    __table_args__ = (
+        Index("idx_hackathon_status", "hackathon_status"),
+        # Index("idx_hackathon_creator_id", "creator_id"),
+    )
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str] = mapped_column(Text(900), nullable=False)
+    start_time: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    end_time: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    status: Mapped[HackathonStatus] = mapped_column(
+        Enum(HackathonStatus),
+        name="hackathon_status",
+        default=HackathonStatus.PLANNED,
+        server_default="PLANNED",
+    )
+    max_participants: Mapped[int] = mapped_column(Integer, nullable=False)
+    current_participants: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    creator_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+    )
+
+    creator: Mapped["User"] = relationship(
+        back_populates="created_hackathons",
+        lazy="selectin",
+    )
+    users_details: Mapped[list["HackathonUserAssociation"]] = relationship(
+        back_populates="hackathon",
+        cascade="all, delete-orphan",
+    )
