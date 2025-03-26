@@ -1,15 +1,54 @@
+from typing import TYPE_CHECKING
+
+from .hackathon_user_association import HackathonUserAssociation
 from .base import Base
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Enum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Enum, Index, DateTime
 from sqlalchemy_utils import EmailType
+from sqlalchemy.sql import func
 import enum
+import datetime
+
+if TYPE_CHECKING:
+    from .profile import Profile
+    from .hackathon import Hackathon
+
 
 class UserRole(enum.Enum):
-    PARTICIPANT = "participant"
-    CREATOR = "creator"
+    PARTICIPANT = "PARTICIPANT"
+    CREATOR = "CREATOR"
+
 
 class User(Base):
-    username: Mapped[str] = mapped_column(String(40), unique=True)
-    hashed_password: Mapped[str] = mapped_column(String(128))
-    email: Mapped[str] = mapped_column(EmailType, unique=True)
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole))
+    __table_args__ = (
+        Index("idx_user_email", "email", unique=True),
+        Index("idx_user_username", "username", unique=True),
+    )
+    username: Mapped[str] = mapped_column(String(40), unique=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(128), nullable=False)
+    email: Mapped[str] = mapped_column(EmailType, unique=True, nullable=False)
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole),
+        name="user_role",
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), nullable=False
+    )
+
+    profile: Mapped["Profile"] = relationship(
+        "Profile", back_populates="user", uselist=False
+    )
+
+    created_hackathons: Mapped[list["Hackathon"]] = relationship(
+        "Hackathon",
+        back_populates="creator",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+
+    hackathons_details: Mapped[list["HackathonUserAssociation"]] = relationship(
+        back_populates="user",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )

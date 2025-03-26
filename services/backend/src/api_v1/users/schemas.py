@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
+import datetime
 
 
 class UserBaseSchema(BaseModel):
@@ -6,10 +7,14 @@ class UserBaseSchema(BaseModel):
     hashed_password: str
     email: EmailStr
     role: str
+    created_at: datetime.datetime
 
 
-class UserCreateSchema(UserBaseSchema):
-    pass
+class UserCreateSchema(BaseModel):
+    username: str
+    hashed_password: str
+    email: EmailStr
+    role: str
 
 
 class UserSchema(UserBaseSchema):
