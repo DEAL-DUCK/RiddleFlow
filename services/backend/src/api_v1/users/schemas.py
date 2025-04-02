@@ -19,13 +19,17 @@ class UserCreateSchema(BaseModel):
 class UserRole(str,Enum):
     CREATOR = "CREATOR"
     PARTICIPANT = "PARTICIPANT"
-class UserSchema(UserBaseSchema):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
+
 class UserSchema2(BaseModel):
     model_config = ConfigDict(strict=True)
     username: str
-    role : UserRole
+    sub : UserRole
     password : bytes
     email: EmailStr | None = None
     active : bool = True
+class TokenInfo(BaseModel):
+    access_token: str
+    token_type: str
+class UserSchema(UserBaseSchema):
+    model_config = ConfigDict(from_attributes=True)
+    id: int

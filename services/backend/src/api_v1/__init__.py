@@ -6,8 +6,8 @@ from .users.views import router as users_router
 from .profiles.views import router as profiles_router
 
 router = APIRouter()
+router.include_router(jwt_auth_router)
 router.include_router(router=users_router, prefix="/users")
 router.include_router(router=profiles_router, prefix="/profiles")
 router.include_router(router=hackathons_router, prefix="/hackathons")
 # router.include_router(router=olympiads_router, prefix="/olympiads")
-jwt_auth_router.include_router(router=jwt_auth_router)

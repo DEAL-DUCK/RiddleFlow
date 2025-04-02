@@ -1,8 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api_v1.profiles.schemas import ProfileUpdateSchema, ProfileSchema
-from core.models import Profile
+from services.backend.src.api_v1.profiles.schemas import ProfileUpdateSchema, ProfileSchema
 from services.backend.src.core.models import Profile
 
 
