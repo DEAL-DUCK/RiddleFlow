@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
 BASE_DIR = Path(__file__).parent.parent
-KEY_DIR = Path(__file__).parent.parent.joinpath('api_v1').joinpath('auth')
+KEY_DIR = Path(__file__).parent.parent.parent.parent.parent
 DB_PATH = BASE_DIR / "db.sqlite3"
 
 

@@ -28,7 +28,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-/keys
+
 MANIFEST
 
 # PyInstaller
@@ -173,5 +173,8 @@ cython_debug/
 
 # LSP config files
 pyrightconfig.json
+
+# Игнорировать файлы ключей
+/keys
 
 # End of https://www.toptal.com/developers/gitignore/api/python
