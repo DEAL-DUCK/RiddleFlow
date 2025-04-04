@@ -68,11 +68,11 @@ def refresh_jwt_token(
         raise HTTPException(status_code=400, detail="Need refresh token")
     return TokenInfo(access_token=new_access_token)
 
-@router.get("/creator-only/", dependencies=[Depends(check_roles([UserRole.CREATOR]))])
+@router.get("/creator-only/", dependencies=[Depends(check_roles([UserRole.CREATOR])),Depends(get_current_active_auth_user)])
 def creator_endpoint():
     return {"message": "Creator access granted"}
 
 
-@router.get("/participant-only/", dependencies=[Depends(check_roles([UserRole.PARTICIPANT]))])
+@router.get("/participant-only/", dependencies=[Depends(check_roles([UserRole.PARTICIPANT])),Depends(get_current_active_auth_user)])
 def participant_endpoint():
     return {"message": "Participant access granted"}
