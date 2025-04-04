@@ -51,9 +51,16 @@ def validate_auth_user(username: str = Form(), password: str = Form()):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User inactive")
     return user
 
-def create_jwt_token(payload: dict, expires_delta: timedelta = None) -> str:
+def create_jwt_access_token(payload: dict, expires_delta: timedelta = None) -> str:
     to_encode = payload.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=JWT_CONFIG["ACCESS_TOKEN_EXPIRE_MINUTES"]))
+    to_encode.update({"exp": expire})
+    private_key = load_private_key()
+    return jwt.encode(to_encode, private_key, algorithm=JWT_CONFIG["ALGORITHM"])
+
+def create_jwt_refresh_token(payload: dict, expires_delta: timedelta = None) -> str:
+    to_encode = payload.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(days=JWT_CONFIG["REFRESH_TOKEN_EXPIRE_DAYS"]))
     to_encode.update({"exp": expire})
     private_key = load_private_key()
     return jwt.encode(to_encode, private_key, algorithm=JWT_CONFIG["ALGORITHM"])
@@ -71,10 +78,31 @@ def get_current_token_payload(token: str = Depends(oauth2_scheme)) -> dict:
             detail=f"Invalid token: {e}",
         )
 
-def get_current_auth_user(payload: dict = Depends(get_current_token_payload)) -> UserSchema2:
-    if user := users_db.get(payload.get("sub")):
-        return user
+def validation_token_type(payload: dict,token_type : str) -> bool:
+    if payload.get('token_type') == token_type:
+        return True
+    if payload.get('token_type') != token_type:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                          detail=f'invalid token type: {payload.get("token_type")}')
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+def get_current_auth_user(payload: dict = Depends(get_current_token_payload)) -> UserSchema2:
+    user = users_db.get(payload.get("sub"))
+    if user and payload.get('token_type') == 'access':
+        return user
+    if payload.get('token_type') != 'access':
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                          detail=f'invalid token type: {payload.get("token_type")}')
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+def get_current_auth_user_for_refresh(payload: dict = Depends(get_current_token_payload)) -> UserSchema2:
+    user = users_db.get(payload.get("sub"))
+    if user and payload.get('token_type') == 'refresh':
+        return user
+    if payload.get('token_type') != 'access':
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                          detail=f'invalid token type: {payload.get("token_type")}')
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
 
 def get_current_active_auth_user(user: UserSchema2 = Depends(get_current_auth_user)):
     if user.active:

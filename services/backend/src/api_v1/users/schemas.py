@@ -29,7 +29,7 @@ class UserSchema2(BaseModel):
     active : bool = True
 class TokenInfo(BaseModel):
     access_token: str
-    token_type: str
+    refresh_token: str | None = None
 class UserSchema(UserBaseSchema):
     model_config = ConfigDict(from_attributes=True)
     id: int
