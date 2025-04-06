@@ -5,7 +5,7 @@ from .hackathons.views import router as hackathons_router
 from .users.views import router as users_router
 from .profiles.views import router as profiles_router
 
-router = APIRouter()
+router = APIRouter(prefix="/v1")
 router.include_router(router=users_router, prefix="/users")
 router.include_router(router=profiles_router, prefix="/profiles")
 router.include_router(router=hackathons_router, prefix="/hackathons")
