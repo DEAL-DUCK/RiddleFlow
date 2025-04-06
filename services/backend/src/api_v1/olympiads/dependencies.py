@@ -9,7 +9,7 @@ from services.backend.src.core.models import db_helper, Olympiad
 
 async def get_olympiad_by_id(
     olympiad_id: Annotated[int, Path],
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ) -> Olympiad:
     olympiad = await get_olympiad(session=session, olympiad_id=olympiad_id)
     if olympiad is not None:

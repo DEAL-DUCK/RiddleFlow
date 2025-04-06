@@ -9,7 +9,7 @@ from services.backend.src.core.models import db_helper, Hackathon
 
 async def get_hackathon_by_id(
     hackathon_id: Annotated[int, Path],
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ) -> Hackathon:
     hackathon = await get_hackathon(session=session, hackathon_id=hackathon_id)
     if hackathon is not None:

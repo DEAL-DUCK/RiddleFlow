@@ -20,7 +20,7 @@ async def get_profile(profile: ProfileSchema = Depends(get_profile_by_id)):
 async def update_profile(
     profile_update: ProfileUpdateSchema,
     profile: ProfileSchema = Depends(get_profile_by_id),
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.update_profile(
         session=session,

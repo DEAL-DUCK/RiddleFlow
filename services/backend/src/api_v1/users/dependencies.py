@@ -9,7 +9,7 @@ from services.backend.src.core.models import db_helper, User
 
 async def get_user_by_id(
     user_id: Annotated[int, Path],
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ) -> User:
     user = await get_user(session=session, user_id=user_id)
     if user is not None:

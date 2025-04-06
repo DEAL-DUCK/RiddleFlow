@@ -9,7 +9,7 @@ from services.backend.src.core.models import db_helper, Profile
 
 async def get_profile_by_id(
     user_id: Annotated[int, Path],
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ) -> Profile:
     profile = await get_profile(session=session, user_id=user_id)
     if profile is not None:
