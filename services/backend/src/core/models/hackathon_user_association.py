@@ -11,11 +11,6 @@ if TYPE_CHECKING:
     from .hackathon import Hackathon
 
 
-class UserRole(enum.Enum):
-    PARTICIPANT = "participant"
-    CREATOR = "creator"
-
-
 class ParticipationStatus(enum.Enum):
     REGISTERED = "REGISTERED"
     COMPLETED = "COMPLETED"
@@ -43,12 +38,6 @@ class HackathonUserAssociation(Base):
     )
     registration_date: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()
-    )
-    user_role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole),
-        name="user_role",
-        default=UserRole.PARTICIPANT,
-        server_default="PARTICIPANT",
     )
     hackathon: Mapped["Hackathon"] = relationship(
         back_populates="users_details",

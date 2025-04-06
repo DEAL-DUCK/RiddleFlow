@@ -1,23 +1,17 @@
 from typing import TYPE_CHECKING
 
-from .hackathon_user_association import HackathonUserAssociation
+# from .hackathon_user_association import HackathonUserAssociation
 from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Enum, Index, DateTime
+from sqlalchemy import String, Boolean, Index, DateTime
 from sqlalchemy_utils import EmailType
 from sqlalchemy.sql import func
-import enum
 import datetime
 
 if TYPE_CHECKING:
     from .profile import Profile
     from .hackathon import Hackathon
     from .submission import Submission
-
-
-class UserRole(enum.Enum):
-    PARTICIPANT = "PARTICIPANT"
-    CREATOR = "CREATOR"
 
 
 class User(Base):
@@ -28,11 +22,9 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(40), unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(128), nullable=False)
     email: Mapped[str] = mapped_column(EmailType, unique=True, nullable=False)
-    role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole),
-        name="user_role",
-        nullable=False,
-    )
+    is_creator: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    is_participant: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), nullable=False
     )
