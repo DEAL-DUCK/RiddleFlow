@@ -26,7 +26,7 @@ class Hackathon(Base):
         # Index("idx_hackathon_creator_id", "creator_id"),
     )
     title: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[str] = mapped_column(Text(900), nullable=False)
+    description: Mapped[str] = mapped_column(String(900), nullable=False)
     start_time: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     end_time: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     status: Mapped[HackathonStatus] = mapped_column(
