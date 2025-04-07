@@ -11,6 +11,8 @@ from sqlalchemy import String, Boolean, Index, DateTime, Enum
 from sqlalchemy.sql import func
 import datetime
 
+from core.types.user_id import UserIdType
+
 if TYPE_CHECKING:
     from .profile import Profile
     from .hackathon import Hackathon
@@ -23,7 +25,7 @@ class UserRole(enum.Enum):
     CREATOR = "CREATOR"
 
 
-class User(Base, SQLAlchemyBaseUserTable[int]):
+class User(Base, SQLAlchemyBaseUserTable[UserIdType]):
     __table_args__ = (
         # Index("idx_user_email", "email", unique=True),
         Index("idx_user_username", "username", unique=True),
@@ -56,5 +58,5 @@ class User(Base, SQLAlchemyBaseUserTable[int]):
     )
 
     @classmethod
-    def get_db(cls, session: AsyncSession):
-        return SQLAlchemyUserDatabase(session, User)
+    def get_db(cls, session: "AsyncSession"):
+        return SQLAlchemyUserDatabase(session, cls)
