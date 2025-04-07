@@ -1,8 +1,8 @@
 """create profiles table
 
-Revision ID: 2ecf7e9e0fbb
-Revises: 6979f3129083
-Create Date: 2025-04-07 00:53:05.912912
+Revision ID: 570717d6ba08
+Revises: b4d9aada1529
+Create Date: 2025-04-07 20:36:01.005671
 
 """
 
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "2ecf7e9e0fbb"
-down_revision: Union[str, None] = "6979f3129083"
+revision: str = "570717d6ba08"
+down_revision: Union[str, None] = "b4d9aada1529"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -35,12 +35,13 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["user_id"],
-            ["users.id"],
+            ["user_id"], ["users.id"], name=op.f("fk_profiles_user_id_users")
         ),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("phone_number"),
-        sa.UniqueConstraint("user_id"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_profiles")),
+        sa.UniqueConstraint(
+            "phone_number", name=op.f("uq_profiles_phone_number")
+        ),
+        sa.UniqueConstraint("user_id", name=op.f("uq_profiles_user_id")),
     )
     # ### end Alembic commands ###
 
