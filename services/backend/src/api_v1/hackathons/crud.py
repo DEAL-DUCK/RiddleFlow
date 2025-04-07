@@ -53,7 +53,6 @@ async def add_user_in_hackathon(
     association = HackathonUserAssociation(
         hackathon_id=hackathon.id,
         user_id=user.id,
-        user_role=user.role.value.upper(),
         user_status=ParticipationStatus.REGISTERED,
     )
 
@@ -95,9 +94,8 @@ async def get_users_in_hackathon(
     )
     return [
         {
-            "user": association.user,
+            "user": association.user.username,
             "status": association.user_status,
-            "role": association.user_role,
         }
         for association in associations.scalars()
     ]

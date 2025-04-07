@@ -6,15 +6,16 @@ class UserBaseSchema(BaseModel):
     username: str
     hashed_password: str
     email: EmailStr
-    role: str
+    user_role: str
     created_at: datetime.datetime
+    is_admin: bool = False
 
 
 class UserCreateSchema(BaseModel):
     username: str
     hashed_password: str
     email: EmailStr
-    role: str
+    user_role: str
 
 
 class UserSchema(UserBaseSchema):
