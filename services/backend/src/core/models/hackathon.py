@@ -5,6 +5,7 @@ from sqlalchemy import String, Text, DateTime, Enum, Integer, ForeignKey, Index
 from sqlalchemy.sql import func
 from datetime import datetime
 import enum
+from .mixins.int_pk_id import IdIntPkMixin
 
 
 if TYPE_CHECKING:
@@ -20,7 +21,7 @@ class HackathonStatus(enum.Enum):
     CANCELED = "CANCELED"
 
 
-class Hackathon(Base):
+class Hackathon(Base, IdIntPkMixin):
     __table_args__ = (
         Index("idx_hackathon_status", "hackathon_status"),
         # Index("idx_hackathon_creator_id", "creator_id"),

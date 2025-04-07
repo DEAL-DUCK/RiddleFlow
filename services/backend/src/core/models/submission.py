@@ -5,6 +5,8 @@ from sqlalchemy import ForeignKey, Text, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 from typing import TYPE_CHECKING
+from .mixins.int_pk_id import IdIntPkMixin
+
 
 if TYPE_CHECKING:
     from .task import Task
@@ -18,7 +20,7 @@ class SubmissionStatus(str, Enum):
     DISQUALIFIED = "DISQUALIFIED"  # Отклонено
 
 
-class Submission(Base):
+class Submission(Base, IdIntPkMixin):
     code_url: Mapped[str] = mapped_column(String(255))  # Ссылка на репозиторий
     # commit_hash: Mapped[str] = mapped_column(String(40))  # Контроль версий
     description: Mapped[str] = mapped_column(Text)  # Описание решения

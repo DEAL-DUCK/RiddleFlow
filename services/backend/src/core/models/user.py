@@ -2,7 +2,7 @@ import enum
 from typing import TYPE_CHECKING
 from .hackathon_user_association import HackathonUserAssociation
 from .base import Base
-from fastapi_users.db import (
+from fastapi_users_db_sqlalchemy import (
     SQLAlchemyBaseUserTable,
     SQLAlchemyUserDatabase,
 )
@@ -12,6 +12,7 @@ from sqlalchemy.sql import func
 import datetime
 
 from core.types.user_id import UserIdType
+from .mixins.int_pk_id import IdIntPkMixin
 
 if TYPE_CHECKING:
     from .profile import Profile
@@ -25,7 +26,7 @@ class UserRole(enum.Enum):
     CREATOR = "CREATOR"
 
 
-class User(Base, SQLAlchemyBaseUserTable[UserIdType]):
+class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
     __table_args__ = (
         # Index("idx_user_email", "email", unique=True),
         Index("idx_user_username", "username", unique=True),

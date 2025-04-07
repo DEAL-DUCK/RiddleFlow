@@ -5,6 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, UniqueConstraint, Enum, DateTime, Index
 from sqlalchemy.sql import func
 import datetime
+from .mixins.int_pk_id import IdIntPkMixin
 
 if TYPE_CHECKING:
     from .user import User
@@ -17,7 +18,7 @@ class ParticipationStatus(enum.Enum):
     DISQUALIFIED = "DISQUALIFIED"
 
 
-class HackathonUserAssociation(Base):
+class HackathonUserAssociation(Base, IdIntPkMixin):
     __tablename__ = "hackathon_user_association"
     __table_args__ = (
         UniqueConstraint("hackathon_id", "user_id", name="idx_unique_hackathon_user"),

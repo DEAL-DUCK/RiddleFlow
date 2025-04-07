@@ -14,6 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 from typing import TYPE_CHECKING
+from .mixins.int_pk_id import IdIntPkMixin
 
 if TYPE_CHECKING:
     from .hackathon import Hackathon
@@ -29,7 +30,7 @@ class TaskType(enum.Enum):
     HARDWARE = "HARDWARE"  # IoT/железо
 
 
-class Task(Base):
+class Task(Base, IdIntPkMixin):
     __table_args__ = (
         Index("idx_task_hackathon", "hackathon_id"),
         Index("idx_task_type", "task_type", "hackathon_id"),
