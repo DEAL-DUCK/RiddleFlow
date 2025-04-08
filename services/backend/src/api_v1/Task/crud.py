@@ -1,5 +1,4 @@
-from sqlalchemy import select, Result
-
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from datetime import datetime
@@ -28,20 +27,36 @@ async def create_task_for_hackathon(
     return TaskSchema.model_validate(task)
 
 
-from typing import List
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+
+async def delete_task(
+        task_id : int,
+        session: AsyncSession
+):
+    task = await session.get(Task, task_id)
+    if task:
+        await session.delete(task)
+        await session.commit()
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='task not found')
+    return {'ok':'Task deleted'}
 
 
-async def get_all_tasks_in_hackathon(
+async def get_task_by_id(
         session: AsyncSession,
-        hackathon_id: int
-) -> List[TaskSchema]:
-    stmt = select(Task).where(Task.hackathon_id == hackathon_id)
-    result = await session.execute(stmt)
-    tasks = result.scalars().all()
-    tasks = [TaskSchema.model_validate(task) for task in tasks]
-    if len(tasks) == 0:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND
-                            , detail='Hackathon not found')
-    return tasks
+        task_id: int,
+):
+    result = await session.execute(select(Task).where(Task.id == task_id))
+    task = result.scalars().first()
+    if task is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Task not found'
+            )
+
+    return task
+async def get_all_tasks(
+        session: AsyncSession,
+):
+    result = await session.execute(select(Task))
+    result = result.scalars().all()
+    return [TaskSchema.model_validate(task) for task in result]
