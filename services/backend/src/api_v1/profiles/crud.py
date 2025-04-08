@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api_v1.profiles.schemas import ProfileUpdateSchema, ProfileSchema
 from core.models import Profile
-from services.backend.src.core.models import Profile
 
 
 async def get_profile(session: AsyncSession, user_id: int) -> Profile | None:
