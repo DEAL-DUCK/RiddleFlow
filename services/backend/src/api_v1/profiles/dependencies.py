@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Path, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.backend.src.api_v1.profiles.crud import get_profile
-from services.backend.src.core.models import db_helper, Profile
+from api_v1.profiles.crud import get_profile
+from core.models import db_helper, Profile
 
 
 async def get_profile_by_id(

@@ -2,13 +2,13 @@ from fastapi import Depends, APIRouter, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import crud
-from services.backend.src.api_v1.hackathons.dependencies import get_hackathon_by_id
-from services.backend.src.api_v1.users.dependencies import get_user_by_id
-from services.backend.src.api_v1.hackathons.schemas import (
+from api_v1.hackathons.dependencies import get_hackathon_by_id
+from api_v1.users.dependencies import get_user_by_id
+from api_v1.hackathons.schemas import (
     HackathonSchema,
     HackathonCreateSchema,
 )
-from services.backend.src.core.models import db_helper, User, Hackathon
+from core.models import db_helper, User, Hackathon
 
 router = APIRouter(tags=["Хакатоны"])
 

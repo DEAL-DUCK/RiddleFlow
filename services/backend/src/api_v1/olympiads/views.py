@@ -2,12 +2,12 @@ from fastapi import Depends, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import crud
-from services.backend.src.api_v1.olympiads.dependencies import get_olympiad_by_id
-from services.backend.src.api_v1.olympiads.schemas import (
+from api_v1.olympiads.dependencies import get_olympiad_by_id
+from api_v1.olympiads.schemas import (
     OlympiadSchema,
     OlympiadCreateSchema,
 )
-from services.backend.src.core.models import db_helper
+from core.models import db_helper
 
 router = APIRouter(tags=["Олимпиады"])
 

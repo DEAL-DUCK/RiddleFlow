@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Path, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.backend.src.api_v1.users.crud import get_user
-from services.backend.src.core.models import db_helper, User
+from api_v1.users.crud import get_user
+from core.models import db_helper, User
 
 
 async def get_user_by_id(

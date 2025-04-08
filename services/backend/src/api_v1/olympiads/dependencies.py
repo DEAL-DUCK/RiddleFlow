@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Path, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.backend.src.api_v1.olympiads.crud import get_olympiad
-from services.backend.src.core.models import db_helper, Olympiad
+from api_v1.olympiads.crud import get_olympiad
+from core.models import db_helper, Olympiad
 
 
 async def get_olympiad_by_id(

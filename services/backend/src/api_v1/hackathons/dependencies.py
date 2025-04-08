@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Path, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.backend.src.api_v1.hackathons.crud import get_hackathon
-from services.backend.src.core.models import db_helper, Hackathon
+from api_v1.hackathons.crud import get_hackathon
+from core.models import db_helper, Hackathon
 
 
 async def get_hackathon_by_id(

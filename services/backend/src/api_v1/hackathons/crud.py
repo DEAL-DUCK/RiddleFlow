@@ -2,11 +2,11 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
-from services.backend.src.api_v1.hackathons.schemas import (
+from api_v1.hackathons.schemas import (
     HackathonCreateSchema,
 )
-from services.backend.src.core.models import Hackathon, User, HackathonUserAssociation
-from services.backend.src.core.models.hackathon_user_association import (
+from core.models import Hackathon, User, HackathonUserAssociation
+from core.models.hackathon_user_association import (
     ParticipationStatus,
 )
 

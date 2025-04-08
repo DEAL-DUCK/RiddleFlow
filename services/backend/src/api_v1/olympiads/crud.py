@@ -1,8 +1,9 @@
 from sqlalchemy import select, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.backend.src.api_v1.olympiads.schemas import OlympiadCreateSchema
-from services.backend.src.core.models import Olympiad
+from api_v1.olympiads.schemas import OlympiadCreateSchema
+
+from core.models import Olympiad
 
 
 async def get_olympiads(session: AsyncSession) -> list[Olympiad]:
