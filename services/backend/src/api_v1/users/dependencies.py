@@ -14,6 +14,7 @@ async def get_user_by_id(
     user = await get_user(session=session, user_id=user_id)
     if user is not None:
         return user
+
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"User {user_id} if not found",

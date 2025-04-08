@@ -29,6 +29,13 @@ class HackathonCreateSchema(BaseModel):
     creator_id: int
 
 
+class HackathonUpdatePartial(HackathonCreateSchema):
+    title: str | None = None
+    description: str | None = None
+    max_participants: int | None = None
+    creator_id: int | None = None
+
+
 class HackathonSchema(HackathonBaseSchema):
     model_config = ConfigDict(from_attributes=True)
     id: int

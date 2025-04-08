@@ -4,6 +4,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from services.backend.src.api_v1.hackathons.schemas import (
     HackathonCreateSchema,
+    HackathonUpdatePartial,
 )
 from services.backend.src.core.models import Hackathon, User, HackathonUserAssociation
 from services.backend.src.core.models.hackathon_user_association import (
@@ -78,6 +79,7 @@ async def delete_user_in_hackathon(
         await session.delete(association)
         await session.commit()
         return association
+
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"User  {user.id} is not participating in this hackathon",
@@ -95,9 +97,72 @@ async def get_users_in_hackathon(
     )
     return [
         {
-            "user": association.user,
-            "status": association.user_status,
-            "role": association.user_role,
+            "user": {
+                "id": association.user.id,
+                "username": association.user.username,
+                "email": association.user.email,
+                "status": association.user_status,
+                "role": association.user_role,
+            },
         }
         for association in associations.scalars()
     ]
+
+
+async def get_user_in_hackathon(
+    session: AsyncSession,
+    hackathon: Hackathon,
+    user_id: int,
+):
+    # тут идет запрос в бдшку по айди хакатона и айди юзера(скопипастил, проверь чтобы верно было)
+    association = await session.scalar(
+        select(HackathonUserAssociation)
+        .where(HackathonUserAssociation.hackathon_id == hackathon.id)
+        .where(HackathonUserAssociation.user_id == user_id)
+    )
+
+    if association:
+        return {
+            "user": {
+                "id": association.user.id,
+                "username": association.user.username,
+                "email": association.user.email,
+                "status": association.user_status,
+                "role": association.user_role,
+                "created_hackathons": association.user.created_hackathons,
+            },
+        }
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"User  {user_id} is not participating in this hackathon",
+    )
+
+
+# пока в комментарий, потому что не реализовано ролирование
+async def delete_hackathon_admin(
+    session: AsyncSession,
+    hackathon: Hackathon,
+    user: User,
+):
+    await session.delete(hackathon)
+    await session.commit()
+
+
+# тоже в комментарий, потому что ролирование не реализовано
+async def update_hackathon_admin(
+    session: AsyncSession,
+    hackathon: Hackathon,
+    hackathon_update: HackathonUpdatePartial,
+    user: User,
+) -> Hackathon:
+    # if user.role.value == "CREATOR":
+    for name, value in hackathon_update.model_dump(exclude_unset=True).items():
+        setattr(hackathon, name, value)
+    await session.commit()
+    return hackathon
+    #
+    # raise HTTPException(
+    #     status_code=status.HTTP_403_FORBIDDEN,
+    #     detail=f"Not enough rights",
+    # )

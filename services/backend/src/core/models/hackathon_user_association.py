@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 
 class UserRole(enum.Enum):
-    PARTICIPANT = "participant"
-    CREATOR = "creator"
+    PARTICIPANT = "PARTICIPANT"
+    CREATOR = "CREATOR"
 
 
 class ParticipationStatus(enum.Enum):
