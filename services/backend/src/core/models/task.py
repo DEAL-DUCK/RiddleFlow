@@ -1,5 +1,7 @@
 import enum
 from datetime import datetime
+
+from pydantic import BaseModel, Field
 from sqlalchemy import (
     JSON,
     Text,
@@ -19,7 +21,6 @@ if TYPE_CHECKING:
     from .hackathon import Hackathon
     from .user import User
     from .submission import Submission
-
 
 class TaskType(enum.Enum):
     CODING = "CODING"  # Программирование
@@ -47,6 +48,9 @@ class Task(Base):
         back_populates="task",
         cascade="all, delete-orphan",
     )
+
+
+
 
     # max_score: Mapped[int] = mapped_column(Integer, default=100)
     # deadline: Mapped[datetime] = mapped_column(DateTime, nullable=True)

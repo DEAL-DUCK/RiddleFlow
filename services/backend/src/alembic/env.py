@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
+from services.backend.src.core.models import Base
 from alembic import context
 
 
@@ -20,8 +20,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from core.models import Base
-from core.config import settings
+
+from services.backend.src.core.config import settings
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
