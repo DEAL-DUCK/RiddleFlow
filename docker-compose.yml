@@ -10,30 +10,26 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./services/backend
     environment:
-      - DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/RiddleFlowDB
+      - DATABASE_URL=postgresql+asyncpg://user:password@pg:5432/RiddleFlowDB
     ports:
       - 5000:5000
     volumes:
       - ./services/backend:/app
-    command: uvicorn src.main:app --reload --host 0.0.0.0 --port 5000
+    depends_on:
+      pg:
+        condition: service_healthy
+    command: >
+      bash -c "uvicorn src.main:app --reload --host 0.0.0.0 --port 5000 && cd src/ && alembic upgrade head"
+
 
 volumes:
   postgres_data:
-
-#  adminer:
-#    image: adminer
-#    ports:
-#      - "8080:8080"
-#
-#  pgadmin:
-#    image: dpage/pgadmin4
-#    environment:
-#      PGADMIN_DEFAULT_EMAIL: admin@admin.org
-#      PGADMIN_DEFAULT_PASSWORD: admin
-#      PGADMIN_CONFIG_SERVER_MODE: "False"
-#    ports:
-#      - "5050:80"
