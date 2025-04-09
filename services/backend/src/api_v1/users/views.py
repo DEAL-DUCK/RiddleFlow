@@ -29,3 +29,9 @@ async def create_user(
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     return await crud.create_user(session=session, user_in=user_in)
+@router.delete("/{user_del}")
+async def del_user(
+        user_id : int,
+        session: AsyncSession = Depends(db_helper.scoped_session_dependency)
+):
+    return await crud.delete_user(session=session, user_id=user_id)

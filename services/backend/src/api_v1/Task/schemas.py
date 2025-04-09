@@ -25,3 +25,8 @@ class TaskSchema(BaseModel):
     hackathon_id: int
 
     model_config = ConfigDict(from_attributes=True)
+class TaskUpdateSchema(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    task_type: TaskType | None = None
+    hackathon_id: int | None = None

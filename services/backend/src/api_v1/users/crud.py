@@ -1,5 +1,7 @@
+from fastapi import HTTPException
 from sqlalchemy import select, Result
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 from services.backend.src.api_v1.users.schemas import UserCreateSchema
 from services.backend.src.core.models import User, Profile
@@ -26,3 +28,12 @@ async def create_user(
     session.add(profile)
     await session.commit()
     return user
+async def delete_user(session: AsyncSession, user_id: int):
+    user = await session.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    await session.delete(user)
+    await session.commit()
+    return {'ok': True}
+
+

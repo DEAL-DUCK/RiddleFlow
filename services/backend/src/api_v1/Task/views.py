@@ -1,9 +1,9 @@
-from cgitb import reset
-
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from .schemas import CreateTaskSchema, TaskSchema
-from .crud import create_task_for_hackathon,delete_task,get_task_by_id,get_all_tasks
+from sqlalchemy.util import await_only
+
+from .schemas import CreateTaskSchema, TaskSchema,TaskUpdateSchema
+from .crud import *
 from services.backend.src.core.models import Task
 from services.backend.src.core.models import db_helper
 
@@ -49,3 +49,20 @@ async def get_all_tasks_(
 ):
     result = await get_all_tasks(session=session)
     return result
+@router.get('/get_all_tasks_in_hackathon')
+async def get_tasks_in_hackathon(
+    hackathon_id: int,
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await get_all_task_by_hackathon(session=session, hackathon_id=hackathon_id)
+@router.patch('/update_task')
+async def update_task_endpoint(
+        task_id : int,
+        update_data : TaskUpdateSchema,
+        session: AsyncSession = Depends(db_helper.scoped_session_dependency)
+):
+    return await update_task(
+        session=session,
+        task_id=task_id,
+        update_data=update_data.model_dump(exclude_unset=True)
+    )

@@ -27,3 +27,8 @@ class SubmissionRead(SubmissionBase):
 
     class Config:
         from_attributes = True
+
+class SubmissionUpdate(BaseModel):
+    code_url: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[SubmissionStatus] = None
