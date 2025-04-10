@@ -2,8 +2,6 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from core.models import Task
 from services.backend.src.api_v1.hackathons.schemas import (
     HackathonCreateSchema,
 )
@@ -103,4 +101,3 @@ async def get_users_in_hackathon(
         }
         for association in associations.scalars()
     ]
-

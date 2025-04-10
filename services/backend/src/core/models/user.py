@@ -21,7 +21,7 @@ class UserRole(enum.Enum):
 
 
 class User(Base):
-    __table_args__ = (
+    _9_table_args__ = (
         Index("idx_user_email", "email", unique=True),
         Index("idx_user_username", "username", unique=True),
     )

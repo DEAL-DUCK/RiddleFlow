@@ -9,7 +9,6 @@ from services.backend.src.api_v1.hackathons.schemas import (
     HackathonCreateSchema,
 )
 from services.backend.src.core.models import db_helper, User, Hackathon
-from ..users.schemas import UserSchema
 
 router = APIRouter(tags=["Хакатоны"])
 
@@ -62,4 +61,3 @@ async def delete_user_in_hackathon(
     return await crud.delete_user_in_hackathon(
         hackathon=hackathon, user=user, session=session
     )
-
