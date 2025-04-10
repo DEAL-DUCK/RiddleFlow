@@ -114,7 +114,7 @@ async def delete_hackathon_admin(
     )
 
 
-@router.patch("/{hackathon_id}")
+'''@router.patch("/{hackathon_id}")
 async def update_hackathon_admin(
     hackathon_update: HackathonUpdatePartial,
     hackathon: Hackathon = Depends(get_hackathon_by_id),
@@ -127,3 +127,4 @@ async def update_hackathon_admin(
         hackathon_update=hackathon_update,
         user=current_user,
     )
+'''

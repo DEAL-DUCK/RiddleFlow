@@ -149,7 +149,7 @@ async def delete_hackathon_admin(
     await session.commit()
 
 
-# тоже в комментарий, потому что ролирование не реализовано
+'''тоже в комментарий, потому что ролирование не реализовано
 async def update_hackathon_admin(
     session: AsyncSession,
     hackathon: Hackathon,
@@ -166,3 +166,4 @@ async def update_hackathon_admin(
     #     status_code=status.HTTP_403_FORBIDDEN,
     #     detail=f"Not enough rights",
     # )
+'''
