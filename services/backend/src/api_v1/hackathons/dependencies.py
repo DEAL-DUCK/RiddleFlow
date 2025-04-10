@@ -4,8 +4,7 @@ from fastapi import Path, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.backend.src.api_v1.hackathons.crud import (
-    get_hackathon,
-    get_user_in_hackathon,
+    get_hackathon
 )
 from services.backend.src.core.models import db_helper, Hackathon, User
 

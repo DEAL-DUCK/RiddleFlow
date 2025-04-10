@@ -17,7 +17,8 @@ async def create_task_for_hackathon(
         hackathon_id: int
 ) -> TaskSchema:
     hackathon = await get_hackathon(session, hackathon_id)
-
+    if hackathon is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     task = Task(
         title=task_data.title,
         description=task_data.description,
