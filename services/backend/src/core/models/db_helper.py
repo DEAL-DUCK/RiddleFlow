@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import (
     async_scoped_session,
 )
 
+from .base import Base
 from ..config import settings
 
 
@@ -43,6 +44,10 @@ class DatabaseHelper:
         session = self.get_scoped_session()
         yield session
         await session.close()
+
+    async def create_all(self):
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
 
 db_helper = DatabaseHelper(
