@@ -6,11 +6,11 @@ from sqlalchemy.sql import func
 from datetime import datetime
 import enum
 
-
 if TYPE_CHECKING:
     from .hackathon_user_association import HackathonUserAssociation
     from .user import User
     from .task import Task
+    from .jury import Jury
 
 
 class HackathonStatus(enum.Enum):
@@ -22,8 +22,7 @@ class HackathonStatus(enum.Enum):
 
 class Hackathon(Base):
     __table_args__ = (
-        Index("idx_hackathon_status", "hackathon_status"),
-        # Index("idx_hackathon_creator_id", "creator_id"),
+        Index("idx_hackathon_status", "status"),
     )
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(Text(900), nullable=False)
@@ -31,7 +30,6 @@ class Hackathon(Base):
     end_time: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     status: Mapped[HackathonStatus] = mapped_column(
         Enum(HackathonStatus),
-        name="hackathon_status",
         default=HackathonStatus.PLANNED,
         server_default="PLANNED",
     )
@@ -52,11 +50,18 @@ class Hackathon(Base):
         back_populates="created_hackathons",
         lazy="selectin",
     )
+
     users_details: Mapped[list["HackathonUserAssociation"]] = relationship(
         back_populates="hackathon",
         cascade="all, delete-orphan",
     )
+
     tasks: Mapped[list["Task"]] = relationship(
         back_populates="hackathon",
         cascade="all, delete-orphan",
+    )
+
+    jury_members: Mapped[list["Jury"]] = relationship(
+        secondary="jury_hackathon_association",
+        back_populates="judged_hackathons"
     )

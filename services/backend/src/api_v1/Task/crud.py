@@ -80,16 +80,18 @@ async def get_all_task_by_hackathon(
 
 
 async def update_task(
-        session: AsyncSession,
-        task_id: int,
-        update_data: dict[str, Any],
+    session: AsyncSession,
+    task_id: int,
+    update_data: dict[str, Any],
 ) -> Task:
+    # Получаем задачу из базы
     result = await session.execute(select(Task).where(Task.id == task_id))
     task = result.scalar_one_or_none()
 
     if task is None:
         raise HTTPException(status_code=404, detail='Task not found')
 
+    # Проверяем допустимые поля для обновления
     allowed_fields = {'title', 'description', 'task_type', 'hackathon_id'}
     invalid_fields = set(update_data.keys()) - allowed_fields
     if invalid_fields:
@@ -97,23 +99,16 @@ async def update_task(
             status_code=400,
             detail=f"Cannot update fields: {', '.join(invalid_fields)}"
         )
-    if 'hackathon_id' in update_data and update_data['hackathon_id'] != task.hackathon_id:
-        hack = await session.get(Hackathon, update_data['hackathon_id'])
-        if hack is None:
-            raise HTTPException(status_code=404, detail='Hackathon not found')
-        await session.delete(task)
-        await session.commit()
-        new_task_data = {
-            'title': update_data.get('title', task.title),
-            'description': update_data.get('description', task.description),
-            'task_type': update_data.get('task_type', task.task_type),
-        }
-        await create_task_for_hackathon(
-            session=session,
-            task_data=CreateTaskSchema(**new_task_data),
-            hackathon_id=update_data['hackathon_id']
-        )
 
+    # Если меняется hackathon_id - проверяем существование нового хакатона
+    if 'hackathon_id' in update_data and update_data['hackathon_id'] != task.hackathon_id:
+        hackathon_exists = await session.execute(
+            select(Hackathon).where(Hackathon.id == update_data['hackathon_id'])
+        )
+        if not hackathon_exists.scalar_one_or_none():
+            raise HTTPException(status_code=404, detail='Hackathon not found')
+
+    # Обновляем поля задачи
     for field, value in update_data.items():
         setattr(task, field, value)
 

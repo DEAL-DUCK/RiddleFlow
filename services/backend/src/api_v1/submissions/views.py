@@ -66,3 +66,14 @@ async def update_submission_endpoint(
         submission_id=submission_id,
         update_data=update_data.model_dump(exclude_unset=True),
     )
+@router.get('users_submissions/{in_any_hackathon}')
+async def get_submissions_by_hackathon(
+        user_id : int,
+        hackathon_id: int,
+        session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+     return await get_all_submissions_any_user_in_any_hackathon(
+         user_id=user_id,
+         session=session,
+         hackathon_id=hackathon_id
+     )
