@@ -5,7 +5,7 @@ from sqlalchemy.util import await_only
 from .schemas import CreateTaskSchema, TaskSchema,TaskUpdateSchema
 from .crud import *
 from services.backend.src.core.models import Task
-from services.backend.src.core.models import db_helper
+from services.backend.src.core.models.db_helper import db_helper
 
 router = APIRouter(tags=["Задачи"])
 

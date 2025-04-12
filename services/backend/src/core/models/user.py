@@ -1,24 +1,25 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
-from .hackathon_user_association import HackathonUserAssociation
-from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Enum, Index, DateTime
 from sqlalchemy_utils import EmailType
 from sqlalchemy.sql import func
 import enum
 import datetime
+from .base import Base
 
 if TYPE_CHECKING:
     from .profile import Profile
     from .hackathon import Hackathon
     from .submission import Submission
     from .jury import Jury
+    from .hackathon_user_association import HackathonUserAssociation
 
 
 class UserRole(enum.Enum):
     PARTICIPANT = "PARTICIPANT"
     CREATOR = "CREATOR"
-    JURY = "JURY"  # Добавлена новая роль для жюри
+    JURY = "JURY"
 
 
 class User(Base):
@@ -26,6 +27,7 @@ class User(Base):
         Index("idx_user_email", "email", unique=True),
         Index("idx_user_username", "username", unique=True),
     )
+
     username: Mapped[str] = mapped_column(String(40), unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(128), nullable=False)
     email: Mapped[str] = mapped_column(EmailType, unique=True, nullable=False)
@@ -39,11 +41,12 @@ class User(Base):
     )
 
     profile: Mapped["Profile"] = relationship(
-        "Profile", back_populates="user", uselist=False
+        back_populates="user",
+        uselist=False,
+        lazy="selectin"
     )
 
     created_hackathons: Mapped[list["Hackathon"]] = relationship(
-        "Hackathon",
         back_populates="creator",
         lazy="selectin",
         cascade="all, delete-orphan",
@@ -58,11 +61,12 @@ class User(Base):
     submissions: Mapped[list["Submission"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
+        lazy="selectin"
     )
 
     jury_profile: Mapped["Jury"] = relationship(
-        "Jury",
         back_populates="user",
         uselist=False,
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )

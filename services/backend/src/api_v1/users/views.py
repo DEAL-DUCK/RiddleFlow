@@ -6,7 +6,7 @@ from services.backend.src.api_v1.users.schemas import (
     UserSchema,
     UserCreateSchema,
 )
-from services.backend.src.core.models import db_helper
+from services.backend.src.core.models.db_helper import db_helper
 
 router = APIRouter(tags=["Пользователь"])
 

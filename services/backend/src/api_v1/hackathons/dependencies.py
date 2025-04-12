@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from services.backend.src.api_v1.hackathons.crud import (
     get_hackathon
 )
-from services.backend.src.core.models import db_helper, Hackathon, User
+from services.backend.src.core.models import Hackathon, User
+from services.backend.src.core.models.db_helper import db_helper
 
 
 async def get_hackathon_by_id(

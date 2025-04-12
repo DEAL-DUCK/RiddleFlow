@@ -1,21 +1,22 @@
-__all__ = {
-    "db_helper",
-    "User",
-    "Profile",
-    # "Olympiad",
-    "Hackathon",
-    "HackathonUserAssociation",
-    "Task",
-    "Submission",
-    #"Base",
-}
-
-# from .olympiad import Olympiad # пока отрубаю
-from .profile import Profile
+from .base import Base
 from .user import User
-from .db_helper import db_helper
 from .hackathon import Hackathon
-from .hackathon_user_association import HackathonUserAssociation
-from .task import Task
-#from .base import Base
+from .jury import Jury
+from .hack_jury_assosiation import jury_hackathon_association
+from .JuryEvaluation import JuryEvaluation
 from .submission import Submission
+from .task import Task
+from .hackathon_user_association import HackathonUserAssociation
+from .profile import Profile
+__all__ = [
+    'Base',
+    'User',
+    'Hackathon',
+    'Jury',
+    'JuryEvaluation',
+    'Submission',
+    'Task',
+    'HackathonUserAssociation',
+    'jury_hackathon_association',
+    'Profile'
+]

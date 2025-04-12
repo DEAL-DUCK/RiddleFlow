@@ -12,7 +12,8 @@ from services.backend.src.api_v1.hackathons.schemas import (
     HackathonCreateSchema,
     HackathonUpdatePartial,
 )
-from services.backend.src.core.models import db_helper, User, Hackathon
+from services.backend.src.core.models import  User, Hackathon
+from services.backend.src.core.models.db_helper import db_helper
 from ..users.schemas import UserSchema
 
 router = APIRouter(tags=["Хакатоны"])
@@ -32,12 +33,12 @@ async def get_hackathon(hackathon: HackathonSchema = Depends(get_hackathon_by_id
 
 @router.get("/{hackathon_id}/users")
 async def get_users_in_hackathon(
-    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    hackathon_id : int,
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     return await crud.get_users_in_hackathon(
         session=session,
-        hackathon=hackathon,
+        hackathon_id=hackathon_id,
     )
 
 
@@ -82,17 +83,16 @@ async def add_user_in_hackathon(
     "/{hackathon_id}/users/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def delete_user_in_hackathon(
-    hackathon: Hackathon = Depends(get_hackathon_by_id),
-    user: User = Depends(get_user_by_id),
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+async def delete_user_in_hack(
+        user_id : int,
+        hackathon_id : int,
+        session : AsyncSession = Depends(db_helper.scoped_session_dependency)
 ):
     return await crud.delete_user_in_hackathon(
-        hackathon=hackathon,
-        user=user,
         session=session,
+        hackathon_id=hackathon_id,
+        user_id=user_id,
     )
-
 
 """@router.delete(
     "/{hackathon_id}",

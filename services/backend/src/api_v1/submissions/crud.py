@@ -9,7 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional, Dict, Any, List
 
-not_submissions = HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+from ..jurys.crud import any_not
+
+async def not_submissions():
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 async def create_submission(
@@ -17,7 +20,6 @@ async def create_submission(
     submission_data: SubmissionCreate
 ) -> Submission:
     try:
-        # Проверяем существование задачи
         task_exists = await session.execute(
             select(Task).where(Task.id == submission_data.task_id)
         )
@@ -27,7 +29,6 @@ async def create_submission(
                 detail="Задача не найдена"
             )
 
-        # Проверяем, что пользователь зарегистрирован на хакатон
         hackathon_id = await session.execute(
             select(Task.hackathon_id).where(Task.id == submission_data.task_id)
         )
@@ -45,11 +46,11 @@ async def create_submission(
                 detail="Пользователь не зарегистрирован на этот хакатон"
             )
 
-        # Проверяем, нет ли уже решения для этой задачи от этого пользователя
         existing_submission = await session.execute(
             select(Submission).where(
                 Submission.task_id == submission_data.task_id,
-                Submission.user_id == submission_data.user_id
+                Submission.user_id == submission_data.user_id,
+                Submission.description == submission_data.description
             )
         )
         if existing_submission.scalar_one_or_none():
@@ -58,7 +59,6 @@ async def create_submission(
                 detail="Решение для этой задачи уже существует"
             )
 
-        # Создаем новое решение
         new_submission = Submission(
             **submission_data.model_dump(),
             submitted_at=datetime.utcnow()
@@ -82,14 +82,13 @@ async def get_user_submissions(session: AsyncSession, user_id: int):
     stmt = select(Submission).where(Submission.user_id == user_id)
     result = await session.execute(stmt)
     submissions = result.scalars().all()
-    raise not_submissions if submissions is None else submissions
-
+    return submissions if submissions else await not_submissions()
 
 async def get_submission_by_id_func(session: AsyncSession, submission_id: int):
     stmt = select(Submission).where(Submission.id == submission_id)
     result = await session.execute(stmt)
     submission = result.scalars().first()
-    raise not_submissions if submission is None else submission
+    return submission if submission else await not_submissions()
 
 
 async def get_submission_by_task_id_plus_user_id(
@@ -100,13 +99,12 @@ async def get_submission_by_task_id_plus_user_id(
     stmt = select(Submission).where(Submission.task_id == task_id).where(Submission.user_id == user_id)
     result = await session.execute(stmt)
     submission = result.scalars().first()
-    raise not_submissions if submission is None else submission
-
+    return submission if submission else await not_submissions()
 
 async def delete_submission_by_id(session: AsyncSession, submission_id: int):
     submission = await session.get(Submission, submission_id)
     if not submission:
-        raise not_submissions
+        await not_submissions()
     await session.delete(submission)
     await session.commit()
     return {'ok': f' submission with id : {submission_id} deleted'}
@@ -125,8 +123,7 @@ async def delete_all_submissions_any_user(
     stmt = select(Submission).where(Submission.user_id == user_id)
     result = await session.execute(stmt)
     submissions = result.scalars().all()
-    if not submissions:
-        raise not_submissions
+    if not submissions : await not_submissions()
     for submission in submissions:
         await session.delete(submission)
     await session.commit()
@@ -146,8 +143,7 @@ async def update_submission(
         select(Submission).where(Submission.id == submission_id)
     )
     submission = result.scalar_one_or_none()
-    if not submission:
-        raise not_submissions
+    if not submission : await not_submissions()
     allowed_fields = {'code_url', 'description', 'status'}
     invalid_fields = set(update_data.keys()) - allowed_fields
 
@@ -211,8 +207,7 @@ async def get_all_submissions_any_user_in_any_hackathon(
         result = await session.execute(stmt)
         submissions = result.scalars().all()
 
-        if not submissions:
-            raise not_submissions
+        if not submissions: await not_submissions()
         return [{**submission.__dict__, "hackathon_id": hackathon_id} for submission in submissions]
 
     except HTTPException:

@@ -6,7 +6,7 @@ from fastapi.params import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from .crud import *
 from api_v1.submissions.schemas import SubmissionRead, SubmissionCreate, SubmissionUpdate
-from core.models import Submission, db_helper
+from core.models.db_helper import db_helper
 
 router = APIRouter(tags=["Решения"])
 @router.post(
