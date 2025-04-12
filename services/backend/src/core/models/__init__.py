@@ -2,7 +2,7 @@ from .base import Base
 from .user import User
 from .hackathon import Hackathon
 from .jury import Jury
-from .hack_jury_assosiation import jury_hackathon_association
+from .hack_jury_assosiation import JuryHackathonAssociation
 from .JuryEvaluation import JuryEvaluation
 from .submission import Submission
 from .task import Task
@@ -17,6 +17,6 @@ __all__ = [
     'Submission',
     'Task',
     'HackathonUserAssociation',
-    'jury_hackathon_association',
+    'JuryHackathonAssociation',
     'Profile'
 ]

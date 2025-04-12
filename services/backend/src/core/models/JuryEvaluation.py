@@ -1,13 +1,13 @@
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .jury import Jury
-    from .submission import Submission
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from .base import Base
+
+if TYPE_CHECKING:
+    from .jury import Jury
+    from .submission import Submission
 
 class JuryEvaluation(Base):
     __tablename__ = 'jury_evaluations'

@@ -1,6 +1,7 @@
 from fastapi import Depends, APIRouter, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import relationship
+from sqlalchemy.util import await_only
 
 from . import crud
 from services.backend.src.api_v1.hackathons.dependencies import (
@@ -92,6 +93,15 @@ async def delete_user_in_hack(
         session=session,
         hackathon_id=hackathon_id,
         user_id=user_id,
+    )
+@router.get('/{hackathon_id}/jury')
+async def get_hackathon_jury(
+        hackathon_id : int ,
+        session : AsyncSession = Depends(db_helper.scoped_session_dependency)
+):
+    return await crud.get_all_jury_in_hackathon(
+        session=session,
+        hackathon_id=hackathon_id,
     )
 
 """@router.delete(

@@ -9,64 +9,72 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional, Dict, Any, List
 
-from ..jurys.crud import any_not
+
 
 async def not_submissions():
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 async def create_submission(
-    session: AsyncSession,
-    submission_data: SubmissionCreate
+        session: AsyncSession,
+        submission_data: SubmissionCreate
 ) -> Submission:
+    """
+    Создает новое решение задачи с автоматическим установкой статуса SUBMITTED.
+    """
     try:
-        task_exists = await session.execute(
+        # Проверяем существование задачи
+        task = await session.scalar(
             select(Task).where(Task.id == submission_data.task_id)
         )
-        if not task_exists.scalar_one_or_none():
+        if not task:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Задача не найдена"
             )
 
-        hackathon_id = await session.execute(
-            select(Task.hackathon_id).where(Task.id == submission_data.task_id)
-        )
-        hackathon_id = hackathon_id.scalar_one()
-
-        user_registered = await session.execute(
+        # Проверяем регистрацию пользователя на хакатон
+        user_registered = await session.scalar(
             select(HackathonUserAssociation).where(
-                HackathonUserAssociation.hackathon_id == hackathon_id,
+                HackathonUserAssociation.hackathon_id == task.hackathon_id,
                 HackathonUserAssociation.user_id == submission_data.user_id
             )
         )
-        if not user_registered.scalar_one_or_none():
+        if not user_registered:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Пользователь не зарегистрирован на этот хакатон"
             )
 
-        existing_submission = await session.execute(
+        # Проверяем существование аналогичного решения
+        existing_submission = await session.scalar(
             select(Submission).where(
                 Submission.task_id == submission_data.task_id,
                 Submission.user_id == submission_data.user_id,
                 Submission.description == submission_data.description
             )
         )
-        if existing_submission.scalar_one_or_none():
+        if existing_submission:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Решение для этой задачи уже существует"
             )
 
+        submission_dict = submission_data.model_dump()
+        if 'status' in submission_dict:
+            del submission_dict['status']
+
         new_submission = Submission(
-            **submission_data.model_dump(),
-            submitted_at=datetime.utcnow()
+            **submission_dict,
+            status=SubmissionStatus.SUBMITTED,
+            submitted_at=datetime.utcnow(),
+            graded_at=datetime.utcnow()
         )
 
         session.add(new_submission)
         await session.commit()
         await session.refresh(new_submission)
+
         return new_submission
 
     except HTTPException:
@@ -77,7 +85,6 @@ async def create_submission(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Ошибка при создании решения: {str(e)}"
         )
-
 async def get_user_submissions(session: AsyncSession, user_id: int):
     stmt = select(Submission).where(Submission.user_id == user_id)
     result = await session.execute(stmt)
@@ -194,7 +201,6 @@ async def get_all_submissions_any_user_in_any_hackathon(
                 detail="User is not registered for this hackathon"
             )
 
-        # Получаем решения
         stmt = (
             select(Submission)
             .join(Submission.task)
@@ -207,7 +213,8 @@ async def get_all_submissions_any_user_in_any_hackathon(
         result = await session.execute(stmt)
         submissions = result.scalars().all()
 
-        if not submissions: await not_submissions()
+        if not submissions:
+            raise not_submissions
         return [{**submission.__dict__, "hackathon_id": hackathon_id} for submission in submissions]
 
     except HTTPException:

@@ -1,9 +1,14 @@
-from typing import List
-
-from services.backend.src.core.models import User
 from pydantic import BaseModel
 
-class Jury(User):
-    user_id : int
-    hackathons_active : List
-    evaluate : int
+
+class JuryResponse(BaseModel):
+    status: str
+    jury_id: int
+    hackathon_id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True
+class JuryCreate(BaseModel):
+    user_id: int
+    hackathon_id: int

@@ -3,6 +3,9 @@ from sqlalchemy import select, Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from api_v1.jurys.crud import any_not
+from core.models import JuryHackathonAssociation, Jury
 from services.backend.src.api_v1.hackathons.schemas import (
     HackathonCreateSchema,
 )
@@ -48,6 +51,16 @@ async def add_user_in_hackathon(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"User  {user.id} is already participating in this hackathon",
+        )
+    not_jury = await session.scalar(
+        select(JuryHackathonAssociation)
+        .where(JuryHackathonAssociation.hackathon_id == hackathon.id)
+        .where(JuryHackathonAssociation.jury_id == user.id)
+    )
+    if not_jury:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"User {user.id} is  jury in this hackathon",
         )
 
     association = HackathonUserAssociation(
@@ -167,6 +180,16 @@ async def get_user_in_hackathon(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"User  {user_id} is not participating in this hackathon",
     )
+async def get_all_jury_in_hackathon(
+        session: AsyncSession,
+        hackathon_id: int,
+):
+    if not await get_hackathon(session=session,hackathon_id=hackathon_id): return any_not('hackathon_id')
+    result = await session.execute(
+        select(JuryHackathonAssociation)
+        .where(JuryHackathonAssociation.hackathon_id == hackathon_id)
+    )
+    return list(result.scalars().all())
 
 
 """# пока в комментарий, потому что не реализовано ролирование
