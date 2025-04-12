@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from core.models import Jury, Hackathon, JuryHackathonAssociation, User, jury
+from core.models import Jury, Hackathon, JuryHackathonAssociation, User, jury, Submission, JuryEvaluation, Task
 from .schemas import JuryResponse
 from fastapi import HTTPException, status
 def any_not(ann: str):
@@ -125,5 +125,65 @@ async def get_hackathons_judged_by_jury(session: AsyncSession, jury_id: int):
         .where(JuryHackathonAssociation.jury_id == jury_id)
     )
     return list(result.scalars().all())
+from typing import Dict, List
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from fastapi import HTTPException
+
+async def get_jury_evaluations_with_details(
+    session: AsyncSession,
+    jury_id: int
+) -> Dict[str, Dict[str, float | str]]:
+    """
+    Возвращает все оценки судьи в формате:
+    {
+        "Описание решения": {
+            "score": 95.5,
+            "comment": "Отличная работа",
+            "submission_id": 1,
+            "task": "Название задачи",
+            "hackathon": "Название хакатона"
+        },
+        ...
+    }
+    """
+    try:
+        # Получаем все оценки судьи с детальной информацией
+        query = (
+            select(
+                Submission.description,
+                JuryEvaluation.score,
+                JuryEvaluation.comment,
+                Submission.id.label("submission_id"),
+                Task.title.label("task_title"),
+                Hackathon.title.label("hackathon_title")
+            )
+            .select_from(JuryEvaluation)
+            .join(Submission, JuryEvaluation.submission_id == Submission.id)
+            .join(Task, Task.id == Submission.task_id)
+            .join(Hackathon, Hackathon.id == Task.hackathon_id)
+            .where(JuryEvaluation.jury_id == jury_id)
+        )
+
+        result = await session.execute(query)
+        evaluations = result.all()
+
+        # Форматируем результат
+        return {
+            row.description: {
+                "score": float(row.score),
+                "comment": row.comment,
+                "submission_id": row.submission_id,
+                "task": row.task_title,
+                "hackathon": row.hackathon_title
+            }
+            for row in evaluations
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ошибка при получении оценок: {str(e)}"
+        )
 
 

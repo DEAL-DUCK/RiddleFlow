@@ -5,8 +5,9 @@ from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
 from core.models import JuryEvaluation, Submission, Jury, JuryHackathonAssociation
 from core.models.submission import SubmissionStatus
-from .schemas import EvaluationSchema
-
+from .schemas import EvaluationSchema,EvaluationsUpdateSchema
+from ..jurys.crud import any_not
+from api_v1.submissions.views import create_submission
 
 async def create_evaluation(
         session: AsyncSession,
@@ -16,7 +17,6 @@ async def create_evaluation(
         score: float,
 ) -> EvaluationSchema:
     try:
-        # Проверяем существование submission с предзагрузкой задачи
         submission = await session.scalar(
             select(Submission)
             .options(selectinload(Submission.task))
@@ -27,8 +27,6 @@ async def create_evaluation(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Submission not found"
             )
-
-        # Проверяем существование жюри
         jury = await session.scalar(select(Jury).where(Jury.id == jury_id))
         if not jury:
             raise HTTPException(
@@ -36,7 +34,6 @@ async def create_evaluation(
                 detail="Jury not found"
             )
 
-        # Проверяем назначение жюри на хакатон
         is_assigned = await session.scalar(
             select(JuryHackathonAssociation)
             .where(and_(
@@ -49,22 +46,17 @@ async def create_evaluation(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Jury is not assigned to this hackathon"
             )
-
-        # Проверяем статус submission
         if submission.status not in [SubmissionStatus.SUBMITTED, SubmissionStatus.DRAFT]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Can only evaluate SUBMITTED or DRAFT submissions"
             )
-
-        # Проверяем диапазон оценки
         if not (0 <= score <= 100):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Score must be between 0 and 100"
             )
 
-        # Проверяем существующую оценку
         existing_eval = await session.scalar(
             select(JuryEvaluation)
             .where(and_(
@@ -74,12 +66,10 @@ async def create_evaluation(
         )
 
         if existing_eval:
-            # Обновляем существующую оценку
             existing_eval.score = score
             existing_eval.comment = comment
             evaluation = existing_eval
         else:
-            # Создаем новую оценку
             evaluation = JuryEvaluation(
                 jury_id=jury_id,
                 submission_id=submission_id,
@@ -88,7 +78,6 @@ async def create_evaluation(
             )
             session.add(evaluation)
 
-        # Обновляем статус submission
         submission.status = SubmissionStatus.GRADED
         submission.graded_at = func.now()
 
@@ -115,3 +104,89 @@ async def create_evaluation(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {str(e)}"
         )
+
+
+async def delete_evaluation(
+        session: AsyncSession,
+        evaluation_id: int,
+) -> dict:
+    """
+    Удаляет оценку и корректно обновляет статус решения
+
+    Args:
+        session: Асинхронная сессия SQLAlchemy
+        evaluation_id: ID оценки для удаления
+
+    Returns:
+        dict: {'ok': True, 'new_status': str} - статус решения после удаления
+
+    Raises:
+        HTTPException: Если оценка не найдена или произошла ошибка
+    """
+    try:
+        # Получаем оценку с предзагруженным решением и его оценками
+        evaluation = await session.scalar(
+            select(JuryEvaluation)
+            .options(
+                selectinload(JuryEvaluation.submission).selectinload(Submission.evaluations)
+            )
+            .where(JuryEvaluation.id == evaluation_id)
+        )
+
+        if not evaluation:
+            return await any_not('evaluation')
+
+        submission = evaluation.submission
+
+        # Удаляем оценку
+        await session.delete(evaluation)
+
+        # Проверяем оставшиеся оценки
+        remaining_evaluations = len(submission.evaluations) - 1  # Уже загружены через selectinload
+
+        # Обновляем статус решения
+        if remaining_evaluations == 0:
+            submission.status = SubmissionStatus.SUBMITTED
+            submission.graded_at = None
+            new_status = "SUBMITTED"
+        else:
+            new_status = submission.status.value  # Сохраняем текущий статус
+
+        await session.commit()
+        return {'ok': True, 'new_status': new_status}
+
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка при удалении оценки: {str(e)}"
+        )
+async def update_evaluation(
+        session: AsyncSession,
+        evaluation_id: int,
+        update_data: EvaluationsUpdateSchema,
+):
+    if await session.get(JuryEvaluation,evaluation_id) is None: return await any_not('evaluation')
+    evaluation = await session.get(JuryEvaluation,evaluation_id)
+    if not (0 <= update_data.score <= 100):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Оценка должна быть в диапазоне от 0 до 100"
+        )
+
+        # Обновляем поля
+    evaluation.score = update_data.score
+    evaluation.comment = update_data.comment
+
+    # Обновляем время оценки (опционально)
+    evaluation.created_at = func.now()
+
+    session.add(evaluation)
+    await session.commit()
+    await session.refresh(evaluation)
+    return {
+        'success': True,
+        'message': 'Оценка успешно обновлена',
+        'evaluation': evaluation
+    }
+

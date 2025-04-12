@@ -32,3 +32,7 @@ class SubmissionUpdate(BaseModel):
     code_url: Optional[str] = None
     description: Optional[str] = None
     status: Optional[SubmissionStatus] = None
+class SimpleJuryEvaluation(BaseModel):
+    score: float
+    comment: str
+    jury_name: str

@@ -45,3 +45,11 @@ session: AsyncSession = Depends(db_helper.scoped_session_dependency)
         session=session,
         jury_id=jury_id,
     )
+@router.get("/{jury_id}/evaluations")
+async def get_jury_evaluations(
+    jury_id: int,
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency)
+):
+    return await crud.get_jury_evaluations_with_details(session, jury_id)
+
+

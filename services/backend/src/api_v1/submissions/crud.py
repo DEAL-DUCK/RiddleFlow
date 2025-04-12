@@ -2,13 +2,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 from fastapi import HTTPException, status
-from core.models import Submission, Task, HackathonUserAssociation
-from .schemas import SubmissionCreate, SubmissionRead, SubmissionStatus
+from sqlalchemy.orm import selectinload, load_only
+
+from core.models import Submission, Task, HackathonUserAssociation, JuryEvaluation
+from .schemas import SubmissionCreate, SubmissionRead, SubmissionStatus, SimpleJuryEvaluation
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional, Dict, Any, List
 
+from ..jurys.crud import any_not
 
 
 async def not_submissions():
@@ -19,11 +22,7 @@ async def create_submission(
         session: AsyncSession,
         submission_data: SubmissionCreate
 ) -> Submission:
-    """
-    Создает новое решение задачи с автоматическим установкой статуса SUBMITTED.
-    """
     try:
-        # Проверяем существование задачи
         task = await session.scalar(
             select(Task).where(Task.id == submission_data.task_id)
         )
@@ -32,8 +31,6 @@ async def create_submission(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Задача не найдена"
             )
-
-        # Проверяем регистрацию пользователя на хакатон
         user_registered = await session.scalar(
             select(HackathonUserAssociation).where(
                 HackathonUserAssociation.hackathon_id == task.hackathon_id,
@@ -181,46 +178,44 @@ async def update_submission(
         )
 
 
-async def get_all_submissions_any_user_in_any_hackathon(
+async def get_all_evaluations(
         session: AsyncSession,
-        hackathon_id: int,
-        user_id: int
-):
-    try:
-        # Проверяем участие пользователя в хакатоне
-        participation = await session.execute(
-            select(HackathonUserAssociation)
-            .where(
-                HackathonUserAssociation.hackathon_id == hackathon_id,
-                HackathonUserAssociation.user_id == user_id
-            )
+        submission_id: int,
+) -> List[Dict[str, any]]:
+    """
+    Получает все оценки для указанного решения (только score, comment и jury_id)
+
+    Args:
+        session: Асинхронная сессия SQLAlchemy
+        submission_id: ID решения
+
+    Returns:
+        List[Dict]: Список словарей с оценками в формате:
+            [{"id": 1, "score": 85.5, "comment": "Хорошо", "jury_id": 1}, ...]
+    """
+    # Проверяем существование решения
+    if not await get_submission_by_id_func(session, submission_id):
+        await not_submissions()
+
+    # Формируем запрос только для нужных полей
+    stmt = (
+        select(JuryEvaluation)
+        .where(JuryEvaluation.submission_id == submission_id)
+        .options(
+            load_only(JuryEvaluation.id, JuryEvaluation.score, JuryEvaluation.comment, JuryEvaluation.jury_id)
         )
-        if not participation.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User is not registered for this hackathon"
-            )
+    )
 
-        stmt = (
-            select(Submission)
-            .join(Submission.task)
-            .where(
-                Submission.user_id == user_id,
-                Task.hackathon_id == hackathon_id
-            )
-        )
+    result = await session.execute(stmt)
+    evaluations = result.scalars().all()
 
-        result = await session.execute(stmt)
-        submissions = result.scalars().all()
-
-        if not submissions:
-            raise not_submissions
-        return [{**submission.__dict__, "hackathon_id": hackathon_id} for submission in submissions]
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching submissions: {str(e)}"
-        )
+    # Преобразуем в список словарей
+    return [
+        {
+            "id": eval.id,
+            "score": eval.score,
+            "comment": eval.comment,
+            "jury_id": eval.jury_id
+        }
+        for eval in evaluations
+    ]

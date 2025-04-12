@@ -77,3 +77,12 @@ async def get_submissions_by_hackathon(
          session=session,
          hackathon_id=hackathon_id
      )
+@router.get('{all_score}')
+async def get_all_score(
+        submission_id : int,
+        session: AsyncSession = Depends(db_helper.scoped_session_dependency)
+):
+    return await get_all_evaluations(
+        session=session,
+        submission_id=submission_id
+    )
