@@ -5,9 +5,10 @@ from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
 from core.models import JuryEvaluation, Submission, Jury, JuryHackathonAssociation
 from core.models.submission import SubmissionStatus
-from .schemas import EvaluationSchema,EvaluationsUpdateSchema
+from .schemas import EvaluationSchema, EvaluationsUpdateSchema
 from ..jurys.crud import any_not
 from api_v1.submissions.views import create_submission
+
 
 async def create_evaluation(
         session: AsyncSession,
@@ -109,22 +110,8 @@ async def create_evaluation(
 async def delete_evaluation(
         session: AsyncSession,
         evaluation_id: int,
-) -> dict:
-    """
-    Удаляет оценку и корректно обновляет статус решения
-
-    Args:
-        session: Асинхронная сессия SQLAlchemy
-        evaluation_id: ID оценки для удаления
-
-    Returns:
-        dict: {'ok': True, 'new_status': str} - статус решения после удаления
-
-    Raises:
-        HTTPException: Если оценка не найдена или произошла ошибка
-    """
+):
     try:
-        # Получаем оценку с предзагруженным решением и его оценками
         evaluation = await session.scalar(
             select(JuryEvaluation)
             .options(
@@ -135,22 +122,15 @@ async def delete_evaluation(
 
         if not evaluation:
             return await any_not('evaluation')
-
         submission = evaluation.submission
-
-        # Удаляем оценку
         await session.delete(evaluation)
-
-        # Проверяем оставшиеся оценки
-        remaining_evaluations = len(submission.evaluations) - 1  # Уже загружены через selectinload
-
-        # Обновляем статус решения
+        remaining_evaluations = len(submission.evaluations) - 1
         if remaining_evaluations == 0:
             submission.status = SubmissionStatus.SUBMITTED
             submission.graded_at = None
             new_status = "SUBMITTED"
         else:
-            new_status = submission.status.value  # Сохраняем текущий статус
+            new_status = submission.status.value
 
         await session.commit()
         return {'ok': True, 'new_status': new_status}
@@ -161,24 +141,24 @@ async def delete_evaluation(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка при удалении оценки: {str(e)}"
         )
+
+
 async def update_evaluation(
         session: AsyncSession,
         evaluation_id: int,
         update_data: EvaluationsUpdateSchema,
 ):
-    if await session.get(JuryEvaluation,evaluation_id) is None: return await any_not('evaluation')
-    evaluation = await session.get(JuryEvaluation,evaluation_id)
+    if await session.get(JuryEvaluation, evaluation_id) is None: return await any_not('evaluation')
+    evaluation = await session.get(JuryEvaluation, evaluation_id)
     if not (0 <= update_data.score <= 100):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Оценка должна быть в диапазоне от 0 до 100"
         )
 
-        # Обновляем поля
     evaluation.score = update_data.score
     evaluation.comment = update_data.comment
 
-    # Обновляем время оценки (опционально)
     evaluation.created_at = func.now()
 
     session.add(evaluation)
@@ -189,4 +169,3 @@ async def update_evaluation(
         'message': 'Оценка успешно обновлена',
         'evaluation': evaluation
     }
-

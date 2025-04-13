@@ -12,20 +12,8 @@ async def get_jury(
         session: AsyncSession,
         user_id: int,
         hackathon_id: int,
-) -> Optional[Jury]:
-    """
-    Получает объект жюри по ID пользователя и хакатона.
-
-    Args:
-        session: Асинхронная сессия SQLAlchemy
-        user_id: ID пользователя
-        hackathon_id: ID хакатона
-
-    Returns:
-        Объект Jury или None, если не найден
-    """
+):
     try:
-        # Проверяем существование пользователя и хакатона
         hackathon = await session.get(Hackathon, hackathon_id)
         user = await session.get(User, user_id)
 
@@ -35,7 +23,6 @@ async def get_jury(
                 detail="Hackathon or user not found"
             )
 
-        # Ищем жюри для этого пользователя
         result = await session.execute(
             select(Jury).where(Jury.user_id == user_id)
         )

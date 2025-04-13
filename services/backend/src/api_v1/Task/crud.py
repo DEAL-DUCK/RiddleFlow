@@ -84,14 +84,13 @@ async def update_task(
     task_id: int,
     update_data: dict[str, Any],
 ) -> Task:
-    # Получаем задачу из базы
     result = await session.execute(select(Task).where(Task.id == task_id))
     task = result.scalar_one_or_none()
 
     if task is None:
         raise HTTPException(status_code=404, detail='Task not found')
 
-    # Проверяем допустимые поля для обновления
+
     allowed_fields = {'title', 'description', 'task_type', 'hackathon_id'}
     invalid_fields = set(update_data.keys()) - allowed_fields
     if invalid_fields:
@@ -100,7 +99,7 @@ async def update_task(
             detail=f"Cannot update fields: {', '.join(invalid_fields)}"
         )
 
-    # Если меняется hackathon_id - проверяем существование нового хакатона
+
     if 'hackathon_id' in update_data and update_data['hackathon_id'] != task.hackathon_id:
         hackathon_exists = await session.execute(
             select(Hackathon).where(Hackathon.id == update_data['hackathon_id'])
@@ -108,7 +107,7 @@ async def update_task(
         if not hackathon_exists.scalar_one_or_none():
             raise HTTPException(status_code=404, detail='Hackathon not found')
 
-    # Обновляем поля задачи
+
     for field, value in update_data.items():
         setattr(task, field, value)
 

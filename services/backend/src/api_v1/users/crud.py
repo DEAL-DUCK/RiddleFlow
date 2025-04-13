@@ -22,7 +22,7 @@ async def create_user(
         session: AsyncSession,
         user_in: UserCreateSchema
 ) -> User:
-    # Проверка на существование пользователя с таким username
+
     existing_user = await session.scalar(
         select(User).where(User.username == user_in.username)
     )
@@ -32,7 +32,7 @@ async def create_user(
             detail=f'Username "{user_in.username}" already exists'
         )
 
-    # Проверка на существование пользователя с таким email
+
     existing_user = await session.scalar(
         select(User).where(User.email == user_in.email)
     )
@@ -42,10 +42,9 @@ async def create_user(
             detail=f'Email "{user_in.email}" already exists'
         )
 
-    # Создание пользователя и профиля
     user = User(**user_in.model_dump())
     session.add(user)
-    await session.flush()  # Получаем ID пользователя
+    await session.flush()
 
     profile = Profile(user_id=user.id)
     session.add(profile)

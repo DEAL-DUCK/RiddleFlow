@@ -73,7 +73,7 @@ async def remove_jury_from_hackathon(
         session: AsyncSession,
         jury_id: int,
         hackathon_id: int,
-) -> dict:
+):
 
     hackathon = await session.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
     if not hackathon.scalar_one_or_none(): any_not('hackathon')
@@ -125,30 +125,12 @@ async def get_hackathons_judged_by_jury(session: AsyncSession, jury_id: int):
         .where(JuryHackathonAssociation.jury_id == jury_id)
     )
     return list(result.scalars().all())
-from typing import Dict, List
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from fastapi import HTTPException
 
 async def get_jury_evaluations_with_details(
     session: AsyncSession,
     jury_id: int
-) -> Dict[str, Dict[str, float | str]]:
-    """
-    Возвращает все оценки судьи в формате:
-    {
-        "Описание решения": {
-            "score": 95.5,
-            "comment": "Отличная работа",
-            "submission_id": 1,
-            "task": "Название задачи",
-            "hackathon": "Название хакатона"
-        },
-        ...
-    }
-    """
+):
     try:
-        # Получаем все оценки судьи с детальной информацией
         query = (
             select(
                 Submission.description,
@@ -167,8 +149,6 @@ async def get_jury_evaluations_with_details(
 
         result = await session.execute(query)
         evaluations = result.all()
-
-        # Форматируем результат
         return {
             row.description: {
                 "score": float(row.score),

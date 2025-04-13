@@ -43,7 +43,6 @@ async def create_submission(
                 detail="Пользователь не зарегистрирован на этот хакатон"
             )
 
-        # Проверяем существование аналогичного решения
         existing_submission = await session.scalar(
             select(Submission).where(
                 Submission.task_id == submission_data.task_id,
@@ -182,22 +181,9 @@ async def get_all_evaluations(
         session: AsyncSession,
         submission_id: int,
 ) -> List[Dict[str, any]]:
-    """
-    Получает все оценки для указанного решения (только score, comment и jury_id)
-
-    Args:
-        session: Асинхронная сессия SQLAlchemy
-        submission_id: ID решения
-
-    Returns:
-        List[Dict]: Список словарей с оценками в формате:
-            [{"id": 1, "score": 85.5, "comment": "Хорошо", "jury_id": 1}, ...]
-    """
-    # Проверяем существование решения
     if not await get_submission_by_id_func(session, submission_id):
         await not_submissions()
 
-    # Формируем запрос только для нужных полей
     stmt = (
         select(JuryEvaluation)
         .where(JuryEvaluation.submission_id == submission_id)
@@ -209,7 +195,6 @@ async def get_all_evaluations(
     result = await session.execute(stmt)
     evaluations = result.scalars().all()
 
-    # Преобразуем в список словарей
     return [
         {
             "id": eval.id,
