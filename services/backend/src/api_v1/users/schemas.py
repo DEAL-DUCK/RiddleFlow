@@ -1,6 +1,6 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
 import datetime
-import uuid
+
+from pydantic import BaseModel, ConfigDict, EmailStr
 from fastapi_users import schemas
 
 from core.types.user_id import UserIdType

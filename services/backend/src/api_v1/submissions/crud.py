@@ -1,27 +1,20 @@
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
+from typing import Dict, Any
+
 from fastapi import HTTPException, status
-from sqlalchemy.orm import selectinload, load_only
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from core.models import (
     Submission,
     Task,
     HackathonUserAssociation,
-    # JuryEvaluation
 )
 from .schemas import (
     SubmissionCreate,
     SubmissionRead,
     SubmissionStatus,
-    SimpleJuryEvaluation,
 )
-from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from typing import Optional, Dict, Any, List
-
-# from ..jurys.crud import any_not
 
 
 async def not_submissions():

@@ -1,6 +1,6 @@
-from pydantic import BaseModel, ConfigDict
-from datetime import datetime
 from enum import Enum
+
+from pydantic import BaseModel, ConfigDict
 
 
 class TaskType(str, Enum):
@@ -16,7 +16,6 @@ class CreateTaskSchema(BaseModel):
     task_type: TaskType
 
 
-
 class TaskSchema(BaseModel):
     id: int
     title: str
@@ -25,6 +24,8 @@ class TaskSchema(BaseModel):
     hackathon_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
 class TaskUpdateSchema(BaseModel):
     title: str | None = None
     description: str | None = None

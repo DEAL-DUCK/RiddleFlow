@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from api_v1.hackathons.schemas import (
     HackathonCreateSchema,
 )

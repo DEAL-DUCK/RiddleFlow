@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, Query
+from fastapi import Depends, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import crud

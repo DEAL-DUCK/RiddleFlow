@@ -1,15 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi_users import exceptions, models, schemas
+from fastapi_users.manager import BaseUserManager, UserManagerDependency
+from fastapi_users.router.common import ErrorCode, ErrorModel
 
 from api_v1.auth.fastapi_users import fastapi_users
 from api_v1.dependencies.authentication.backend import authentication_backend
 from api_v1.dependencies.authentication.user_manager import get_user_manager
 from api_v1.users.schemas import UserRead, UserCreate
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-
-from fastapi_users import exceptions, models, schemas
-from fastapi_users.manager import BaseUserManager, UserManagerDependency
-from fastapi_users.router.common import ErrorCode, ErrorModel
-
 from core.models import Profile, db_helper
 
 router = APIRouter(tags=["Auth"])

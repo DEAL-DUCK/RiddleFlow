@@ -18,7 +18,6 @@ async def get_user(session: AsyncSession, user_id: int) -> User | None:
 
 async def create_user(session: AsyncSession, user_in: UserCreateSchema) -> User:
     user = User(**user_in.model_dump())
-
     session.add(user)
     await session.commit()
     profile = Profile(user_id=user.id)

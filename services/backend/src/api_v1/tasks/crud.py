@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
+
 from core.models import Task, Hackathon
 from .schemas import CreateTaskSchema, TaskSchema
 from api_v1.hackathons.dependencies import get_hackathon
@@ -20,7 +21,6 @@ async def create_task_for_hackathon(
         task_type=task_data.task_type,
         hackathon_id=hackathon_id,
     )
-
     session.add(task)
     await session.commit()
     await session.refresh(task)
