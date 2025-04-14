@@ -94,8 +94,62 @@ async def get_users_in_hackathon(
     )
     return [
         {
-            "user": association.user.username,
-            "status": association.user_status,
+            "user": {
+                "id": association.user.id,
+                "username": association.user.username,
+                "email": association.user.email,
+                "role": association.user.role,
+            },
+            "status": association.user_status.value,
+            "role": association.user_role.value,
+            "registration_date": (
+                association.registration_date.isoformat()
+                if association.registration_date
+                else None
+            ),
         }
-        for association in associations.scalars()
+        for association in associations
     ]
+
+
+async def get_user_in_hackathon(
+    session: AsyncSession,
+    hackathon: Hackathon,
+    user_id: int,
+):
+    # тут идет запрос в бдшку по айди хакатона и айди юзера(скопипастил, проверь чтобы верно было)
+    association = await session.scalar(
+        select(HackathonUserAssociation)
+        .where(HackathonUserAssociation.hackathon_id == hackathon.id)
+        .where(HackathonUserAssociation.user_id == user_id)
+    )
+
+    if association:
+        return {
+            "user": {
+                "id": association.user.id,
+                "username": association.user.username,
+                "email": association.user.email,
+                "status": association.user_status,
+                "role": association.user_role,
+                "created_hackathons": association.user.created_hackathons,
+            },
+        }
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"User  {user_id} is not participating in this hackathon",
+    )
+
+
+# async def get_all_jury_in_hackathon(
+#         session: AsyncSession,
+#         hackathon_id: int,
+# ):
+#     if not await get_hackathon(session=session,hackathon_id=hackathon_id): return any_not('hackathon_id')
+#     result = await session.execute(
+#         select(JuryHackathonAssociation)
+#         .where(JuryHackathonAssociation.hackathon_id == hackathon_id)
+#     )
+#     return list(result.scalars().all())
+#

@@ -18,3 +18,23 @@ async def get_hackathon_by_id(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Hackathon {hackathon_id} if not found",
     )
+
+
+# async def get_user_in_hackathon_by_id(
+#     user_id: Annotated[int, Path(ge=1)],
+#     hackathon: Hackathon = Depends(get_hackathon_by_id),
+#     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+# ):
+#     user = await get_user_in_hackathon(
+#         session=session,
+#         hackathon=hackathon,
+#         user_id=user_id,
+#     )
+#
+#     if user is not None:
+#         return user
+#
+#     raise HTTPException(
+#         status_code=status.HTTP_404_NOT_FOUND,
+#         detail=f"User {user_id} is not found",
+#     )

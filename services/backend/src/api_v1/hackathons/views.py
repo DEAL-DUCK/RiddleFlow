@@ -61,3 +61,15 @@ async def delete_user_in_hackathon(
     return await crud.delete_user_in_hackathon(
         hackathon=hackathon, user=user, session=session
     )
+
+
+#
+# @router.get("/{hackathon_id}/jury")
+# async def get_hackathon_jury(
+#     hackathon_id: int,
+#     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+# ):
+#     return await crud.get_all_jury_in_hackathon(
+#         session=session,
+#         hackathon_id=hackathon_id,
+#     )
