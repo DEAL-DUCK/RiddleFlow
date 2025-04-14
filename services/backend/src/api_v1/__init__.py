@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 from .hackathons.views import router as hackathons_router
+from .submissions.views import router as submissions_router
+from .tasks.views import router as tasks_router
 
 # from .olympiads.views import router as olympiads_router
 from .users.views import router as users_router
@@ -13,3 +15,5 @@ router.include_router(router=profiles_router, prefix="/profiles")
 router.include_router(router=hackathons_router, prefix="/hackathons")
 # router.include_router(router=olympiads_router, prefix="/olympiads")
 router.include_router(router=auth_router, prefix="/auth")
+router.include_router(router=submissions_router, prefix="/submissions")
+router.include_router(router=tasks_router, prefix="/tasks")
