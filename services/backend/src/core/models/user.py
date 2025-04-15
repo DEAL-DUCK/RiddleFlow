@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from .hackathon import Hackathon
     from .submission import Submission
     from sqlalchemy.ext.asyncio import AsyncSession
+    from .group_user_association import GroupUserAssociation
 
 
 class UserRole(enum.Enum):
@@ -58,6 +59,11 @@ class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
     )
     submissions: Mapped[list["Submission"]] = relationship(
         back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    groups_details: Mapped[list["GroupUserAssociation"]] = relationship(
+        back_populates="user",
+        lazy="selectin",
         cascade="all, delete-orphan",
     )
 

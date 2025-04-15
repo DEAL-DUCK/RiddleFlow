@@ -9,6 +9,7 @@ from .mixins.int_pk_id import IdIntPkMixin
 
 
 if TYPE_CHECKING:
+    from .hackathon_group_association import HackathonGroupAssociation
     from .hackathon_user_association import HackathonUserAssociation
     from .user import User
     from .task import Task
@@ -59,5 +60,10 @@ class Hackathon(Base, IdIntPkMixin):
     )
     tasks: Mapped[list["Task"]] = relationship(
         back_populates="hackathon",
+        cascade="all, delete-orphan",
+    )
+    groups_details: Mapped[list["HackathonGroupAssociation"]] = relationship(
+        back_populates="hackathon",
+        lazy="selectin",
         cascade="all, delete-orphan",
     )
