@@ -11,7 +11,7 @@ from .mixins.int_pk_id import IdIntPkMixin
 
 if TYPE_CHECKING:
     from .hackathon import Hackathon
-    from .groups import Group
+    from .group import Group
 
 
 class TeamStatus(enum.Enum):

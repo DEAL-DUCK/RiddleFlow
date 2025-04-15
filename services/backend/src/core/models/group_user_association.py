@@ -9,7 +9,7 @@ from .mixins.int_pk_id import IdIntPkMixin
 
 if TYPE_CHECKING:
     from .user import User
-    from .groups import Group
+    from .group import Group
 
 
 class ParticipationStatus(enum.Enum):

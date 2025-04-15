@@ -41,10 +41,10 @@ class Group(Base, IdIntPkMixin):
     )
 
     users_details: Mapped[list["GroupUserAssociation"]] = relationship(
-        back_populates="user",
+        back_populates="group",
         cascade="all, delete-orphan",
     )
     hackathons_details: Mapped[list["HackathonGroupAssociation"]] = relationship(
-        back_populates="hackathon",
+        back_populates="group",
         cascade="all, delete-orphan",
     )

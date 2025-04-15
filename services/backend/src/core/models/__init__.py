@@ -24,6 +24,6 @@ from .hackathon_user_association import HackathonUserAssociation
 from .task import Task
 from .access_token import AccessToken
 from .submission import Submission
-from .groups import Group
+from .group import Group
 from .group_user_association import GroupUserAssociation
 from .hackathon_group_association import HackathonGroupAssociation
