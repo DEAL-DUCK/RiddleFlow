@@ -42,7 +42,7 @@ class AccessToken(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=("src/.env.template", "src/.env"),
+        env_file=(".env.template", ".env.local"),
         case_sensitive=False,
         env_nested_delimiter="__",
         env_prefix="APP_CONFIG__",
