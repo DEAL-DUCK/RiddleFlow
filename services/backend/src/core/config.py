@@ -35,7 +35,7 @@ class DbSettings(BaseModel):
 
 
 class AccessToken(BaseModel):
-    lifetime_seconds: int = 3600
+    lifetime_seconds: int = 3600000  # ПОМЕНЯТЬ ПРИ СОЗДАНИИ REFRESH JWT
     reset_password_token_secret: str
     verification_token_secret: str
 
