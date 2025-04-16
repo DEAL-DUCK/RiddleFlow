@@ -11,7 +11,9 @@ async def get_profile(session: AsyncSession, user_id: int) -> Profile | None:
 
 
 async def update_profile(
-    session: AsyncSession, profile: ProfileSchema, profile_update: ProfileUpdateSchema
+    session: AsyncSession,
+    profile: ProfileSchema,
+    profile_update: ProfileUpdateSchema,
 ) -> ProfileSchema:
     for name, value in profile_update.model_dump(exclude_unset=True).items():
         setattr(profile, name, value)
