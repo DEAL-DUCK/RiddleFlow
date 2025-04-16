@@ -1,11 +1,11 @@
 from sqlalchemy import select, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api_v1.users.schemas import UserCreateSchema
-from core.models import User, Profile
+from core.models import User
 
 
 async def get_users(session: AsyncSession) -> list[User]:
+    """Получить всех пользователей с сортировкой по ID."""
     stmt = select(User).order_by(User.id)
     result: Result = await session.execute(stmt)
     users = result.scalars().all()
@@ -13,14 +13,17 @@ async def get_users(session: AsyncSession) -> list[User]:
 
 
 async def get_user(session: AsyncSession, user_id: int) -> User | None:
+    """Получить пользователя по ID."""
     return await session.get(User, user_id)
 
 
-async def create_user(session: AsyncSession, user_in: UserCreateSchema) -> User:
-    user = User(**user_in.model_dump())
-    session.add(user)
-    await session.commit()
-    profile = Profile(user_id=user.id)
-    session.add(profile)
-    await session.commit()
-    return user
+# ненадобность, из-за подключённой регистрации
+
+# async def create_user(session: AsyncSession, user_in: UserCreateSchema) -> User:
+#     user = User(**user_in.model_dump())
+#     session.add(user)
+#     await session.commit()
+#     profile = Profile(user_id=user.id)
+#     session.add(profile)
+#     await session.commit()
+#     return user

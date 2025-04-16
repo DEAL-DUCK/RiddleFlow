@@ -6,23 +6,13 @@ from fastapi_users import schemas
 from core.types.user_id import UserIdType
 
 
-class UserBaseSchema(BaseModel):
+class UserSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     username: str
     hashed_password: str
     email: EmailStr
     user_role: str
     created_at: datetime.datetime
-
-
-class UserCreateSchema(BaseModel):
-    username: str
-    hashed_password: str
-    email: EmailStr
-    user_role: str
-
-
-class UserSchema(UserBaseSchema):
-    model_config = ConfigDict(from_attributes=True)
     id: int
 
 

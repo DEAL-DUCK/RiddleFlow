@@ -7,6 +7,7 @@ from .tasks.views import router as tasks_router
 from .users.views import router as users_router
 from .profiles.views import router as profiles_router
 from .auth.views import router as auth_router
+from .groups.views import router as group_router
 
 
 router = APIRouter(prefix="/v1")
@@ -17,3 +18,4 @@ router.include_router(router=hackathons_router, prefix="/hackathons")
 router.include_router(router=auth_router, prefix="/auth")
 router.include_router(router=submissions_router, prefix="/submissions")
 router.include_router(router=tasks_router, prefix="/tasks")
+router.include_router(router=group_router, prefix="/groups")
