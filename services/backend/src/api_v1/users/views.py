@@ -7,14 +7,22 @@ from api_v1.users.schemas import (
     UserRead,
     UserUpdate,
 )
-from core.models import db_helper
-from api_v1.auth.fastapi_users import fastapi_users
+from core.models import db_helper, User
+from api_v1.auth.fastapi_users import (
+    current_active_user,
+    current_active_superuser,
+    fastapi_users,
+)
 
 
 router = APIRouter(tags=["Пользователь"])
 
 
-@router.get("/", response_model=list[UserSchema])
+@router.get(
+    "/",
+    response_model=list[UserSchema],
+    dependencies=[Depends(current_active_superuser)],
+)
 async def get_users(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
