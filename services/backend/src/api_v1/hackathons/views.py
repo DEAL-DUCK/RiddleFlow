@@ -105,6 +105,46 @@ async def delete_user_in_hackathon(
     )
 
 
+@router.get(
+    "/{hackathon_id}/groups",
+    dependencies=[Depends(user_is_creator_of_this_hackathon)],
+)
+async def get_groups_in_hackathon(
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.get_groups_in_hackathon(session=session, hackathon=hackathon)
+
+
+@router.post(
+    "/{hackathon_id}/groups",
+    dependencies=[Depends(user_is_owner_of_this_group)],
+)
+async def add_group_in_hackathon(
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    group: Group = Depends(get_group_by_id),
+    user: User = Depends(user_is_owner_of_this_group),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.add_group_in_hackathon(
+        hackathon=hackathon, group=group, session=session
+    )
+
+
+@router.delete(
+    "/{hackathon_id}/groups",
+    dependencies=[Depends(user_is_owner_of_this_group_or_hackathon_creator)],
+)
+async def delete_group_in_hackathon(
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    group: Group = Depends(get_group_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.delete_group_in_hackathon(
+        hackathon=hackathon, group=group, session=session
+    )
+
+
 #
 # @router.get("/{hackathon_id}/jury")
 # async def get_hackathon_jury(
