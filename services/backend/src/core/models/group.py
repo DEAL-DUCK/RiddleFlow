@@ -13,7 +13,6 @@ class GroupType(enum.Enum):
 
 
 if TYPE_CHECKING:
-    from .hackathon import Hackathon
     from .hackathon_group_association import HackathonGroupAssociation
     from .group_user_association import GroupUserAssociation
 

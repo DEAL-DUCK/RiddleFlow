@@ -43,6 +43,7 @@ class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     created_hackathons: Mapped[list["Hackathon"]] = relationship(
