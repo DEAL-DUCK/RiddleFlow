@@ -1,3 +1,5 @@
+from black import timezone
+
 from .base import Base
 from typing import TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -27,10 +29,10 @@ class Hackathon(Base, IdIntPkMixin):
         Index("idx_hackathon_status", "hackathon_status"),
         # Index("idx_hackathon_creator_id", "creator_id"),
     )
-    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    title: Mapped[str] = mapped_column(String(100), nullable=False)  # unique=True
     description: Mapped[str] = mapped_column(String(900), nullable=False)
-    start_time: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    end_time: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[HackathonStatus] = mapped_column(
         Enum(HackathonStatus),
         name="hackathon_status",
@@ -43,7 +45,9 @@ class Hackathon(Base, IdIntPkMixin):
         default=0,
         server_default="0",
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     creator_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
