@@ -20,6 +20,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # op.execute("ALTER TABLE hackathon_group_association DROP COLUMN group_status")
+    op.execute("DROP TYPE IF EXISTS teamstatus CASCADE")
     """Upgrade schema."""
     op.create_table(
         "hackathon_group_association",
