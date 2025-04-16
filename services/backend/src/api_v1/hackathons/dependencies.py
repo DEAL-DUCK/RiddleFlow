@@ -4,7 +4,8 @@ from fastapi import Path, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api_v1.hackathons.crud import get_hackathon
-from core.models import db_helper, Hackathon
+from api_v1.users.dependencies import user_is_creator
+from core.models import db_helper, Hackathon, User
 
 
 async def get_hackathon_by_id(
@@ -17,6 +18,18 @@ async def get_hackathon_by_id(
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Hackathon {hackathon_id} if not found",
+    )
+
+
+async def user_is_creator_of_this_hackathon(
+    user: User = Depends(user_is_creator),
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+):
+    if user.id == hackathon.creator_id or user.is_superuser:
+        return user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"user {user.id} is not creator of this hackathon",
     )
 
 
