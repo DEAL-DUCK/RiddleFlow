@@ -13,7 +13,6 @@ class GroupCreateSchema(BaseModel):
     title: str
     max_members: int
     type: str
-    owner_id: int
 
 
 class GroupUpdateSchema(BaseModel):

@@ -22,8 +22,12 @@ async def get_group(session: AsyncSession, group_id: int) -> Group | None:
 async def create_group(
     session: AsyncSession,
     group_in: GroupCreateSchema,
+    user_id: int,
 ) -> Group:
-    group = Group(**group_in.model_dump())
+    group = Group(
+        **group_in.model_dump(),
+        owner_id=user_id,
+    )
     session.add(group)
     await session.commit()
     return group
