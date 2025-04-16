@@ -1,12 +1,21 @@
 from fastapi import HTTPException, status
 from sqlalchemy import select, Result
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api_v1.hackathons.schemas import (
     HackathonCreateSchema,
+    HackathonUpdatePartial,
 )
-from core.models import Hackathon, User, HackathonUserAssociation
+from core.models import (
+    Hackathon,
+    User,
+    HackathonUserAssociation,
+    HackathonGroupAssociation,
+    Group,
+    GroupUserAssociation,
+)
+from core.models.hackathon_group_association import TeamStatus
 from core.models.hackathon_user_association import (
     ParticipationStatus,
 )
@@ -24,11 +33,23 @@ async def get_hackathon(session: AsyncSession, hackathon_id: int) -> Hackathon |
 
 
 async def create_hackathon(
-    session: AsyncSession,
     hackathon_in: HackathonCreateSchema,
+    session: AsyncSession,
+    user_id: int,
 ) -> Hackathon:
-    hackathon = Hackathon(**hackathon_in.model_dump())
+    hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
     session.add(hackathon)
+    await session.commit()
+    return hackathon
+
+
+async def update_hackathon(
+    hackathon_in: HackathonUpdatePartial,
+    session: AsyncSession,
+    hackathon: Hackathon,
+):
+    for name, value in hackathon_in.model_dump(exclude_unset=True).items():
+        setattr(hackathon, name, value)
     await session.commit()
     return hackathon
 
@@ -38,25 +59,32 @@ async def add_user_in_hackathon(
     hackathon: Hackathon,
     user: User,
 ):
+    if hackathon.status != "PLANNED":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"acceptance of applications to the hackathon {hackathon.id} is completed",
+        )
     existing_association = await session.scalar(
         select(HackathonUserAssociation)
         .where(HackathonUserAssociation.hackathon_id == hackathon.id)
         .where(HackathonUserAssociation.user_id == user.id)
     )
-
     if existing_association:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"User  {user.id} is already participating in this hackathon",
         )
-
-    # Создаем новую ассоциацию
+    if hackathon.current_participants == hackathon.max_participants:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No available spots in the hackathon.",
+        )
     association = HackathonUserAssociation(
         hackathon_id=hackathon.id,
         user_id=user.id,
         user_status=ParticipationStatus.REGISTERED,
     )
-
+    hackathon.current_participants += 1
     session.add(association)
     await session.commit()
     return association
@@ -75,9 +103,10 @@ async def delete_user_in_hackathon(
     )
 
     if association:
+        hackathon.current_participants -= 1
         await session.delete(association)
         await session.commit()
-        return association
+        return {"delete": True}
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"User  {user.id} is not participating in this hackathon",
