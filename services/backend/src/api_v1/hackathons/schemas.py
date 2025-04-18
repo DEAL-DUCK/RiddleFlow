@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator, Field
 import datetime
 
 # import enum
@@ -25,7 +25,7 @@ class HackathonBaseSchema(BaseModel):
 class HackathonCreateSchema(BaseModel):
     title: str
     description: str
-    max_participants: int
+    max_participants: int = Field(..., gt=0)
     start_time: datetime.datetime | None
     end_time: datetime.datetime | None = None
 
@@ -41,7 +41,14 @@ class HackathonCreateSchema(BaseModel):
             raise ValueError("end_time must be in UTC")
         if end_time and not start_time:
             raise ValueError("start_time must be provided if end_time is given")
+        return values
 
+    @model_validator(mode='before')
+    def check_max_participants(cls, values):
+        max_participants = values.get("max_participants")
+        if max_participants is not None and max_participants <= 0:
+            raise ValueError("max_participants must be greater than zero")
+        return values
         # включить на проде
         # if (
         #     start_time
