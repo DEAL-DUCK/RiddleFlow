@@ -23,6 +23,8 @@ class ProfileUpdateSchema(BaseModel):
     job: str | None = None
     phone_number: str | None = None
 
+class PublicProfileRead(ProfileUpdateSchema):
+    pass
 
 class ProfileSchema(ProfileBaseSchema):
     model_config = ConfigDict(from_attributes=True)

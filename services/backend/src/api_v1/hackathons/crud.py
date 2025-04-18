@@ -30,7 +30,11 @@ async def get_hackathons(session: AsyncSession) -> list[Hackathon]:
 
 async def get_hackathon(session: AsyncSession, hackathon_id: int) -> Hackathon | None:
     return await session.get(Hackathon, hackathon_id)
-
+async def get_hackathon_by_tittle(session: AsyncSession, hackathon_title: str) -> Hackathon | None:
+    result = await session.execute(
+        select(Hackathon)
+        .where(Hackathon.title.ilike(hackathon_title)))
+    return result.scalars().first()
 
 async def create_hackathon(
     hackathon_in: HackathonCreateSchema,

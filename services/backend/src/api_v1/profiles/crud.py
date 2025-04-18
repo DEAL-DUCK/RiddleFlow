@@ -1,5 +1,7 @@
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 from api_v1.profiles.schemas import ProfileUpdateSchema, ProfileSchema
 from core.models import Profile
@@ -9,6 +11,23 @@ async def get_profile(session: AsyncSession, user_id: int) -> Profile | None:
     result = await session.execute(select(Profile).where(Profile.user_id == user_id))
     return result.scalar_one_or_none()
 
+
+async def get_profile_by_username(
+        session: AsyncSession,
+        username: str
+) -> Profile:
+    result = await session.execute(
+        select(Profile)
+        .where(Profile.username == username)
+    )
+    profile = result.scalars().first()
+
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Profile with username '{username}' not found"
+        )
+    return profile
 
 async def update_profile(
     session: AsyncSession,

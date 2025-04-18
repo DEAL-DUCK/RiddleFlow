@@ -39,9 +39,16 @@ async def get_hackathons(
     response_model=HackathonSchema,
     dependencies=[Depends(current_active_user)],
 )
+#ПУСТЬ ЭТО БУДЕТ ДЛЯ ВСЕХ ДАЖЕ НЕ ЗАРЕГАННЫХ
 async def get_hackathon(hackathon: HackathonSchema = Depends(get_hackathon_by_id)):
     return hackathon
-
+@router.get('{/hackathon_id}',response_model=HackathonSchema,
+            dependencies=[])
+async def get_hackathon_by_name(
+        tittle : str,
+        session : AsyncSession = Depends(db_helper.session_getter)
+):
+    return await crud.get_hackathon_by_tittle(hackathon_title=tittle,session=session)
 
 @router.post(
     "/",
