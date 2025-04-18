@@ -94,7 +94,8 @@ async def add_user_in_hackathon(
     return association
 
 
-@router.delete("/{hackathon_id}/users")
+@router.delete("/{hackathon_id}/users",
+               dependencies=[Depends(user_is_creator_of_this_hackathon)])
 async def delete_user_in_hackathon(
     hackathon: Hackathon = Depends(get_hackathon_by_id),
     user: User = Depends(user_is_participant),

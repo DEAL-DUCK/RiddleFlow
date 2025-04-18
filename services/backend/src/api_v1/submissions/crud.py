@@ -20,71 +20,61 @@ from .schemas import (
 async def not_submissions():
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-
 async def create_submission(
-    session: AsyncSession, submission_data: SubmissionCreate
+    session: AsyncSession, submission_data: SubmissionCreate, user_id: int
 ) -> Submission:
-    try:
-        task = await session.scalar(
-            select(Task).where(Task.id == submission_data.task_id)
-        )
-        if not task:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена"
-            )
-        user_registered = await session.scalar(
-            select(HackathonUserAssociation).where(
-                HackathonUserAssociation.hackathon_id == task.hackathon_id,
-                HackathonUserAssociation.user_id == submission_data.user_id,
-            )
-        )
-        if not user_registered:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Пользователь не зарегистрирован на этот хакатон",
-            )
-
-        existing_submission = await session.scalar(
-            select(Submission).where(
-                Submission.task_id == submission_data.task_id,
-                Submission.user_id == submission_data.user_id,
-                Submission.description == submission_data.description,
-            )
-        )
-        if existing_submission:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Решение для этой задачи уже существует",
-            )
-
-        submission_dict = submission_data.model_dump()
-        if "status" in submission_dict:
-            del submission_dict["status"]
-
-        new_submission = Submission(
-            **submission_dict,
-            status=SubmissionStatus.SUBMITTED,
-            submitted_at=datetime.utcnow(),
-            graded_at=datetime.utcnow(),
-        )
-
-        session.add(new_submission)
-        await session.commit()
-        await session.refresh(new_submission)
-
-        return new_submission
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        await session.rollback()
+    task = await session.scalar(
+        select(Task).where(Task.id == submission_data.task_id)
+    )
+    if not task:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Ошибка при создании решения: {str(e)}",
+            status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена"
         )
 
+    user_registered = await session.scalar(
+        select(HackathonUserAssociation).where(
+            HackathonUserAssociation.hackathon_id == task.hackathon_id,
+            HackathonUserAssociation.user_id == user_id,
+        )
+    )
+    if not user_registered:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Пользователь не зарегистрирован на этот хакатон",
+        )
 
-async def get_user_submissions(session: AsyncSession, user_id: int):
+    existing_submission = await session.scalar(
+        select(Submission).where(
+            Submission.task_id == submission_data.task_id,
+            Submission.user_id == user_id,
+            Submission.description == submission_data.description,
+        )
+    )
+    if existing_submission:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Решение для этой задачи уже существует",
+        )
+
+    submission_dict = submission_data.model_dump()
+    submission_dict.pop("status", None)
+
+    new_submission = Submission(
+        **submission_dict,
+        user_id=user_id,
+        status=SubmissionStatus.SUBMITTED,
+        submitted_at=datetime.utcnow(),
+        graded_at=datetime.utcnow(),
+    )
+
+    session.add(new_submission)
+    await session.commit()
+    await session.refresh(new_submission)
+
+    return new_submission
+
+
+async def get_my_submissions(session: AsyncSession, user_id: int):
     stmt = select(Submission).where(Submission.user_id == user_id)
     result = await session.execute(stmt)
     submissions = result.scalars().all()

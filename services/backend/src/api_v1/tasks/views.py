@@ -60,7 +60,7 @@ async def get_task_by_id(
 @router.delete("/{task_id}")
 async def api_delete_task(
     task_id: int,
-    user: User = Depends(current_active_superuser),
+    user: User = Depends(user_is_creator_of_this_hackathon),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     result = await crud.delete_task(session=session, task_id=task_id)
@@ -72,7 +72,7 @@ async def update_task_endpoint(
     task_id: int,
     update_data: TaskUpdateSchema,
     session: AsyncSession = Depends(db_helper.session_getter),
-    user: User = Depends(current_active_superuser),
+    user: User = Depends(user_is_creator_of_this_hackathon),
 ):
     return await crud.update_task(
         session=session,
