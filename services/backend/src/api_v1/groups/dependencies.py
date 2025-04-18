@@ -20,7 +20,7 @@ async def get_group_by_id(
         return group
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Hackathon {group_id} if not found",
+        detail=f"Group {group_id} if not found",
     )
 
 

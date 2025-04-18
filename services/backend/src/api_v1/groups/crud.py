@@ -60,13 +60,21 @@ async def add_user_in_group(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"User  {user.id} is already participating in this group",
         )
-
-    # Создаем новую ассоциацию
+    if group.max_members == group.current_members:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"The team has reached its maximum number of participants.",
+        )
+    if user.user_role.value != "PARTICIPANT":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="creators can't be in group",
+        )
     association = GroupUserAssociation(
         group_id=group.id,
         user_id=user.id,
     )
-
+    group.current_members += 1
     session.add(association)
     await session.commit()
     return association
@@ -86,6 +94,7 @@ async def delete_user_in_group(
 
     if association:
         await session.delete(association)
+        group.current_members -= 1
         await session.commit()
         return {"delete": True}
     raise HTTPException(

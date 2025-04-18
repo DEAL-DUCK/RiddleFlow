@@ -25,7 +25,7 @@ async def get_groups(
 
 @router.get(
     "/{group_id}",
-    dependencies=[Depends(current_active_superuser)],
+    dependencies=[Depends(user_is_owner_of_this_group)],
 )
 async def get_group(
     group: GroupSchema = Depends(get_group_by_id),
