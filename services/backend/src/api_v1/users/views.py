@@ -18,7 +18,7 @@ from api_v1.auth.fastapi_users import (
 router = APIRouter(tags=["Пользователь"])
 
 
-@router.get(
+"""@router.get(
     "/",
     response_model=list[UserSchema],
     dependencies=[Depends(current_active_superuser)],
@@ -31,7 +31,7 @@ async def get_users(
 
 router.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),
-)
+)"""
 
 
 # @router.get("/{user_id}", response_model=UserSchema)

@@ -27,13 +27,13 @@ async def create_task(
     )
 
 
-@router.get("/get_all_tasks")
+"""@router.get("/get_all_tasks")
 async def get_all_tasks_(
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(current_active_superuser),
 ):
     result = await crud.get_all_tasks(session=session)
-    return result
+    return result"""
 
 
 @router.get("/get_all_tasks_in_hackathon")

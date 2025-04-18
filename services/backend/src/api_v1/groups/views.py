@@ -13,7 +13,7 @@ from api_v1.users.schemas import UserSchema
 router = APIRouter(tags=["Группы"])
 
 
-@router.get(
+"""@router.get(
     "/",
     dependencies=[Depends(current_active_superuser)],
 )
@@ -21,7 +21,7 @@ async def get_groups(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.get_groups(session=session)
-
+"""
 
 @router.get(
     "/{group_id}",

@@ -5,7 +5,6 @@ from core.models import User
 
 
 async def get_users(session: AsyncSession) -> list[User]:
-    """Получить всех пользователей с сортировкой по ID."""
     stmt = select(User).order_by(User.id)
     result: Result = await session.execute(stmt)
     users = result.scalars().all()
@@ -13,7 +12,6 @@ async def get_users(session: AsyncSession) -> list[User]:
 
 
 async def get_user(session: AsyncSession, user_id: int) -> User | None:
-    """Получить пользователя по ID."""
     return await session.get(User, user_id)
 
 
