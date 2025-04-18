@@ -81,8 +81,8 @@ async def get_my_submissions(session: AsyncSession, user_id: int):
     return submissions if submissions else await not_submissions()
 
 
-async def get_submission_by_id_func(session: AsyncSession, submission_id: int):
-    stmt = select(Submission).where(Submission.id == submission_id)
+async def get_submission_by_id_func(session: AsyncSession, submission_id: int,user_id : int):
+    stmt = select(Submission).where(Submission.id == submission_id).where(Submission.user_id == user_id)
     result = await session.execute(stmt)
     submission = result.scalars().first()
     return submission if submission else await not_submissions()
@@ -91,14 +91,29 @@ async def get_submission_by_id_func(session: AsyncSession, submission_id: int):
 async def get_submission_by_task_id_plus_user_id(
     session: AsyncSession, task_id: int, user_id: int
 ):
-    stmt = (
+    task_exists = await session.scalar(
+        select(Task).where(Task.id == task_id).exists().select()
+    )
+
+    if not task_exists:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with id {task_id} not found"
+        )
+    result = await session.execute(
         select(Submission)
         .where(Submission.task_id == task_id)
         .where(Submission.user_id == user_id)
     )
-    result = await session.execute(stmt)
-    submission = result.scalars().first()
-    return submission if submission else await not_submissions()
+    submissions = result.scalars().all()
+    return submissions if submissions else await not_submissions()
+
+
+
+
+
+
+
 
 
 async def delete_submission_by_id(session: AsyncSession, submission_id: int):

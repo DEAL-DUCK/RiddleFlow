@@ -1,9 +1,8 @@
 from typing import List
-from .dependencies import user_is_participant_or_admin
+from .dependencies import user_is_participant_or_admin,check_submission_ownership
 from fastapi import APIRouter
 from fastapi.params import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from . import crud
 from core.models import Submission, User
 from . import crud
 from .schemas import SubmissionCreate
@@ -36,29 +35,31 @@ async def get_submission_endpoint(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.get_my_submissions(session=session,user_id=current_user.id)
-#########
 
-@router.get("/{submission_id}", response_model=SubmissionRead)
+
+@router.get("/{submission_id}",
+            dependencies=[Depends(check_submission_ownership)])
 async def get_submission_by_id(
     submission_id: int,
-    session: AsyncSession = Depends(db_helper.session_getter),
+    session: AsyncSession = Depends(db_helper.session_getter)
 ):
-    return await crud.get_submission_by_id_func(session, submission_id)
+    submission = await session.get(Submission, submission_id)
+    return submission
 
 
-
-@router.get("/submissions_by_user_id+task_id", response_model=SubmissionRead)
+@router.get("/{task_id}",summary='залупа нерабочая почему-то делает поиск по решениям а не задачам')
 async def get_submissions_by_user_id_and_task_id(
-    user_id: int,
     task_id: int,
+    current_user: User = Depends(user_is_participant_or_admin),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.get_submission_by_task_id_plus_user_id(
-        session=session, task_id=task_id, user_id=user_id
+        session=session, task_id=task_id, user_id=current_user.id
     )
 
 
-@router.delete("/{submission_id}")
+@router.delete("/{submission_id}",
+               dependencies=[Depends(check_submission_ownership)])
 async def delete_submission(
     submission_id: int,
     session: AsyncSession = Depends(db_helper.session_getter),
@@ -67,20 +68,21 @@ async def delete_submission(
 
 
 
-@router.get("/get_all_submissions")
+"""@router.get("/get_all_submissions")
 async def get_all_submissions(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.all_submissions(session=session)
-
-@router.delete("/delete_all_submissions_any_user")
+"""
+"""@router.delete("/delete_all_submissions_any_user",)
 async def delete_all_submissions_user(
     user_id: int, session: AsyncSession = Depends(db_helper.session_getter)
 ):
     return await crud.delete_all_submissions_any_user(session=session, user_id=user_id)
 
-
-@router.patch("/{submission_id}", response_model=SubmissionRead)
+"""
+@router.patch("/{submission_id}", response_model=SubmissionRead,
+              dependencies=[Depends(check_submission_ownership)])
 async def update_submission_endpoint(
     submission_id: int,
     update_data: SubmissionUpdate,
