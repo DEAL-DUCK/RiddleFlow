@@ -48,6 +48,11 @@ async def update_hackathon(
     session: AsyncSession,
     hackathon: Hackathon,
 ):
+    if hackathon.status != "PLANNED":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"update data is prohibited when the hackathon is started.",
+        )
     for name, value in hackathon_in.model_dump(exclude_unset=True).items():
         setattr(hackathon, name, value)
     await session.commit()
@@ -63,6 +68,11 @@ async def add_user_in_hackathon(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"acceptance of applications to the hackathon {hackathon.id} is completed",
+        )
+    if user.user_role.value != "PARTICIPANT":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="creators can't be in hackathon members",
         )
     existing_association = await session.scalar(
         select(HackathonUserAssociation)
