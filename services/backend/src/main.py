@@ -9,8 +9,9 @@ from core.models.base import Base
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # async with db_helper.db_helper.engine.begin() as conn:
+    # async with db_helper.engine.begin() as conn:
     #     await conn.run_sync(Base.metadata.drop_all)
+    #     await conn.run_sync(Base.metadata.create_all)
     yield
     await db_helper.dispose()
 

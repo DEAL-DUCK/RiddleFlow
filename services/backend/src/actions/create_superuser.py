@@ -18,11 +18,11 @@ get_users_db_context = contextlib.asynccontextmanager(get_users_db)
 get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
 default_email = "admin@yandex.ru"
-default_password = "123 "
+default_password = "111"
 default_is_active = True
 default_is_superuser = True
 default_is_verified = True
-default_username = "admin"
+default_username = "admin2"
 default_user_role = "CREATOR"
 
 
