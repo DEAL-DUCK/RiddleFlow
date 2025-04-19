@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import Depends, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,6 +44,7 @@ async def get_hackathons(
 #ПУСТЬ ЭТО БУДЕТ ДЛЯ ВСЕХ ДАЖЕ НЕ ЗАРЕГАННЫХ
 async def get_hackathon(hackathon: HackathonSchema = Depends(get_hackathon_by_id)):
     return hackathon
+#ЗАЛУПА С ПУТЯМИ В ДВУХ ФУНКЦИЯХ НИЖЕ ПОЗЖЕ ПОПРАВЛЮ САМИ ОНИ РАБОТАЮТ
 @router.get('{/hackathon_id}',response_model=HackathonSchema,
             dependencies=[])
 async def get_hackathon_by_name(
@@ -49,7 +52,21 @@ async def get_hackathon_by_name(
         session : AsyncSession = Depends(db_helper.session_getter)
 ):
     return await crud.get_hackathon_by_tittle(hackathon_title=tittle,session=session)
-
+@router.get(
+    '{/my_hack}',response_model=List[HackathonSchema],summary='hackathon when i participant'
+)
+async def get_my_hackathons_when_i_participant(
+        current_user: User = Depends(current_active_user),
+        session: AsyncSession = Depends(db_helper.session_getter)
+):
+    return await crud.get_hackathons_for_user(session=session, user_id=current_user.id)
+@router.get('{/my_created}',response_model=List[HackathonSchema],
+            dependencies=[Depends(user_is_creator)])
+async def get_hack_when_i_creator(
+        current_user: User = Depends(current_active_user),
+        session: AsyncSession = Depends(db_helper.session_getter)
+):
+    return await crud.get_hackathon_for_creator(session=session,user_id=current_user.id)
 @router.post(
     "/",
     response_model=HackathonSchema,

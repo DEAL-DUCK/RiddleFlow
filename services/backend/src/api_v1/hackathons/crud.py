@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import HTTPException, status
 from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload, sessionmaker
@@ -6,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api_v1.hackathons.schemas import (
     HackathonCreateSchema,
     HackathonUpdatePartial,
+    HackathonBaseSchema
 )
 from core.models import (
     Hackathon,
@@ -46,6 +49,36 @@ async def create_hackathon(
     await session.commit()
     return hackathon
 
+
+async def get_hackathons_for_user(
+        session: AsyncSession,
+        user_id : int,
+):
+    stmt = (
+        select(Hackathon)
+        .where(Hackathon.users_details.any(user_id=user_id))
+        .options(
+            selectinload(Hackathon.tasks),
+        )
+    )
+    result = await session.execute(stmt)
+    hackathons = result.scalars().all()
+    if not hackathons:
+        raise HTTPException(status_code=404, detail="No hackathons found for the current user.")
+    return list(hackathons)
+async def get_hackathon_for_creator(
+        session : AsyncSession,
+        user_id : int
+):
+    stmt = (
+        select(Hackathon)
+        .where(Hackathon.creator_id == user_id)
+    )
+    result = await session.execute(stmt)
+    hackathons = result.scalars().all()
+    if not hackathons:
+        raise HTTPException(status_code=404, detail="No hackathons found for the current user.")
+    return list(hackathons)
 
 async def update_hackathon(
     hackathon_in: HackathonUpdatePartial,
@@ -266,7 +299,6 @@ async def delete_group_in_hackathon(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Group {group.id} is not participating in this hackathon",
     )
-
 
 # async def get_user_in_hackathon(
 #     session: AsyncSession,

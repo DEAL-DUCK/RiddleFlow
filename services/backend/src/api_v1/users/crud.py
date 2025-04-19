@@ -1,7 +1,13 @@
+from typing import TYPE_CHECKING
+
+from fastapi import HTTPException
 from sqlalchemy import select, Result
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from core.models import User
+if TYPE_CHECKING:
+    from core.models import User,Hackathon
 
 
 async def get_users(session: AsyncSession) -> list[User]:
