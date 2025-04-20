@@ -42,9 +42,15 @@ class AccessToken(BaseModel):
 
 
 class RedisConfig:
-    REDIS_HOST = "redis"
+    REDIS_HOST = "redis_cache"
     REDIS_PORT = 6379
     REDIS_DB = 0
+
+
+class CeleryConfig:
+    CELERY_MAIN = "tasks"
+    CELERY_BROKER = "redis://redis_celery:6379/0"
+    CELERY_BACKEND = "redis://redis_celery:6379/0"
 
 
 class Settings(BaseSettings):
@@ -57,6 +63,7 @@ class Settings(BaseSettings):
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
     redis: RedisConfig = RedisConfig()
+    celery: CeleryConfig = CeleryConfig()
     db: DbSettings
     access_token: AccessToken
 
