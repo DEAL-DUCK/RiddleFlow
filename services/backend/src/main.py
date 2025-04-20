@@ -1,6 +1,8 @@
+from pathlib import Path
 from fastapi import FastAPI
 import uvicorn
 from contextlib import asynccontextmanager
+from starlette.staticfiles import StaticFiles
 from api_v1 import router as router_v1
 from core.config import settings
 from core.models import db_helper
@@ -18,7 +20,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(router=router_v1, prefix=settings.api.prefix)
-
+static_path = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 # if __name__ == "__main__":
 #     uvicorn.run(

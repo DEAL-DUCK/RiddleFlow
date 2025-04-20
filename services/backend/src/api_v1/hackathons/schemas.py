@@ -1,3 +1,6 @@
+from typing import Optional
+
+from fastapi import UploadFile
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator, Field
 import datetime
 
@@ -10,6 +13,7 @@ import datetime
 #     CANCELED = "canceled"
 
 
+
 class HackathonBaseSchema(BaseModel):
     title: str
     description: str
@@ -20,6 +24,8 @@ class HackathonBaseSchema(BaseModel):
     current_participants: int = 0
     created_at: datetime.datetime
     creator_id: int
+    cover_image: Optional[UploadFile] = None  # Поле для загрузки файла
+
 
 
 class HackathonCreateSchema(BaseModel):
@@ -28,6 +34,7 @@ class HackathonCreateSchema(BaseModel):
     max_participants: int = Field(..., gt=0)
     start_time: datetime.datetime | None
     end_time: datetime.datetime | None = None
+    cover_image: Optional[UploadFile] = None  # Поле для загрузки файла
 
     @model_validator(mode="before")
     def check_times(cls, values):
@@ -49,6 +56,13 @@ class HackathonCreateSchema(BaseModel):
         if max_participants is not None and max_participants <= 0:
             raise ValueError("max_participants must be greater than zero")
         return values
+
+    @model_validator(mode='after')
+    def build_cover_url(self):
+        # Если cover_image None - используем дефолт
+        filename = self.cover_image or "default_cover.jpg"
+        self.cover_url = f"/static/covers/{filename}"
+        return self
         # включить на проде
         # if (
         #     start_time

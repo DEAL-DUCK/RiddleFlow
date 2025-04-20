@@ -1,3 +1,5 @@
+import uuid
+from datetime import datetime, timezone
 from typing import List
 
 from fastapi import HTTPException, status
@@ -22,6 +24,7 @@ from core.models.hackathon_group_association import TeamStatus
 from core.models.hackathon_user_association import (
     ParticipationStatus,
 )
+from core.storage import save_cover
 
 
 async def get_hackathons(session: AsyncSession) -> list[Hackathon]:
@@ -39,16 +42,55 @@ async def get_hackathon_by_tittle(session: AsyncSession, hackathon_title: str) -
         .where(Hackathon.title.ilike(hackathon_title)))
     return result.scalars().first()
 
+
 async def create_hackathon(
-    hackathon_in: HackathonCreateSchema,
-    session: AsyncSession,
-    user_id: int,
+        hackathon_in: HackathonCreateSchema,
+        session: AsyncSession,
+        user_id: int,
 ) -> Hackathon:
-    hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
+    """
+    Создает хакатон с обработкой обложки.
+    Автоматически устанавливает:
+    - Статус 'planned'
+    - Текущую дату как created_at
+    - Дефолтную обложку если не указана
+    """
+    # Основные данные
+    hackathon_data = hackathon_in.model_dump(
+        exclude={"cover_image"},
+        exclude_unset=True
+    )
+
+    # Обработка обложки
+    cover_filename = "default_cover.jpg"  # Значение по умолчанию
+    if hackathon_in.cover_image:
+        # Валидация файла
+        if hackathon_in.cover_image.content_type not in ["image/jpeg", "image/png"]:
+            raise HTTPException(400, detail="Only JPEG/PNG images allowed")
+
+        # Генерация уникального имени
+        file_ext = hackathon_in.cover_image.filename.split('.')[-1]
+        cover_filename = f"{uuid.uuid4()}.{file_ext}"
+
+        # Сохранение файла
+        file_path = f"static/covers/{cover_filename}"
+        with open(file_path, "wb") as buffer:
+            content = await hackathon_in.cover_image.read()
+            buffer.write(content)
+
+    # Создание объекта
+    hackathon = Hackathon(
+        **hackathon_data,
+        creator_id=user_id,
+        cover_image=cover_filename,
+        status="planned",
+        created_at=datetime.now(timezone.utc)
+    )
+
     session.add(hackathon)
     await session.commit()
+    await session.refresh(hackathon)
     return hackathon
-
 
 async def get_hackathons_for_user(
         session: AsyncSession,

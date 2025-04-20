@@ -76,8 +76,11 @@ async def create_hackathon(
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator),
 ):
+    """Создание хакатона (поддерживает загрузку обложки)"""
     return await crud.create_hackathon(
-        session=session, hackathon_in=hackathon_in, user_id=user.id
+        session=session,
+        hackathon_in=hackathon_in,
+        user_id=user.id
     )
 
 

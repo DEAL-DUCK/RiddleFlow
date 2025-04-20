@@ -71,3 +71,8 @@ class Hackathon(Base, IdIntPkMixin):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+    cover_image: Mapped[str] = mapped_column(
+        String(255),
+        nullable=True,
+        default=None
+    )

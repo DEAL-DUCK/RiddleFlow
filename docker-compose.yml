@@ -10,6 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      - ./services/backend:/app
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U user" ]
       interval: 10s
@@ -33,3 +34,4 @@ services:
 
 volumes:
   postgres_data:
+  hackathon_covers:
