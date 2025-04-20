@@ -61,7 +61,7 @@ async def get_my_hackathons_when_i_participant(
 ):
     return await crud.get_hackathons_for_user(session=session, user_id=current_user.id)
 @router.get('{/my_created}',response_model=List[HackathonSchema],
-            dependencies=[Depends(user_is_creator)])
+            dependencies=[Depends(user_is_creator)],summary='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
 async def get_hack_when_i_creator(
         current_user: User = Depends(current_active_user),
         session: AsyncSession = Depends(db_helper.session_getter)

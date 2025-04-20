@@ -9,7 +9,7 @@ from . import crud
 from api_v1.profiles.dependencies import get_profile_by_id
 from api_v1.profiles.schemas import (
     ProfileSchema,
-    ProfileUpdateSchema, PublicProfileRead,
+    ProfileUpdateSchema
 )
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from core.models import db_helper, User
@@ -39,15 +39,11 @@ async def get_profile(
     return profile
 
 @router.get(
-    '/{username}',
-    response_model=PublicProfileRead,
-    dependencies=[]
-)
+    '{/username}',summary="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 async def get_public_profile(
-    username: str,
-    session: AsyncSession = Depends(db_helper.session_getter),
+        profile : ProfileSchema = Depends(get_profile_by_username)
 ):
-    return await get_profile_by_username(session, username)
+    return profile
 
 
 @router.patch("/", response_model=ProfileSchema)
