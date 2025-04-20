@@ -1,5 +1,4 @@
 services:
-
   pg:
     image: postgres
     environment:
@@ -16,6 +15,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build: ./services/backend
     env_file:
@@ -27,9 +39,11 @@ services:
     depends_on:
       pg:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     command: >
       bash -c "uvicorn main:app --reload --host 0.0.0.0 --port 5000 && alembic upgrade head"
 
-
 volumes:
   postgres_data:
+  redis_data:
