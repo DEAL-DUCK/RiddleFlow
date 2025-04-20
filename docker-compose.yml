@@ -15,18 +15,57 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:alpine
+  redis_cache:
+    image: redis:latest
     ports:
-      - "6379:6379"
+      - "6378:6379"
     volumes:
-      - redis_data:/data
+      - redis_cache_data:/data
     restart: always
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  redis_celery:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_celery_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery_worker:
+    build:
+      context: ./services/backend
+    command: ["sh", "-c", "sleep 5 && celery -A tasks.celery_app worker --loglevel=info"]
+    depends_on:
+      pg:
+        condition: service_healthy
+      redis_celery:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://user:password@pg:5432/RiddleFlowDB
+      - REDIS_CELERY_URL=redis://redis_celery:6379/0
+
+  celery_beat:
+    build:
+      context: ./services/backend
+    command: ["sh", "-c", "sleep 5 && celery -A tasks.celery_app beat --loglevel=info"]
+    depends_on:
+      pg:
+        condition: service_healthy
+      redis_celery:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://user:password@pg:5432/RiddleFlowDB
+      - REDIS_CELERY_URL=redis://redis_celery:6379/0
+
 
   backend:
     build: ./services/backend
@@ -39,11 +78,24 @@ services:
     depends_on:
       pg:
         condition: service_healthy
-      redis:
+      redis_cache:
+        condition: service_healthy
+      redis_celery:
         condition: service_healthy
     command: >
       bash -c "uvicorn main:app --reload --host 0.0.0.0 --port 5000 && alembic upgrade head"
 
+
+#  flower:
+#    image: mher/flower:latest
+#    ports:
+#      - "5555:5555"
+#    depends_on:
+#      - redis_celery
+#    command: ["flower", "--broker=redis://redis_celery:6378/0"]
+
+
 volumes:
   postgres_data:
-  redis_data:
+  redis_cache_data:
+  redis_celery_data:
