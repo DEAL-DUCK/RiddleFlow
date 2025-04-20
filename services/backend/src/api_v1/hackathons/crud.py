@@ -2,11 +2,13 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload, sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
-
+import json
 from api_v1.hackathons.schemas import (
     HackathonCreateSchema,
     HackathonUpdatePartial,
+    HackathonSchema,
 )
+from core.config import redis_client
 from core.models import (
     Hackathon,
     User,
@@ -21,11 +23,53 @@ from core.models.hackathon_user_association import (
 )
 
 
-async def get_hackathons(session: AsyncSession) -> list[Hackathon]:
+def serialize_hackathons(hackathons):
+    return [
+        {
+            "id": hackathon.id,
+            "title": hackathon.title,
+            "description": hackathon.description,
+            "start_time": (
+                hackathon.start_time.isoformat() if hackathon.start_time else None
+            ),
+            "end_time": hackathon.end_time.isoformat() if hackathon.end_time else None,
+            "status": hackathon.status,
+            "max_participants": hackathon.max_participants,
+            "current_participants": hackathon.current_participants,
+            "created_at": (hackathon.created_at.isoformat()),
+            "creator_id": hackathon.creator_id,
+        }
+        for hackathon in hackathons
+    ]
+
+
+# Ваша функция get_hackathons
+async def get_hackathons(session: AsyncSession) -> list[HackathonSchema]:
+    cached_hackathons = redis_client.get("hackathons")
+
+    if cached_hackathons:
+        return json.loads(cached_hackathons)
+
     stmt = select(Hackathon).order_by(Hackathon.id)
     result: Result = await session.execute(stmt)
     hackathons = result.scalars().all()
-    return list(hackathons)
+
+    hackathon_schemas = [
+        HackathonSchema.model_validate(hackathon) for hackathon in hackathons
+    ]
+
+    redis_client.set(
+        "hackathons", json.dumps(serialize_hackathons(hackathon_schemas)), ex=300
+    )
+
+    return hackathon_schemas
+
+
+# async def get_hackathons(session: AsyncSession) -> list[Hackathon]:
+#     stmt = select(Hackathon).order_by(Hackathon.id)
+#     result: Result = await session.execute(stmt)
+#     hackathons = result.scalars().all()
+#     return list(hackathons)
 
 
 async def get_hackathon(session: AsyncSession, hackathon_id: int) -> Hackathon | None:

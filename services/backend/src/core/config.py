@@ -1,6 +1,7 @@
 from pathlib import Path
 from pydantic import BaseModel, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import redis
 
 BASE_DIR = Path(__file__).parent.parent
 
@@ -40,6 +41,12 @@ class AccessToken(BaseModel):
     verification_token_secret: str
 
 
+class RedisConfig:
+    REDIS_HOST = "redis"
+    REDIS_PORT = 6379
+    REDIS_DB = 0
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env.template", ".env.local"),
@@ -49,8 +56,16 @@ class Settings(BaseSettings):
     )
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
+    redis: RedisConfig = RedisConfig()
     db: DbSettings
     access_token: AccessToken
 
 
 settings = Settings()
+
+redis_client = redis.StrictRedis(
+    host=settings.redis.REDIS_HOST,
+    port=settings.redis.REDIS_PORT,
+    db=settings.redis.REDIS_DB,
+    decode_responses=True,
+)
