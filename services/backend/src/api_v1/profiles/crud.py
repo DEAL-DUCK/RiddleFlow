@@ -1,11 +1,12 @@
 from fastapi import HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from starlette import status
 
 from api_v1.auth.fastapi_users import current_active_user
 from api_v1.profiles.schemas import ProfileUpdateSchema, ProfileSchema
-from core.models import Profile, db_helper
+from core.models import Profile, db_helper, User
 
 
 async def get_profile(session: AsyncSession, user_id: int) -> Profile | None:
@@ -16,21 +17,35 @@ async def get_profile(session: AsyncSession, user_id: int) -> Profile | None:
 async def get_profile_by_username(
         username: str,
         session: AsyncSession = Depends(db_helper.session_getter),
-        user = Depends(current_active_user)
+        current_user: User = Depends(current_active_user)
 ) -> ProfileSchema:
     result = await session.execute(
-        select(Profile)
-        .where(Profile.first_name == username)
+        select(User)
+        .where(User.username == username)
+        .options(selectinload(User.profile))
     )
-    profile = result.scalars().first()
-
-    if not profile:
+    user = result.scalars().first()
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Profile with username '{username}' not found")
+            detail=f"User with username '{username}' not found"
+        )
+    if not user.profile:
+        user.profile = Profile(
+            user_id=user.id,
+            first_name=None,
+            last_name=None,
+            birth_date=None
+        )
+        session.add(user.profile)
+        await session.commit()
+        await session.refresh(user)
 
+    profile_data = user.profile.__dict__
+    profile_data.pop("_sa_instance_state", None)
+    profile_data["username"] = user.username
 
-    return ProfileSchema.model_validate(profile)
+    return ProfileSchema(**profile_data)
 
 
 async def update_profile(

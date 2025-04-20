@@ -37,7 +37,7 @@ async def get_submission_endpoint(
     return await crud.get_my_submissions(session=session,user_id=current_user.id)
 
 
-@router.get("/{submission_id}",
+@router.get("/{submissions_id}",
             dependencies=[Depends(check_submission_ownership)])
 async def get_submission_by_id(
     submission_id: int,
@@ -47,7 +47,7 @@ async def get_submission_by_id(
     return submission
 
 
-@router.get("/{task_id}",summary='залупа нерабочая почему-то делает поиск по решениям а не задачам')
+@router.get("{/task_id}",summary='залупа нерабочая почему-то делает поиск по решениям а не задачам')
 async def get_submissions_by_user_id_and_task_id(
     task_id: int,
     current_user: User = Depends(user_is_participant_or_admin),
@@ -58,7 +58,7 @@ async def get_submissions_by_user_id_and_task_id(
     )
 
 
-@router.delete("/{submission_id}",
+@router.delete("/{submissions_id}",
                dependencies=[Depends(check_submission_ownership)])
 async def delete_submission(
     submission_id: int,
