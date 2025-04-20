@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import HTTPException, status
 from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload, sessionmaker
@@ -59,17 +61,10 @@ async def get_hackathons(session: AsyncSession) -> list[HackathonSchema]:
     ]
 
     redis_client.set(
-        "hackathons", json.dumps(serialize_hackathons(hackathon_schemas)), ex=300
+        "hackathons", json.dumps(serialize_hackathons(hackathon_schemas)), ex=30
     )
 
     return hackathon_schemas
-
-
-# async def get_hackathons(session: AsyncSession) -> list[Hackathon]:
-#     stmt = select(Hackathon).order_by(Hackathon.id)
-#     result: Result = await session.execute(stmt)
-#     hackathons = result.scalars().all()
-#     return list(hackathons)
 
 
 async def get_hackathon(session: AsyncSession, hackathon_id: int) -> Hackathon | None:
@@ -92,11 +87,11 @@ async def update_hackathon(
     session: AsyncSession,
     hackathon: Hackathon,
 ):
-    if hackathon.status != "PLANNED":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"update data is prohibited when the hackathon is started.",
-        )
+    # if hackathon.status != "PLANNED":
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail=f"update data is prohibited when the hackathon is started.",
+    #     )
     for name, value in hackathon_in.model_dump(exclude_unset=True).items():
         setattr(hackathon, name, value)
     await session.commit()
