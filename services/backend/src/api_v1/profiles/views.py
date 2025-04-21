@@ -1,3 +1,5 @@
+from gc import get_referrers
+
 from fastapi import Depends, APIRouter
 from fastapi_users.schemas import model_dump
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,10 +9,12 @@ from . import crud
 from api_v1.profiles.dependencies import get_profile_by_id
 from api_v1.profiles.schemas import (
     ProfileSchema,
-    ProfileUpdateSchema,
+    ProfileUpdateSchema
 )
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from core.models import db_helper, User
+from .crud import get_profile_by_username
+from .dependencies import get_profile_by_first_name
 
 router = APIRouter(tags=["Профиль"])
 
@@ -31,6 +35,13 @@ async def get_profile(
 )
 async def get_profile(
     profile: ProfileSchema = Depends(get_profile_by_id),
+):
+    return profile
+
+@router.get(
+    '{/username}',summary="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+async def get_public_profile(
+        profile : ProfileSchema = Depends(get_profile_by_username)
 ):
     return profile
 

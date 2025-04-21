@@ -1,11 +1,16 @@
+from typing import TYPE_CHECKING
+
+from fastapi import HTTPException
 from sqlalchemy import select, Result
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from core.models import User
+if TYPE_CHECKING:
+    from core.models import User,Hackathon
 
 
 async def get_users(session: AsyncSession) -> list[User]:
-    """Получить всех пользователей с сортировкой по ID."""
     stmt = select(User).order_by(User.id)
     result: Result = await session.execute(stmt)
     users = result.scalars().all()
@@ -13,7 +18,6 @@ async def get_users(session: AsyncSession) -> list[User]:
 
 
 async def get_user(session: AsyncSession, user_id: int) -> User | None:
-    """Получить пользователя по ID."""
     return await session.get(User, user_id)
 
 

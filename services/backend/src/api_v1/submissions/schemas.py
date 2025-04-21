@@ -20,7 +20,7 @@ class SubmissionBase(BaseModel):
 
 class SubmissionCreate(SubmissionBase):
     task_id: int
-    user_id: int
+
 
 
 class SubmissionRead(SubmissionBase):

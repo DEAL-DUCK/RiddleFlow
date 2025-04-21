@@ -1,6 +1,7 @@
+from typing import List
 from fastapi import Depends, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from .dependencies import user_is_creator
 from . import crud
 from api_v1.users.schemas import (
     UserSchema,
@@ -13,7 +14,7 @@ from api_v1.auth.fastapi_users import (
     current_active_superuser,
     fastapi_users,
 )
-
+from ..hackathons.schemas import HackathonSchema
 
 router = APIRouter(tags=["Пользователь"])
 
@@ -32,7 +33,6 @@ async def get_users(
 router.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),
 )
-
 
 # @router.get("/{user_id}", response_model=UserSchema)
 # async def get_user(user: UserSchema = Depends(get_user_by_id)):
