@@ -43,7 +43,7 @@ async def check_hackathon_times_async():
         result = await session.execute(stmt)
         hackathons = result.scalars().all()
         for hackathon in hackathons:
-            now = datetime.datetime.now()  # TODO: ПОМЕНЯТЬ НА UTC!!!!
+            now = datetime.datetime.now(datetime.UTC)
             logging.info(f"{hackathon.status}")
             if str(hackathon.status) == str(HackathonStatus.PLANNED) and (
                 hackathon.start_time <= now < hackathon.end_time
