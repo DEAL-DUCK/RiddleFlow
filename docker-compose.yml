@@ -86,13 +86,15 @@ services:
       bash -c "uvicorn main:app --reload --host 0.0.0.0 --port 5000 && alembic upgrade head"
 
 
-#  flower:
-#    image: mher/flower:latest
-#    ports:
-#      - "5555:5555"
-#    depends_on:
-#      - redis_celery
-#    command: ["flower", "--broker=redis://redis_celery:6378/0"]
+  flower:
+    build:
+      context: ./services/backend
+    command: ["celery", "-A", "tasks.celery_app", "flower", "--broker=redis://redis_celery:6379/0"]
+    ports:
+      - "5555:5555"
+    depends_on:
+      redis_celery:
+        condition: service_healthy
 
 
 volumes:
