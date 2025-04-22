@@ -41,32 +41,48 @@ async def get_hackathons(
     response_model=HackathonSchema,
     dependencies=[Depends(current_active_user)],
 )
-#ПУСТЬ ЭТО БУДЕТ ДЛЯ ВСЕХ ДАЖЕ НЕ ЗАРЕГАННЫХ
-async def get_hackathon(hackathon: HackathonSchema = Depends(get_hackathon_by_id)):
+# ПУСТЬ ЭТО БУДЕТ ДЛЯ ВСЕХ ДАЖЕ НЕ ЗАРЕГАННЫХ
+async def get_hackathon(
+    hackathon: HackathonSchema = Depends(get_hackathon_by_id),
+):  # УБРАЛ ПЕРЕВОД В СХЕМУ HackathonSchema для celery
     return hackathon
-#ЗАЛУПА С ПУТЯМИ В ДВУХ ФУНКЦИЯХ НИЖЕ ПОЗЖЕ ПОПРАВЛЮ САМИ ОНИ РАБОТАЮТ
-@router.get('{/hackathon_id}',response_model=HackathonSchema,
-            dependencies=[])
+
+
+# ЗАЛУПА С ПУТЯМИ В ДВУХ ФУНКЦИЯХ НИЖЕ ПОЗЖЕ ПОПРАВЛЮ САМИ ОНИ РАБОТАЮТ
+@router.get("{/hackathon_id}", response_model=HackathonSchema, dependencies=[])
 async def get_hackathon_by_name(
-        tittle : str,
-        session : AsyncSession = Depends(db_helper.session_getter)
+    tittle: str, session: AsyncSession = Depends(db_helper.session_getter)
 ):
-    return await crud.get_hackathon_by_tittle(hackathon_title=tittle,session=session)
+    return await crud.get_hackathon_by_tittle(hackathon_title=tittle, session=session)
+
+
 @router.get(
-    '{/my_hack}',response_model=List[HackathonSchema],summary='hackathon when i participant'
+    "{/my_hack}",
+    response_model=List[HackathonSchema],
+    summary="hackathon when i participant",
 )
 async def get_my_hackathons_when_i_participant(
-        current_user: User = Depends(current_active_user),
-        session: AsyncSession = Depends(db_helper.session_getter)
+    current_user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.get_hackathons_for_user(session=session, user_id=current_user.id)
-@router.get('{/my_created}',response_model=List[HackathonSchema],
-            dependencies=[Depends(user_is_creator)],summary='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+
+
+@router.get(
+    "{/my_created}",
+    response_model=List[HackathonSchema],
+    dependencies=[Depends(user_is_creator)],
+    summary="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+)
 async def get_hack_when_i_creator(
-        current_user: User = Depends(current_active_user),
-        session: AsyncSession = Depends(db_helper.session_getter)
+    current_user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.get_hackathon_for_creator(session=session,user_id=current_user.id)
+    return await crud.get_hackathon_for_creator(
+        session=session, user_id=current_user.id
+    )
+
+
 @router.post(
     "/",
     response_model=HackathonSchema,
@@ -118,8 +134,9 @@ async def add_user_in_hackathon(
     return association
 
 
-@router.delete("/{hackathon_id}/users",
-               dependencies=[Depends(user_is_creator_of_this_hackathon)])
+@router.delete(
+    "/{hackathon_id}/users", dependencies=[Depends(user_is_creator_of_this_hackathon)]
+)
 async def delete_user_in_hackathon(
     hackathon: Hackathon = Depends(get_hackathon_by_id),
     user: User = Depends(user_is_participant),

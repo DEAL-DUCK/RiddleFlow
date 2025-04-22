@@ -19,13 +19,18 @@ class HackathonBaseSchema(BaseModel):
     max_participants: int
     current_participants: int = 0
     created_at: datetime.datetime
+    updated_at: datetime.datetime
+    allow_teams: bool
+    logo_url: str
     creator_id: int
 
 
 class HackathonCreateSchema(BaseModel):
     title: str
     description: str
+    allow_teams: bool
     max_participants: int = Field(..., gt=0)
+    logo_url: str | None = None
     start_time: datetime.datetime | None
     end_time: datetime.datetime | None = None
 
@@ -43,7 +48,7 @@ class HackathonCreateSchema(BaseModel):
             raise ValueError("start_time must be provided if end_time is given")
         return values
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     def check_max_participants(cls, values):
         max_participants = values.get("max_participants")
         if max_participants is not None and max_participants <= 0:
@@ -65,6 +70,8 @@ class HackathonUpdatePartial(HackathonCreateSchema):
     max_participants: int | None = None
     start_time: datetime.datetime | None = None
     end_time: datetime.datetime | None = None
+    allow_teams: bool | None = None
+    logo_url: str | None = None
     status: str = None
 
 
