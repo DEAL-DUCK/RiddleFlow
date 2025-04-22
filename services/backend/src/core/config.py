@@ -3,10 +3,6 @@ from pydantic import BaseModel, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import redis
 
-BASE_DIR = Path(__file__).parent.parent
-
-DB_PATH = BASE_DIR / "db.sqlite3"
-
 
 class ApiPrefix(BaseModel):
     prefix: str = "/api"

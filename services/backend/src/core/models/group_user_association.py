@@ -16,6 +16,13 @@ class ParticipationStatus(enum.Enum):
     REGISTERED = "REGISTERED"
     COMPLETED = "COMPLETED"
     DISQUALIFIED = "DISQUALIFIED"
+    REFUSED = "REFUSED"
+
+
+# class UserGroupStatus(enum.Enum):
+#     REGISTERED = "REGISTERED"
+#     COMPLETED = "COMPLETED"
+#     DISQUALIFIED = "DISQUALIFIED"
 
 
 class GroupUserAssociation(Base, IdIntPkMixin):
@@ -32,6 +39,11 @@ class GroupUserAssociation(Base, IdIntPkMixin):
         ForeignKey("users.id"),
         nullable=False,
     )
+    # user_status: Mapped[UserGroupStatus] = mapped_column(
+    #     Enum(UserGroupStatus),
+    #     default=UserGroupStatus.REGISTERED,
+    #     server_default="REGISTERED",
+    # )
 
     user: Mapped["User"] = relationship(
         back_populates="groups_details",

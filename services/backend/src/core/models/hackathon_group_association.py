@@ -18,6 +18,7 @@ class TeamStatus(enum.Enum):
     REGISTERED = "REGISTERED"
     COMPLETED = "COMPLETED"
     DISQUALIFIED = "DISQUALIFIED"
+    REFUSED = "REFUSED"
 
 
 class HackathonGroupAssociation(Base, IdIntPkMixin):

@@ -1,6 +1,7 @@
 import enum
 from typing import TYPE_CHECKING
-from .hackathon_user_association import HackathonUserAssociation
+
+# from .hackathon_user_association import HackathonUserAssociation
 from .base import Base
 from fastapi_users_db_sqlalchemy import (
     SQLAlchemyBaseUserTable,

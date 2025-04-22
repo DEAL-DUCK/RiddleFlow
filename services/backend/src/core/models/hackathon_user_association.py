@@ -2,7 +2,7 @@ import enum
 from typing import TYPE_CHECKING
 from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, UniqueConstraint, Enum, DateTime, Index
+from sqlalchemy import ForeignKey, UniqueConstraint, Enum, DateTime, Index, Integer
 from sqlalchemy.sql import func
 import datetime
 from .mixins.int_pk_id import IdIntPkMixin
@@ -16,6 +16,7 @@ class ParticipationStatus(enum.Enum):
     REGISTERED = "REGISTERED"
     COMPLETED = "COMPLETED"
     DISQUALIFIED = "DISQUALIFIED"
+    REFUSED = "REFUSED"
 
 
 class HackathonUserAssociation(Base, IdIntPkMixin):
@@ -40,6 +41,8 @@ class HackathonUserAssociation(Base, IdIntPkMixin):
     registration_date: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()
     )
+    tasks_completed: Mapped[int] = mapped_column(Integer, default=0)
+    points_earned: Mapped[int] = mapped_column(Integer, default=0)
     hackathon: Mapped["Hackathon"] = relationship(
         back_populates="users_details",
         cascade="save-update, merge",

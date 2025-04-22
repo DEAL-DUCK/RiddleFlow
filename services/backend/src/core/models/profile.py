@@ -13,7 +13,7 @@ class Profile(Base, IdIntPkMixin):
     first_name: Mapped[str] = mapped_column(nullable=True)
     last_name: Mapped[str] = mapped_column(nullable=True)
     birth_date: Mapped[date] = mapped_column(Date, nullable=True)
-
+    logo_url: Mapped[str] = mapped_column(String(255), nullable=True)
     bio: Mapped[str] = mapped_column(String(1000), nullable=True)
     country: Mapped[str] = mapped_column(String(30), nullable=True)
     city: Mapped[str] = mapped_column(String(30), nullable=True)
