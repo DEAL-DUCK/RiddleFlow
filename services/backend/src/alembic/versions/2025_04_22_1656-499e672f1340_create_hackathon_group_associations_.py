@@ -1,8 +1,8 @@
 """create hackathon_group_associations table
 
-Revision ID: 1268f699210b
-Revises: 027af0cddaa7
-Create Date: 2025-04-15 10:28:07.566484
+Revision ID: 499e672f1340
+Revises: af14f27d5885
+Create Date: 2025-04-22 16:56:19.009221
 
 """
 
@@ -12,16 +12,13 @@ from alembic import op
 import sqlalchemy as sa
 
 
-# revision identifiers, used by Alembic.
-revision: str = "1268f699210b"
-down_revision: Union[str, None] = "027af0cddaa7"
+revision: str = "499e672f1340"
+down_revision: Union[str, None] = "af14f27d5885"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # op.execute("ALTER TABLE hackathon_group_association DROP COLUMN group_status")
-    op.execute("DROP TYPE IF EXISTS teamstatus CASCADE")
     """Upgrade schema."""
     op.create_table(
         "hackathon_group_association",
@@ -29,7 +26,13 @@ def upgrade() -> None:
         sa.Column("group_id", sa.Integer(), nullable=False),
         sa.Column(
             "group_status",
-            sa.Enum("REGISTERED", "COMPLETED", "DISQUALIFIED", name="teamstatus"),
+            sa.Enum(
+                "REGISTERED",
+                "COMPLETED",
+                "DISQUALIFIED",
+                "REFUSED",
+                name="teamstatus",
+            ),
             server_default="REGISTERED",
             nullable=False,
         ),

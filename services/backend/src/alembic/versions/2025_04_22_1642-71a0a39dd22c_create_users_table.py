@@ -1,8 +1,8 @@
 """create users table
 
-Revision ID: 7c5404270e26
+Revision ID: 71a0a39dd22c
 Revises:
-Create Date: 2025-04-07 20:23:43.237242
+Create Date: 2025-04-22 16:42:16.822730
 
 """
 
@@ -12,14 +12,13 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "7c5404270e26"
+revision: str = "71a0a39dd22c"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("DROP TYPE IF EXISTS userrole CASCADE")
     """Upgrade schema."""
     op.create_table(
         "users",

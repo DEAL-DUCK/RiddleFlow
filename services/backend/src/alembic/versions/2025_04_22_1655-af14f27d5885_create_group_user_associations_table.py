@@ -1,8 +1,8 @@
 """create group_user_associations table
 
-Revision ID: 027af0cddaa7
-Revises: f41ea6acec8d
-Create Date: 2025-04-15 10:25:19.804455
+Revision ID: af14f27d5885
+Revises: 84bdb346d0d4
+Create Date: 2025-04-22 16:55:29.585167
 
 """
 
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "027af0cddaa7"
-down_revision: Union[str, None] = "f41ea6acec8d"
+revision: str = "af14f27d5885"
+down_revision: Union[str, None] = "84bdb346d0d4"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
