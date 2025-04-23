@@ -1,17 +1,16 @@
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from api_v1.users.dependencies import get_user_by_id
-from .dependencies import get_group_by_id, user_is_owner_of_this_group
+from .dependencies import get_group_by_id, user_is_owner_of_this_group, upload_file
 from . import crud
+
 from core.models import db_helper, Group, User
 from .schemas import GroupCreateSchema, GroupUpdateSchema, GroupSchema
 from api_v1.auth.fastapi_users import current_active_superuser, current_active_user
 from api_v1.users.dependencies import user_is_participant
-from api_v1.users.schemas import UserSchema
+
 
 router = APIRouter(tags=["Группы"])
-
 
 """@router.get(
     "/",
@@ -23,6 +22,7 @@ async def get_groups(
     return await crud.get_groups(session=session)
 """
 
+
 @router.get(
     "/{group_id}",
     dependencies=[Depends(user_is_owner_of_this_group)],
@@ -33,13 +33,21 @@ async def get_group(
     return group
 
 
+# # TODO: ПЕРЕПИШИ ДЛЯ ХАКАТОНОВ, создание+обновка. УДАЛЯЙ СОХРАНЁННЫЕ ФАЙЛЫ. Ссылку добавь в бд.
+# @router.post("/upload_test")
+
+
 @router.post("/")
 async def create_group(
     group_in: GroupCreateSchema,
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_participant),
 ):
-    return await crud.create_group(group_in=group_in, session=session, user_id=user.id)
+    return await crud.create_group(
+        group_in=group_in,
+        session=session,
+        user_id=user.id,
+    )
 
 
 @router.patch(

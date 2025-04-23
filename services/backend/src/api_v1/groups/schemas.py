@@ -26,7 +26,7 @@ class GroupCreateSchema(BaseModel):
     max_members: int
     type: str
     description: str | None = None
-    logo_url: str | None = None
+    # logo_url: str | None = None
     social_media_links: str | None = None
 
 
@@ -34,7 +34,7 @@ class GroupUpdateSchema(BaseModel):
     title: str | None = None
     max_members: int | None = None
     description: str | None = None
-    logo_url: str | None = None
+    # logo_url: str | None = None
     social_media_links: str | None = None
 
 

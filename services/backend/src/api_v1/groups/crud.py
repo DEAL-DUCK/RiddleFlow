@@ -1,9 +1,9 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy import select, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-
 from api_v1.groups.schemas import GroupCreateSchema, GroupUpdateSchema, GroupSchema
+from core.config import settings
 from core.models import Group, User, GroupUserAssociation
 from core.models.group_user_association import ParticipationStatus
 
@@ -26,6 +26,7 @@ async def create_group(
 ) -> Group:
     group = Group(
         **group_in.model_dump(),
+        logo_url=f"{settings.s3.domain_url}/default_logo.jpg",
         owner_id=user_id,
     )
     session.add(group)
