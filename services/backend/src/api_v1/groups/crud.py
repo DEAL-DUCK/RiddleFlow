@@ -45,6 +45,16 @@ async def update_group(
     return group
 
 
+async def update_group_logo(
+    session: AsyncSession,
+    group: GroupSchema,
+    logo_url: str,
+) -> GroupSchema:
+    group.logo_url = logo_url
+    await session.commit()
+    return group
+
+
 async def add_user_in_group(
     session: AsyncSession,
     group: Group,

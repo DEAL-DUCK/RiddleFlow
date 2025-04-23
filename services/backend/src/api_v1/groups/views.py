@@ -66,6 +66,22 @@ async def update_group(
     )
 
 
+@router.patch(
+    "/logo",
+    dependencies=[Depends(user_is_owner_of_this_group)],
+)
+async def update_group_logo(
+    logo_url: str = Depends(upload_file),
+    group: GroupSchema = Depends(get_group_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.update_group_logo(
+        logo_url=logo_url,
+        group=group,
+        session=session,
+    )
+
+
 @router.get(
     "/{group_id}/users",
     dependencies=[Depends(user_is_owner_of_this_group)],
