@@ -1,9 +1,10 @@
 from typing import Annotated
 
-from fastapi import Path, Depends, HTTPException, status
+from fastapi import Path, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-
+import os
+from core.config import s3_client, settings
 from api_v1.auth.fastapi_users import current_active_user
 from api_v1.groups.crud import get_group
 from api_v1.hackathons.dependencies import get_hackathon_by_id
@@ -47,3 +48,22 @@ async def user_is_owner_of_this_group_or_hackathon_creator(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=f"user {user.id} is not owner of group",
     )
+
+
+async def upload_file(
+    upload_file: UploadFile = File(...),
+):
+    filename = upload_file.filename
+    file_path = f"src/tmp/{filename}"
+    with open(file_path, "wb") as f:
+        f.write(await upload_file.read())
+    await s3_client.upload_file(file_path)
+    os.remove(file_path)
+    return f"{settings.s3.domain_url}/{filename}"
+
+
+# TODO: сделать функцию удаления файла с s3 хранилища по его url
+# async def delete_file(
+#     file_url: str,
+# ):
+#     await
