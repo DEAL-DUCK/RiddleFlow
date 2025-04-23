@@ -30,7 +30,7 @@ class HackathonCreateSchema(BaseModel):
     description: str
     allow_teams: bool
     max_participants: int = Field(..., gt=0)
-    logo_url: str | None = None
+    # logo_url: str | None = None
     start_time: datetime.datetime | None
     end_time: datetime.datetime | None = None
 
@@ -71,7 +71,7 @@ class HackathonUpdatePartial(HackathonCreateSchema):
     start_time: datetime.datetime | None = None
     end_time: datetime.datetime | None = None
     allow_teams: bool | None = None
-    logo_url: str | None = None
+    # logo_url: str | None = None
     status: str = None
 
 

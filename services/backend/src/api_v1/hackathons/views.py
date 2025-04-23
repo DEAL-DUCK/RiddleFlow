@@ -24,6 +24,7 @@ from ..groups.dependencies import (
     get_group_by_id,
     user_is_owner_of_this_group,
     user_is_owner_of_this_group_or_hackathon_creator,
+    upload_file,
 )
 
 router = APIRouter(tags=["Хакатоны"])
@@ -107,6 +108,20 @@ async def update_hackathon(
     return await crud.update_hackathon(
         session=session,
         hackathon_in=hackathon_in,
+        hackathon=hackathon,
+    )
+
+
+@router.patch("/logo")
+async def update_hackathon_logo(
+    session: AsyncSession = Depends(db_helper.session_getter),
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    user: User = Depends(user_is_creator_of_this_hackathon),
+    logo_url: str = Depends(upload_file),
+):
+    return await crud.update_hackathon_logo(
+        session=session,
+        logo_url=logo_url,
         hackathon=hackathon,
     )
 

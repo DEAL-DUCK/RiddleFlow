@@ -13,7 +13,7 @@ from api_v1.hackathons.schemas import (
     HackathonSchema,
     HackathonBaseSchema,
 )
-from core.config import redis_client
+from core.config import redis_client, settings
 from core.models import (
     Hackathon,
     User,
@@ -89,7 +89,11 @@ async def create_hackathon(
     session: AsyncSession,
     user_id: int,
 ) -> Hackathon:
-    hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
+    hackathon = Hackathon(
+        **hackathon_in.model_dump(),
+        logo_url=f"{settings.s3.domain_url}/default_logo.jpg",
+        creator_id=user_id,
+    )
     session.add(hackathon)
     await session.commit()
     return hackathon
@@ -138,6 +142,21 @@ async def update_hackathon(
     #     )
     for name, value in hackathon_in.model_dump(exclude_unset=True).items():
         setattr(hackathon, name, value)
+    await session.commit()
+    return hackathon
+
+
+async def update_hackathon_logo(
+    logo_url: str,
+    session: AsyncSession,
+    hackathon: Hackathon,
+):
+    # if hackathon.status != "PLANNED":
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail=f"update data is prohibited when the hackathon is started.",
+    #     )
+    hackathon.logo_url = logo_url
     await session.commit()
     return hackathon
 
