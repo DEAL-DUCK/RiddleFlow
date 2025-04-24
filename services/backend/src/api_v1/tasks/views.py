@@ -79,3 +79,4 @@ async def update_task_endpoint(
         task_id=task_id,
         update_data=update_data.model_dump(exclude_unset=True),
     )
+

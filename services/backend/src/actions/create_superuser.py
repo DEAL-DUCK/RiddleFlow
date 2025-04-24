@@ -17,12 +17,12 @@ from api_v1.dependencies.authentication.user_manager import get_user_manager
 get_users_db_context = contextlib.asynccontextmanager(get_users_db)
 get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
-default_email = "admin3@yandex.ru"
-default_password = "111"
+default_email = "admin10@yandex.ru"
+default_password = "10"
 default_is_active = True
 default_is_superuser = True
 default_is_verified = True
-default_username = "admin3"
+default_username = "admin10"
 default_user_role = "CREATOR"
 
 

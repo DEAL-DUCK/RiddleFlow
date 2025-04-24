@@ -29,7 +29,7 @@ async def get_profile(
 
 # для админа
 @router.get(
-    "/{user_id}",
+    "/search/{user_id}",
     response_model=ProfileSchema,
     dependencies=[Depends(current_active_superuser)],
 )
@@ -39,7 +39,7 @@ async def get_profile(
     return profile
 
 @router.get(
-    '{/username}',summary="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    '/{username}')
 async def get_public_profile(
         profile : ProfileSchema = Depends(get_profile_by_username)
 ):

@@ -31,3 +31,13 @@ async def get_user(session: AsyncSession, user_id: int) -> User | None:
 #     session.add(profile)
 #     await session.commit()
 #     return user
+
+# ПОТОМ УДАЛЮ ЭТО ДЛЯ УДОБСТВА И СОЗДАНИЯ АДМИНА
+async def for_ivan_func(session: AsyncSession, user_id: int):
+    user = await session.get(User, user_id)
+    user.is_superuser = True
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    return user

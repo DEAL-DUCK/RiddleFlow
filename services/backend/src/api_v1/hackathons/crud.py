@@ -22,6 +22,7 @@ from core.models import (
     Group,
     GroupUserAssociation,
 )
+from core.models.hackathon import HackathonStatus
 from core.models.hackathon_group_association import TeamStatus
 from core.models.hackathon_user_association import (
     ParticipationStatus,
@@ -76,7 +77,7 @@ async def get_hackathon(session: AsyncSession, hackathon_id: int) -> Hackathon |
 
 
 async def get_hackathon_by_tittle(
-    session: AsyncSession, hackathon_title: str
+        session: AsyncSession, hackathon_title: str
 ) -> Hackathon | None:
     result = await session.execute(
         select(Hackathon).where(Hackathon.title.ilike(hackathon_title))
@@ -85,9 +86,9 @@ async def get_hackathon_by_tittle(
 
 
 async def create_hackathon(
-    hackathon_in: HackathonCreateSchema,
-    session: AsyncSession,
-    user_id: int,
+        hackathon_in: HackathonCreateSchema,
+        session: AsyncSession,
+        user_id: int,
 ) -> Hackathon:
     hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
     session.add(hackathon)
@@ -96,8 +97,8 @@ async def create_hackathon(
 
 
 async def get_hackathons_for_user(
-    session: AsyncSession,
-    user_id: int,
+        session: AsyncSession,
+        user_id: int,
 ):
     stmt = (
         select(Hackathon)
@@ -125,27 +126,55 @@ async def get_hackathon_for_creator(session: AsyncSession, user_id: int):
         )
     return list(hackathons)
 
-
 async def update_hackathon(
-    hackathon_in: HackathonUpdatePartial,
-    session: AsyncSession,
-    hackathon: Hackathon,
-):
-    # if hackathon.status != "PLANNED":
-    #     raise HTTPException(
-    #         status_code=status.HTTP_403_FORBIDDEN,
-    #         detail=f"update data is prohibited when the hackathon is started.",
-    #     )
-    for name, value in hackathon_in.model_dump(exclude_unset=True).items():
-        setattr(hackathon, name, value)
-    await session.commit()
-    return hackathon
+            hackathon_in: HackathonUpdatePartial,
+            session: AsyncSession,
+            hackathon: Hackathon,
+    ):
+        if hackathon.status != HackathonStatus.PLANNED:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Обновление данных запрещено, когда хакатон уже начался или завершен.",
+            )
+
+        update_data = hackathon_in.model_dump(exclude_unset=True)
+
+        for field, value in update_data.items():
+            if value == "string":
+                continue
+
+            if field == "max_participants":
+                if value <= 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Количество участников должно быть больше нуля."
+                    )
+                if value < hackathon.current_participants:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Нельзя установить максимальное количество участников ({value}) "
+                               f"меньше текущего количества ({hackathon.current_participants})."
+                    )
+
+            if field == "status":
+                if value not in HackathonStatus.__members__.values():
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Недопустимый статус хакатона. Допустимые значения: {', '.join([s.value for s in HackathonStatus])}"
+                    )
+
+
+            setattr(hackathon, field, value)
+
+        await session.commit()
+        await session.refresh(hackathon)
+        return hackathon
 
 
 async def add_user_in_hackathon(
-    session: AsyncSession,
-    hackathon: Hackathon,
-    user: User,
+        session: AsyncSession,
+        hackathon: Hackathon,
+        user: User,
 ):
     # if hackathon.status != "PLANNED":
     #   raise HTTPException(
@@ -184,9 +213,9 @@ async def add_user_in_hackathon(
 
 
 async def delete_user_in_hackathon(
-    session: AsyncSession,
-    hackathon: Hackathon,
-    user: User,
+        session: AsyncSession,
+        hackathon: Hackathon,
+        user: User,
 ):
     # Находим ассоциацию между пользователем и хакатоном
     association = await session.scalar(
@@ -207,8 +236,8 @@ async def delete_user_in_hackathon(
 
 
 async def get_users_in_hackathon(
-    session: AsyncSession,
-    hackathon: Hackathon,
+        session: AsyncSession,
+        hackathon: Hackathon,
 ):
     result = await session.execute(
         select(HackathonUserAssociation)
@@ -233,8 +262,8 @@ async def get_users_in_hackathon(
 
 
 async def get_groups_in_hackathon(
-    session: AsyncSession,
-    hackathon: Hackathon,
+        session: AsyncSession,
+        hackathon: Hackathon,
 ):
     result = await session.execute(
         select(HackathonGroupAssociation)
@@ -261,9 +290,9 @@ async def get_groups_in_hackathon(
 
 
 async def add_group_in_hackathon(
-    session: AsyncSession,
-    hackathon: Hackathon,
-    group: Group,
+        session: AsyncSession,
+        hackathon: Hackathon,
+        group: Group,
 ):
     if hackathon.status != "PLANNED":
         raise HTTPException(
@@ -282,8 +311,8 @@ async def add_group_in_hackathon(
             detail=f"Group {group.id} is already participating in this hackathon",
         )
     if (
-        hackathon.max_participants
-        <= hackathon.current_participants + group.current_members
+            hackathon.max_participants
+            <= hackathon.current_participants + group.current_members
     ):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -314,9 +343,9 @@ async def add_group_in_hackathon(
 
 
 async def delete_group_in_hackathon(
-    session: AsyncSession,
-    hackathon: Hackathon,
-    group: Group,
+        session: AsyncSession,
+        hackathon: Hackathon,
+        group: Group,
 ):
     association = await session.scalar(
         select(HackathonGroupAssociation)
@@ -345,7 +374,6 @@ async def delete_group_in_hackathon(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Group {group.id} is not participating in this hackathon",
     )
-
 
 # async def get_user_in_hackathon(
 #     session: AsyncSession,

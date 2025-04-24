@@ -48,7 +48,6 @@ async def get_hackathon(
     return hackathon
 
 
-# ЗАЛУПА С ПУТЯМИ В ДВУХ ФУНКЦИЯХ НИЖЕ ПОЗЖЕ ПОПРАВЛЮ САМИ ОНИ РАБОТАЮТ
 @router.get("{/hackathon_id}", response_model=HackathonSchema, dependencies=[])
 async def get_hackathon_by_name(
     tittle: str, session: AsyncSession = Depends(db_helper.session_getter)
@@ -57,7 +56,7 @@ async def get_hackathon_by_name(
 
 
 @router.get(
-    "{/my_hack}",
+    "/me/{my_hack}",
     response_model=List[HackathonSchema],
     summary="hackathon when i participant",
 )
@@ -69,10 +68,9 @@ async def get_my_hackathons_when_i_participant(
 
 
 @router.get(
-    "{/my_created}",
+    "/me/{my_created}",
     response_model=List[HackathonSchema],
     dependencies=[Depends(user_is_creator)],
-    summary="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 )
 async def get_hack_when_i_creator(
     current_user: User = Depends(current_active_user),
