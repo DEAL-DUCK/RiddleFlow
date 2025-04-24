@@ -24,7 +24,7 @@ router.include_router(
 
 @router.post(
     "/register",
-    response_model=UserRead,
+    response_model=UserCreate,
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_400_BAD_REQUEST: {
@@ -54,12 +54,20 @@ async def register(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     try:
-        # Создаем пользователя
+        user_data = user_create.model_dump()
+        protected_fields = {
+            'is_active': True,
+            'is_superuser': False,
+            'is_verified': False
+        }
+
+
         created_user = await user_manager.create(
-            user_create, safe=True, request=request
+            UserCreate(**{**user_data, **protected_fields}),
+            safe=True,
+            request=request
         )
 
-        # Создаем профиль
         profile = Profile(user_id=created_user.id)
         session.add(profile)
         await session.commit()
