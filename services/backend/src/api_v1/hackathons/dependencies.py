@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api_v1.hackathons.crud import get_hackathon
 from api_v1.users.dependencies import user_is_creator
 from core.models import db_helper, Hackathon, User
+from core.models.hackathon import HackathonStatus
 
 
 async def get_hackathon_by_id(
@@ -31,6 +32,7 @@ async def user_is_creator_of_this_hackathon(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=f"user {user.id} is not creator of this hackathon",
     )
+
 
 
 # async def get_user_in_hackathon_by_id(

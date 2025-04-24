@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 
 from typing import List
@@ -90,11 +91,11 @@ async def create_hackathon(
         session: AsyncSession,
         user_id: int,
 ) -> Hackathon:
+
     hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
     session.add(hackathon)
     await session.commit()
     return hackathon
-
 
 async def get_hackathons_for_user(
         session: AsyncSession,
@@ -155,20 +156,35 @@ async def update_hackathon(
                         detail=f"Нельзя установить максимальное количество участников ({value}) "
                                f"меньше текущего количества ({hackathon.current_participants})."
                     )
-
-            if field == "status":
-                if value not in HackathonStatus.__members__.values():
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Недопустимый статус хакатона. Допустимые значения: {', '.join([s.value for s in HackathonStatus])}"
-                    )
-
-
             setattr(hackathon, field, value)
-
         await session.commit()
         await session.refresh(hackathon)
         return hackathon
+async def activate_hackathon(
+        session : AsyncSession,
+        hackathon: Hackathon,
+):
+    if hackathon.status == HackathonStatus.PLANNED or hackathon.status == HackathonStatus.CANCELED:
+        hackathon.status = HackathonStatus.ACTIVE
+        hackathon.updated_at = datetime.now()
+    if hackathon.status == HackathonStatus.COMPLETED:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail='hackathon completed')
+    await session.commit()
+    await session.refresh(hackathon)
+
+    return {'success':f'hackathon {hackathon.title} activate'}
+async def cancel_hackathon(
+        session : AsyncSession,
+        hackathon: Hackathon,
+):
+    if hackathon.status == HackathonStatus.ACTIVE or hackathon.status == HackathonStatus.PLANNED:
+        hackathon.status = HackathonStatus.CANCELED
+        hackathon.updated_at = datetime.now()
+    if hackathon.status == HackathonStatus.COMPLETED:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail='hackathon completed')
+    await session.commit()
+    await session.refresh(hackathon)
+    return {'success':f'hackathon {hackathon.title} deactivate'}
 
 
 async def add_user_in_hackathon(
@@ -374,6 +390,29 @@ async def delete_group_in_hackathon(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Group {group.id} is not participating in this hackathon",
     )
+async def delete_hackathon(hackathon_id: int, session: AsyncSession):
+    stmt = (
+        select(Hackathon)
+        .where(Hackathon.id == hackathon_id)
+        .options(
+            selectinload(Hackathon.tasks),
+            selectinload(Hackathon.users_details),
+            selectinload(Hackathon.groups_details)
+        )
+    )
+    hackathon = (await session.execute(stmt)).scalars().first()
+
+    if not hackathon:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Хакатон не найден")
+
+    await session.delete(hackathon)
+    await session.commit()
+
+    return {
+        "status": "success",
+        "message": "Хакатон и все связанные данные успешно удалены",
+        "hackathon_id": hackathon_id
+    }
 
 # async def get_user_in_hackathon(
 #     session: AsyncSession,

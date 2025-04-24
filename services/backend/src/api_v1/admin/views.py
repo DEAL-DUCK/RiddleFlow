@@ -12,15 +12,22 @@ from api_v1.auth.fastapi_users import (
     current_active_superuser,
     fastapi_users,
 )
-from .crud import is_this_user_admin
+from .crud import is_this_user_admin,get_all_hackathons
 from ..groups.crud import get_groups
+from ..hackathons.schemas import HackathonSchema
 from ..submissions.crud import get_submission_by_id_func, get_submission_by_task_id_plus_user_id, \
     delete_submission_by_id, all_submissions, delete_all_submissions_any_user
 from ..submissions.schemas import SubmissionRead
 from ..tasks.crud import get_all_tasks
+from ..hackathons.crud import delete_hackathon
 
 router = APIRouter(tags=["АДМИН"])
-
+@router.get("/hackathon/get", response_model=list[HackathonSchema])
+async def get_hackathons_for_admin(
+    session: AsyncSession = Depends(db_helper.session_getter),
+    user : User = Depends(current_active_superuser)
+):
+    return await get_all_hackathons(session=session)
 @router.get(
     "/user/",
     response_model=list[UserSchema],
@@ -64,3 +71,8 @@ async def delete_all_submissions_user(
     user_id: int, session: AsyncSession = Depends(db_helper.session_getter)
 ):
     return await delete_all_submissions_any_user(session=session, user_id=user_id)
+@router.delete('/hackathon/del',dependencies=[Depends(is_this_user_admin)])
+async def del_hack(
+        hackathon_id : int , session: AsyncSession = Depends(db_helper.session_getter)
+):
+    return await delete_hackathon(session=session,hackathon_id=hackathon_id)

@@ -72,7 +72,6 @@ class HackathonUpdatePartial(HackathonCreateSchema):
     end_time: datetime.datetime | None = None
     allow_teams: bool | None = None
     logo_url: str | None = None
-    status: str = None
 
 
 class HackathonSchema(HackathonBaseSchema):

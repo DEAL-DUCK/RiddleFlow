@@ -11,6 +11,7 @@ from .groups.views import router as group_router
 
 
 router = APIRouter(prefix="/v1")
+router.include_router(router=admin_router,prefix='/admin')
 router.include_router(router=users_router, prefix="/users")
 router.include_router(router=profiles_router, prefix="/profiles")
 router.include_router(router=hackathons_router, prefix="/hackathons")
@@ -19,4 +20,3 @@ router.include_router(router=auth_router, prefix="/auth")
 router.include_router(router=submissions_router, prefix="/submissions")
 router.include_router(router=tasks_router, prefix="/tasks")
 router.include_router(router=group_router, prefix="/groups")
-router.include_router(router=admin_router,prefix='/admin')

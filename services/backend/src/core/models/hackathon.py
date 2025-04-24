@@ -37,8 +37,8 @@ class Hackathon(Base, IdIntPkMixin):
     max_participants: Mapped[int] = mapped_column(Integer, nullable=False)
     current_participants: Mapped[int] = mapped_column(
         Integer,
-        default=0,
-        server_default="0",
+        default=1,
+        server_default="1",
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import Depends, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.util import await_only
 
 from . import crud
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
@@ -56,7 +57,7 @@ async def get_hackathon_by_name(
 
 
 @router.get(
-    "/me/{my_hack}",
+    "/me/partial/",
     response_model=List[HackathonSchema],
     summary="hackathon when i participant",
 )
@@ -68,7 +69,7 @@ async def get_my_hackathons_when_i_participant(
 
 
 @router.get(
-    "/me/{my_created}",
+    "/me/created/",
     response_model=List[HackathonSchema],
     dependencies=[Depends(user_is_creator)],
 )
@@ -84,6 +85,10 @@ async def get_hack_when_i_creator(
 @router.post(
     "/",
     response_model=HackathonSchema,
+    summary="""PLANNED
+    ACTIVE 
+    COMPLETED
+    CANCELED """
 )
 async def create_hackathon(
     hackathon_in: HackathonCreateSchema,
@@ -107,6 +112,21 @@ async def update_hackathon(
         hackathon_in=hackathon_in,
         hackathon=hackathon,
     )
+@router.patch('/hackathon_id}/activate',summary='activate hackathon')
+async def force_activate_hack(
+    hackathon : Hackathon = Depends(get_hackathon_by_id),
+    session : AsyncSession = Depends(db_helper.session_getter),
+    user : User = Depends(user_is_creator_of_this_hackathon)
+):
+    return await crud.activate_hackathon(session=session,hackathon=hackathon)
+
+@router.patch('/hackathon_id}/deactivate',summary='deactivate hackathon')
+async def cancel_hack(
+    hackathon : Hackathon = Depends(get_hackathon_by_id),
+    session : AsyncSession = Depends(db_helper.session_getter),
+    user : User = Depends(user_is_creator_of_this_hackathon)
+):
+    return await crud.deactivate_hackathon(session=session,hackathon=hackathon)
 
 
 @router.get(
@@ -170,7 +190,6 @@ async def add_group_in_hackathon(
         hackathon=hackathon, group=group, session=session
     )
 
-
 @router.delete(
     "/{hackathon_id}/groups",
     dependencies=[Depends(user_is_owner_of_this_group_or_hackathon_creator)],
@@ -183,7 +202,6 @@ async def delete_group_in_hackathon(
     return await crud.delete_group_in_hackathon(
         hackathon=hackathon, group=group, session=session
     )
-
 
 #
 # @router.get("/{hackathon_id}/jury")
