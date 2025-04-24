@@ -62,6 +62,17 @@ async def upload_file(
     return f"{settings.s3.domain_url}/{filename}"
 
 
+async def is_jury_group(
+    group: Group = Depends(get_group_by_id),
+):
+    if group.type.value == "JURY":
+        return group
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"creators can't create a {group.type.value} group",
+    )
+
+
 # TODO: сделать функцию удаления файла с s3 хранилища по его url
 # async def delete_file(
 #     file_url: str,

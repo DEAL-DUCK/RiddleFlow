@@ -1,14 +1,22 @@
-from fastapi import Depends, APIRouter, File, UploadFile
+from fastapi import Depends, APIRouter, File, UploadFile, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from api_v1.users.dependencies import get_user_by_id
-from .dependencies import get_group_by_id, user_is_owner_of_this_group, upload_file
+from .dependencies import (
+    get_group_by_id,
+    user_is_owner_of_this_group,
+    upload_file,
+    is_jury_group,
+)
 from . import crud
 
-from core.models import db_helper, Group, User
+from core.models import db_helper, Group, User, Hackathon
 from .schemas import GroupCreateSchema, GroupUpdateSchema, GroupSchema
 from api_v1.auth.fastapi_users import current_active_superuser, current_active_user
 from api_v1.users.dependencies import user_is_participant
-
+from ..hackathons.dependencies import (
+    get_hackathon_by_id,
+    user_is_creator_of_this_hackathon,
+)
 
 router = APIRouter(tags=["Группы"])
 
@@ -47,6 +55,35 @@ async def create_group(
         group_in=group_in,
         session=session,
         user_id=user.id,
+    )
+
+
+@router.post("/jury", tags=["Хакатоны"])
+async def create_group_jury(
+    group_in: GroupCreateSchema,
+    session: AsyncSession = Depends(db_helper.session_getter),
+    user: User = Depends(user_is_creator_of_this_hackathon),
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+):
+    return await crud.create_group_jury(
+        group_in=group_in,
+        session=session,
+        user_id=user.id,
+        hackathon=hackathon,
+    )
+
+
+@router.post("/jury/users", tags=["Хакатоны"])
+async def add_users_in_group_jury(
+    session: AsyncSession = Depends(db_helper.session_getter),
+    hackathon_creator: User = Depends(user_is_creator_of_this_hackathon),
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    user: User = Depends(get_user_by_id),
+):
+    return await crud.add_users_in_group_jury(
+        session=session,
+        hackathon=hackathon,
+        user=user,
     )
 
 
