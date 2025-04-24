@@ -95,9 +95,8 @@ async def create_hackathon(
     hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
     stmt = select(func.count()).select_from(Hackathon).where(Hackathon.creator_id == user_id)
     count = await session.scalar(stmt)
-    all_hack = await session.execute(stmt)
     if count >= 5:
-        raise ValueError('the maximum number of hackathons created has been exceeded')
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='The maximum number of hackathons created has been exceeded (max 5)')
     session.add(hackathon)
     await session.commit()
     return hackathon

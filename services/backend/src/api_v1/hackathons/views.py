@@ -100,7 +100,7 @@ async def create_hackathon(
     )
 
 
-@router.patch("/")
+@router.patch("/",summary='AAAAAAAA')
 async def update_hackathon(
     hackathon_in: HackathonUpdatePartial,
     session: AsyncSession = Depends(db_helper.session_getter),
