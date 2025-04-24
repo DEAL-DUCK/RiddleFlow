@@ -25,7 +25,7 @@ async def get_user_by_id(
 async def user_is_creator(
     user: User = Depends(current_active_user),
 ):
-    if user.user_role.value == "CREATOR":
+    if user.user_role.value == "CREATOR" or user.is_superuser:
         return user
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -36,7 +36,7 @@ async def user_is_creator(
 async def user_is_participant(
     user: User = Depends(current_active_user),
 ):
-    if user.user_role.value == "PARTICIPANT":
+    if user.user_role.value == "PARTICIPANT" or user.is_superuser:
         return user
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,

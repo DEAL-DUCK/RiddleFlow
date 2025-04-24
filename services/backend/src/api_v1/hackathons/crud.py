@@ -202,7 +202,7 @@ async def add_user_in_hackathon(
     #      status_code=status.HTTP_403_FORBIDDEN,
     #     detail=f"acceptance of applications to the hackathon {hackathon.id} is completed",
     # )
-    if user.user_role.value != "PARTICIPANT":
+    if user.user_role.value == 'CREATOR' and not user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="creators can't be in hackathon members",
