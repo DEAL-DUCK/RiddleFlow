@@ -2,6 +2,13 @@
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from fastapi_users import schemas
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
+from datetime import datetime
+from enum import Enum
+from typing import Optional
+from fastapi_users import schemas
+from core.types.user_id import UserIdType
+
 
 from core.types.user_id import UserIdType
 
@@ -28,33 +35,13 @@ class UserCreate(schemas.BaseUserCreate):
 """
 class UserUpdate(schemas.BaseUserUpdate):
     username: str
-
-from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
-from datetime import datetime
-from enum import Enum
-from typing import Optional
-from fastapi_users import schemas
-from core.types.user_id import UserIdType
-
-
-
-
-
-from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
-from datetime import datetime
-from enum import Enum
-from typing import Optional
-from fastapi_users import schemas
-from core.types.user_id import UserIdType
-
-
 class UserRole(str, Enum):
     PARTICIPANT = "PARTICIPANT"
     CREATOR = "CREATOR"
 
 
 class UserCreate(schemas.BaseUserCreate):
-    username: str = Field(..., min_length=3, max_length=40)
+    username: str = Field(..., min_length=1, max_length=40)
     user_role: str = UserRole.PARTICIPANT.value
     class Config:
         extra = "forbid"

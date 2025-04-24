@@ -1,6 +1,6 @@
 from fastapi import Depends, APIRouter, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from api_v1.users.crud import get_users, get_user
+from api_v1.users.crud import get_users, get_user,del_user
 from api_v1.users.schemas import (
     UserRead,
     UserCreate,
@@ -76,3 +76,8 @@ async def del_hack(
         hackathon_id : int , session: AsyncSession = Depends(db_helper.session_getter)
 ):
     return await delete_hackathon(session=session,hackathon_id=hackathon_id)
+@router.delete('/user/del',dependencies=[Depends(is_this_user_admin)])
+async def delete_user(
+     user_id : int, session: AsyncSession = Depends(db_helper.session_getter)
+):
+    return await del_user(user_id=user_id,session=session)

@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi_users import exceptions, models, schemas
@@ -8,7 +9,7 @@ from api_v1.auth.fastapi_users import fastapi_users
 from api_v1.dependencies.authentication.backend import authentication_backend
 from api_v1.dependencies.authentication.user_manager import get_user_manager
 from api_v1.users.schemas import UserRead, UserCreate
-from core.models import Profile, db_helper
+from core.models import Profile, db_helper, User
 
 router = APIRouter(tags=["Auth"])
 
@@ -24,7 +25,7 @@ router.include_router(
 
 @router.post(
     "/register",
-    response_model=UserCreate,
+    response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_400_BAD_REQUEST: {
@@ -38,6 +39,24 @@ router.include_router(
                                 "detail": {
                                     "code": "INVALID_ROLE",
                                     "reason": "Role must be either PARTICIPANT or CREATOR"
+                                }
+                            }
+                        },
+                        "USERNAME_EXISTS": {
+                            "summary": "Username already exists",
+                            "value": {
+                                "detail": {
+                                    "code": "USERNAME_EXISTS",
+                                    "reason": "This username is already taken"
+                                }
+                            }
+                        },
+                        "EMAIL_EXISTS": {
+                            "summary": "Email already exists",
+                            "value": {
+                                "detail": {
+                                    "code": "EMAIL_EXISTS",
+                                    "reason": "User with this email already exists"
                                 }
                             }
                         }
@@ -54,13 +73,37 @@ async def register(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     try:
+        try:
+            existing_user_by_email = await user_manager.get_by_email(user_create.email)
+            if existing_user_by_email:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "code": "EMAIL_EXISTS",
+                        "reason": "User with this email already exists"
+                    },
+                )
+        except exceptions.UserNotExists:
+            pass
+
+        existing_user_by_username = await session.execute(
+            select(User).where(User.username == user_create.username)
+        )
+        if existing_user_by_username.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": "USERNAME_EXISTS",
+                    "reason": "This username is already taken"
+                },
+            )
+
         user_data = user_create.model_dump()
         protected_fields = {
             'is_active': True,
             'is_superuser': False,
             'is_verified': False
         }
-
 
         created_user = await user_manager.create(
             UserCreate(**{**user_data, **protected_fields}),
@@ -84,11 +127,6 @@ async def register(
                 },
             )
         raise
-    except exceptions.UserAlreadyExists:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrorCode.REGISTER_USER_ALREADY_EXISTS,
-        )
     except exceptions.InvalidPasswordException as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

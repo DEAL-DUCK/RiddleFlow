@@ -19,8 +19,17 @@ async def get_users(session: AsyncSession) -> list[User]:
 
 async def get_user(session: AsyncSession, user_id: int) -> User | None:
     return await session.get(User, user_id)
+async def del_user(session:AsyncSession,user_id:int):
+    stmt = select(User).where(User.id == user_id)
+    result = await session.execute(stmt)
+    user = result.scalar_one_or_none()
 
+    if user is None:
+        return f'user with id : {user_id} not found'
 
+    await session.delete(user)
+    await session.commit()
+    return f'user with id : {user_id} deleted'
 # ненадобность, из-за подключённой регистрации
 
 # async def create_user(session: AsyncSession, user_in: UserCreateSchema) -> User:

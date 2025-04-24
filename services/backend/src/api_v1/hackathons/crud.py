@@ -4,7 +4,7 @@ import logging
 from typing import List
 
 from fastapi import HTTPException, status
-from sqlalchemy import select, Result
+from sqlalchemy import select, Result, func
 from sqlalchemy.orm import selectinload, sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
 import json
@@ -93,6 +93,11 @@ async def create_hackathon(
 ) -> Hackathon:
 
     hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
+    stmt = select(func.count()).select_from(Hackathon).where(Hackathon.creator_id == user_id)
+    count = await session.scalar(stmt)
+    all_hack = await session.execute(stmt)
+    if count >= 5:
+        raise ValueError('the maximum number of hackathons created has been exceeded')
     session.add(hackathon)
     await session.commit()
     return hackathon

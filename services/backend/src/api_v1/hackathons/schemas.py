@@ -26,8 +26,8 @@ class HackathonBaseSchema(BaseModel):
 
 
 class HackathonCreateSchema(BaseModel):
-    title: str
-    description: str
+    title: str = Field(...,max_length=100)
+    description: str = Field(...,max_length=900)
     allow_teams: bool
     max_participants: int = Field(..., gt=0)
     logo_url: str | None = None
@@ -54,6 +54,14 @@ class HackathonCreateSchema(BaseModel):
         if max_participants is not None and max_participants <= 0:
             raise ValueError("max_participants must be greater than zero")
         return values
+
+    @model_validator(mode="before")
+    def check_tittle(cls, values):
+            title = values.get("title")
+            if len(title) > 100:
+                raise ValueError("The length is more than 100")
+
+            return values
         # включить на проде
         # if (
         #     start_time
@@ -61,7 +69,8 @@ class HackathonCreateSchema(BaseModel):
         #     == datetime.datetime.now(datetime.timezone.utc).date().isoformat()
         # ):
         #     raise ValueError("start_time cannot be today")
-        return values
+
+
 
 
 class HackathonUpdatePartial(HackathonCreateSchema):
