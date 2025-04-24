@@ -2,9 +2,9 @@ from fastapi import Depends, APIRouter, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from api_v1.users.crud import get_users, get_user
 from api_v1.users.schemas import (
-    UserSchema,
     UserRead,
-    UserUpdate,
+    UserCreate,
+    UserRole,
 )
 from core.models import db_helper, User
 from api_v1.auth.fastapi_users import (
@@ -30,7 +30,7 @@ async def get_hackathons_for_admin(
     return await get_all_hackathons(session=session)
 @router.get(
     "/user/",
-    response_model=list[UserSchema],
+    response_model=list[UserRead],
     dependencies=[Depends(is_this_user_admin)],
 )
 async def get_all_users(
@@ -39,7 +39,7 @@ async def get_all_users(
     return await get_users(session=session)
 @router.get(
     '/{id}',
-    response_model=UserSchema,
+    response_model=UserRead,
     dependencies=[Depends(is_this_user_admin)],
 )
 async def get_user_by_id(user_id: int, session: AsyncSession = Depends(db_helper.session_getter)):

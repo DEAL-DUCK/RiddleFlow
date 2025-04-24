@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .dependencies import user_is_creator
 from . import crud
 from api_v1.users.schemas import (
-    UserSchema,
     UserRead,
     UserUpdate,
 )
