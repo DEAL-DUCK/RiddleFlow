@@ -1,5 +1,6 @@
 from fastapi import Depends, HTTPException
-from sqlalchemy import select
+
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -39,3 +40,11 @@ async def get_all_hackathons(session: AsyncSession) -> list[HackathonSchema]:
         )
         for hackathon in hackathons
     ]
+async def del_all_my_hackathon(
+    session: AsyncSession,
+    user_id: int
+) -> dict:
+    stmt = delete(Hackathon).where(Hackathon.creator_id == user_id)
+    await session.execute(stmt)
+    await session.commit()
+    return {'ok': True}

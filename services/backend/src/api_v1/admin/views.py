@@ -12,7 +12,7 @@ from api_v1.auth.fastapi_users import (
     current_active_superuser,
     fastapi_users,
 )
-from .crud import is_this_user_admin,get_all_hackathons
+from .crud import is_this_user_admin,get_all_hackathons,del_all_my_hackathon
 from ..groups.crud import get_groups
 from ..hackathons.schemas import HackathonSchema
 from ..submissions.crud import get_submission_by_id_func, get_submission_by_task_id_plus_user_id, \
@@ -81,3 +81,9 @@ async def delete_user(
      user_id : int, session: AsyncSession = Depends(db_helper.session_getter)
 ):
     return await del_user(user_id=user_id,session=session)
+@router.delete('/hackathon/all_del',dependencies=[Depends(current_active_superuser)])
+async def delete_all_my_hack(
+        user : User = Depends(current_active_superuser),
+        session : AsyncSession = Depends(db_helper.session_getter)
+):
+    return await del_all_my_hackathon(session=session,user_id=user.id)
