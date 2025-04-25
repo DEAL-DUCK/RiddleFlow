@@ -86,6 +86,13 @@ services:
       bash -c "uvicorn main:app --reload --host 0.0.0.0 --port 5000 && alembic upgrade head"
 
 
+  frontend:
+    build: ./services/frontend
+    volumes:
+      - './services/frontend:/app'
+      - '/app/node_modules'
+    ports:
+      - 8080:8080
 #  flower:
 #    image: mher/flower:latest
 #    ports:
