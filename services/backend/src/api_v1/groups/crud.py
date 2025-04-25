@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import HTTPException, status, UploadFile
 from sqlalchemy import select, Result, func, delete
 from sqlalchemy.exc import SQLAlchemyError
@@ -5,10 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from api_v1.groups.schemas import GroupCreateSchema, GroupUpdateSchema, GroupSchema,GroupStatus
 from core.config import settings
-from core.models import Group, User, GroupUserAssociation, HackathonGroupAssociation
+from core.models import Group, User, GroupUserAssociation, HackathonGroupAssociation, Hackathon
 from core.models.group_user_association import ParticipationStatus
-
-
+from core.models.hackathon import HackathonStatus
+from core.models.hackathon_group_association import TeamStatus
+from .dependencies2 import del_group_in_hack
 async def get_groups(session: AsyncSession) -> list[Group]:
     stmt = select(Group).order_by(Group.id)
     result: Result = await session.execute(stmt)
@@ -174,20 +177,63 @@ async def de_activate_group(
         session: AsyncSession,
         group: Group,
 ) -> dict:
-    group.status = "INACTIVE"
-    group.updated_at = func.now()
+    # Check if group is already inactive
+    if group.status == GroupStatus.INACTIVE:
+        return {
+            'status': 'info',
+            'message': 'Group is already inactive',
+            'new_status': 'INACTIVE'
+        }
 
-    await session.execute(
-        delete(HackathonGroupAssociation)
+    # Find all active hackathon associations for this group
+    result = await session.execute(
+        select(HackathonGroupAssociation)
         .where(HackathonGroupAssociation.group_id == group.id)
+        .where(HackathonGroupAssociation.group_status != TeamStatus.REFUSED)
     )
+    hackathon_associations = result.scalars().all()
+
+    # Remove group from all active hackathons
+    for association in hackathon_associations:
+        hackathon = await session.get(Hackathon, association.hackathon_id)
+        if hackathon and hackathon.status != HackathonStatus.COMPLETED:
+            try:
+                await del_group_in_hack(
+                    session=session,
+                    hackathon=hackathon,
+                    group=group
+                )
+                # Update group status in the association
+                association.group_status = TeamStatus.REFUSED
+            except HTTPException as e:
+                logging.error(f"Error removing group {group.id} from hackathon {hackathon.id}: {str(e)}")
+                continue
+
+    # Deactivate all user associations in this group
+    result = await session.execute(
+        select(GroupUserAssociation)
+        .where(GroupUserAssociation.group_id == group.id)
+    )
+    user_associations = result.scalars().all()
+    for user_assoc in user_associations:
+        user_assoc.is_active = False
+        user_assoc.updated_at = func.now()
+
+    # Finally deactivate the group itself
+    group.status = 'INACTIVE'
+    group.updated_at = func.now()
+    group.current_members = 0  # Reset member count since group is inactive
 
     await session.commit()
+
     return {
         'status': 'success',
-        'message': 'Group deactivated successfully',
-        'new_status': 'INACTIVE'
-        }
+        'message': f'Group {group.title} deactivated successfully. '
+                  f'Removed from {len(hackathon_associations)} hackathons.',
+        'new_status': 'INACTIVE',
+        'affected_hackathons': len(hackathon_associations),
+        'affected_members': len(user_associations)
+    }
 async def activate_group(
         session: AsyncSession,
         group: Group,

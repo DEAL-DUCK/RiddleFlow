@@ -120,15 +120,21 @@ async def force_activate_hack(
 ):
     return await crud.activate_hackathon(session=session,hackathon=hackathon)
 
-@router.patch('/hackathon_id}/deactivate',summary='deactivate hackathon')
+@router.patch('/{hackathon_id}/deactivate',summary='deactivate hackathon')
 async def cancel_hack(
     hackathon : Hackathon = Depends(get_hackathon_by_id),
     session : AsyncSession = Depends(db_helper.session_getter),
     user : User = Depends(user_is_creator_of_this_hackathon)
 ):
     return await crud.cancel_hackathon(session=session,hackathon=hackathon)
-
-
+@router.patch('/{hackathon_id}/max_participant')
+async def change_max_participant(
+    new_max_users : int ,
+    hackathon : Hackathon = Depends(get_hackathon_by_id),
+    session : AsyncSession = Depends(db_helper.session_getter),
+    user : User = Depends(user_is_creator_of_this_hackathon)
+):
+    return await crud.patch_max_users_in_hack(session=session,hackathon=hackathon,max_participants=new_max_users)
 @router.get(
     "/{hackathon_id}/users",
     dependencies=[Depends(user_is_creator_of_this_hackathon)],
@@ -194,7 +200,7 @@ async def add_group_in_hackathon(
     "/{hackathon_id}/groups",
     dependencies=[Depends(user_is_owner_of_this_group_or_hackathon_creator)],
 )
-async def delete_group_in_hackathon(
+async def delete_group_in_hackathons(
     hackathon: Hackathon = Depends(get_hackathon_by_id),
     group: Group = Depends(get_group_by_id),
     session: AsyncSession = Depends(db_helper.session_getter),

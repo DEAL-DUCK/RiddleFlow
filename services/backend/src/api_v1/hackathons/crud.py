@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 
 from typing import List
-
+from .dependencies2 import act_group
 from fastapi import HTTPException, status
 from sqlalchemy import select, Result, func
 from sqlalchemy.orm import selectinload, sessionmaker
@@ -318,10 +318,17 @@ async def add_group_in_hackathon(
         hackathon: Hackathon,
         group: Group,
 ):
+    if not hackathon.allow_teams:
+        return HTTPException(status_code=status.HTTP_409_CONFLICT,detail='teams are not allowed to participate in the hackathon')
     if group.status == 'BANNED':
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Group {group.id} BANNED",
+        )
+    if group.status == 'INACTIVE':
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Group {group.id} INACTIVE",
         )
     if hackathon.status != HackathonStatus.PLANNED:
         raise HTTPException(
@@ -352,7 +359,7 @@ async def add_group_in_hackathon(
         group_id=group.id,
         group_status=TeamStatus.REGISTERED,
     )
-
+    await act_group(session=session,group=group)
     hackathon.current_participants += group.current_members
     session.add(association)
     await session.commit()
@@ -427,6 +434,38 @@ async def delete_hackathon(hackathon_id: int, session: AsyncSession):
         "message": "Хакатон и все связанные данные успешно удалены",
         "hackathon_id": hackathon_id
     }
+
+
+async def patch_max_users_in_hack(
+        session: AsyncSession,
+        hackathon: Hackathon,
+        max_participants: int
+) -> HackathonSchema:
+    if hackathon.status != HackathonStatus.PLANNED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Updating max participants is only allowed for planned hackathons.",
+        )
+
+    if max_participants <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Number of participants must be greater than zero."
+        )
+
+    if max_participants < hackathon.current_participants:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot set maximum participants ({max_participants}) "
+                   f"less than current participants ({hackathon.current_participants})."
+        )
+
+    hackathon.max_participants = max_participants
+    await session.commit()
+    await session.refresh(hackathon)
+
+    return HackathonSchema.model_validate(hackathon)
+
 
 
 # async def get_user_in_hackathon(

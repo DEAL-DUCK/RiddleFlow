@@ -5,9 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api_v1.hackathons.crud import get_hackathon
 from api_v1.users.dependencies import user_is_creator
-from core.models import db_helper, Hackathon, User
+from core.models import db_helper, Hackathon, User, Group
 from core.models.hackathon import HackathonStatus
-
 
 async def get_hackathon_by_id(
     hackathon_id: Annotated[int, Path],
