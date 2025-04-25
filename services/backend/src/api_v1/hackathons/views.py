@@ -111,6 +111,7 @@ async def update_hackathon(
         session=session,
         hackathon_in=hackathon_in,
         hackathon=hackathon,
+        user=user
     )
 @router.patch('/hackathon_id}/activate',summary='activate hackathon')
 async def force_activate_hack(
@@ -134,7 +135,7 @@ async def change_max_participant(
     session : AsyncSession = Depends(db_helper.session_getter),
     user : User = Depends(user_is_creator_of_this_hackathon)
 ):
-    return await crud.patch_max_users_in_hack(session=session,hackathon=hackathon,max_participants=new_max_users)
+    return await crud.patch_max_users_in_hack(session=session,hackathon=hackathon,max_participants=new_max_users,user=user)
 @router.get(
     "/{hackathon_id}/users",
     dependencies=[Depends(user_is_creator_of_this_hackathon)],

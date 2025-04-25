@@ -136,8 +136,9 @@ async def update_hack(
         hackathon_in: HackathonUpdatePartial,
         session: AsyncSession,
         hackathon: Hackathon,
+        user : User
 ) -> HackathonSchema:
-    if hackathon.status != HackathonStatus.PLANNED:
+    if hackathon.status != HackathonStatus.PLANNED and not user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Обновление данных запрещено, когда хакатон уже начался или завершен.",
@@ -439,9 +440,10 @@ async def delete_hackathon(hackathon_id: int, session: AsyncSession):
 async def patch_max_users_in_hack(
         session: AsyncSession,
         hackathon: Hackathon,
-        max_participants: int
+        max_participants: int,
+        user : User
 ) -> HackathonSchema:
-    if hackathon.status != HackathonStatus.PLANNED:
+    if hackathon.status != HackathonStatus.PLANNED and not user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Updating max participants is only allowed for planned hackathons.",
