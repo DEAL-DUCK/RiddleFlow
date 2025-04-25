@@ -133,7 +133,6 @@ async def delete_user_in_group(
     group: Group,
     user: User,
 ):
-    # Находим ассоциацию между пользователем и хакатоном
     association = await session.scalar(
         select(GroupUserAssociation)
         .where(GroupUserAssociation.group_id == group.id)
@@ -177,7 +176,6 @@ async def de_activate_group(
         session: AsyncSession,
         group: Group,
 ) -> dict:
-    # Check if group is already inactive
     if group.status == GroupStatus.INACTIVE:
         return {
             'status': 'info',
@@ -185,7 +183,6 @@ async def de_activate_group(
             'new_status': 'INACTIVE'
         }
 
-    # Find all active hackathon associations for this group
     result = await session.execute(
         select(HackathonGroupAssociation)
         .where(HackathonGroupAssociation.group_id == group.id)
@@ -193,7 +190,6 @@ async def de_activate_group(
     )
     hackathon_associations = result.scalars().all()
 
-    # Remove group from all active hackathons
     for association in hackathon_associations:
         hackathon = await session.get(Hackathon, association.hackathon_id)
         if hackathon and hackathon.status != HackathonStatus.COMPLETED:
@@ -203,13 +199,11 @@ async def de_activate_group(
                     hackathon=hackathon,
                     group=group
                 )
-                # Update group status in the association
                 association.group_status = TeamStatus.REFUSED
             except HTTPException as e:
                 logging.error(f"Error removing group {group.id} from hackathon {hackathon.id}: {str(e)}")
                 continue
 
-    # Deactivate all user associations in this group
     result = await session.execute(
         select(GroupUserAssociation)
         .where(GroupUserAssociation.group_id == group.id)
@@ -219,10 +213,9 @@ async def de_activate_group(
         user_assoc.is_active = False
         user_assoc.updated_at = func.now()
 
-    # Finally deactivate the group itself
     group.status = 'INACTIVE'
     group.updated_at = func.now()
-    group.current_members = 0  # Reset member count since group is inactive
+    group.current_members = 0
 
     await session.commit()
 
