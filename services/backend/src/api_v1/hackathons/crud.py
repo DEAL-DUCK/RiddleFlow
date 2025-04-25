@@ -95,8 +95,8 @@ async def create_hackathon(
     hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
     stmt = select(func.count()).select_from(Hackathon).where(Hackathon.creator_id == user_id)
     count = await session.scalar(stmt)
-    if count >= 5:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='The maximum number of hackathons created has been exceeded (max 5)')
+    if count >= 20: #временно . когда таблица решений востановится будет 5
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='The maximum number of hackathons created has been exceeded (max 20)')
     session.add(hackathon)
     await session.commit()
     return hackathon
@@ -131,39 +131,43 @@ async def get_hackathon_for_creator(session: AsyncSession, user_id: int):
         )
     return list(hackathons)
 
-async def update_hackathon(
-            hackathon_in: HackathonUpdatePartial,
-            session: AsyncSession,
-            hackathon: Hackathon,
-    ):
-        if hackathon.status != HackathonStatus.PLANNED:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Обновление данных запрещено, когда хакатон уже начался или завершен.",
-            )
 
-        update_data = hackathon_in.model_dump(exclude_unset=True)
+async def update_hack(
+        hackathon_in: HackathonUpdatePartial,
+        session: AsyncSession,
+        hackathon: Hackathon,
+) -> HackathonSchema:
+    if hackathon.status != HackathonStatus.PLANNED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Обновление данных запрещено, когда хакатон уже начался или завершен.",
+        )
 
-        for field, value in update_data.items():
-            if value == "string":
-                continue
+    update_data = hackathon_in.model_dump(exclude_unset=True)
 
-            if field == "max_participants":
-                if value <= 0:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Количество участников должно быть больше нуля."
-                    )
-                if value < hackathon.current_participants:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Нельзя установить максимальное количество участников ({value}) "
-                               f"меньше текущего количества ({hackathon.current_participants})."
-                    )
-            setattr(hackathon, field, value)
-        await session.commit()
-        await session.refresh(hackathon)
-        return hackathon
+    for field, value in update_data.items():
+        if value == "string":
+            continue
+
+        if field == "max_participants":
+            if value <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Количество участников должно быть больше нуля."
+                )
+            if value < hackathon.current_participants:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Нельзя установить максимальное количество участников ({value}) "
+                           f"меньше текущего количества ({hackathon.current_participants})."
+                )
+        setattr(hackathon, field, value)
+
+    await session.commit()
+    await session.refresh(hackathon)
+
+    return HackathonSchema.model_validate(hackathon)
+
 async def activate_hackathon(
         session : AsyncSession,
         hackathon: Hackathon,
@@ -314,7 +318,12 @@ async def add_group_in_hackathon(
         hackathon: Hackathon,
         group: Group,
 ):
-    if hackathon.status != "PLANNED":
+    if group.status == 'BANNED':
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Group {group.id} BANNED",
+        )
+    if hackathon.status != HackathonStatus.PLANNED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"acceptance of applications to the hackathon {hackathon.id} is completed",
@@ -352,6 +361,7 @@ async def add_group_in_hackathon(
         .options(selectinload(GroupUserAssociation.user))
         .where(GroupUserAssociation.group_id == group.id)
     )
+
     users_assoc = result.scalars().all()
     for assoc in users_assoc:
         await add_user_in_hackathon(
@@ -417,6 +427,7 @@ async def delete_hackathon(hackathon_id: int, session: AsyncSession):
         "message": "Хакатон и все связанные данные успешно удалены",
         "hackathon_id": hackathon_id
     }
+
 
 # async def get_user_in_hackathon(
 #     session: AsyncSession,

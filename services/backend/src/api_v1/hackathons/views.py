@@ -100,14 +100,14 @@ async def create_hackathon(
     )
 
 
-@router.patch("/",summary='AAAAAAAA')
+@router.patch("/",response_model=HackathonSchema)
 async def update_hackathon(
     hackathon_in: HackathonUpdatePartial,
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator_of_this_hackathon),
     hackathon: Hackathon = Depends(get_hackathon_by_id),
 ):
-    return await crud.update_hackathon(
+    return await crud.update_hack(
         session=session,
         hackathon_in=hackathon_in,
         hackathon=hackathon,
@@ -126,7 +126,7 @@ async def cancel_hack(
     session : AsyncSession = Depends(db_helper.session_getter),
     user : User = Depends(user_is_creator_of_this_hackathon)
 ):
-    return await crud.deactivate_hackathon(session=session,hackathon=hackathon)
+    return await crud.cancel_hackathon(session=session,hackathon=hackathon)
 
 
 @router.get(

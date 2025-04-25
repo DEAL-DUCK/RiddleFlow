@@ -44,7 +44,11 @@ async def del_all_my_hackathon(
     session: AsyncSession,
     user_id: int
 ) -> dict:
-    stmt = delete(Hackathon).where(Hackathon.creator_id == user_id)
-    await session.execute(stmt)
+    stmt = select(Hackathon).where(Hackathon.creator_id == user_id)
+    result = await session.execute(stmt)
+    hackathons = result.scalars().all()
+    for hackathon in hackathons:
+        await session.delete(hackathon)
+
     await session.commit()
     return {'ok': True}

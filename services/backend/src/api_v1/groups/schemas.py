@@ -1,7 +1,9 @@
 import enum
 
 from pydantic import BaseModel, ConfigDict
-
+from enum import Enum
+from pydantic import BaseModel, field_validator, constr, conint
+from typing import Optional
 
 class GroupStatus(enum.Enum):
     ACTIVE = "ACTIVE"
@@ -21,23 +23,35 @@ class GroupBaseSchema(BaseModel):
     social_media_links: str
 
 
-class GroupCreateSchema(BaseModel):
-    title: str
-    max_members: int
-    type: str
-    description: str | None = None
-    # logo_url: str | None = None
-    social_media_links: str | None = None
+class GroupType(str, Enum):
+    TEAM = "TEAM"
+    JURY = "JURY"
 
+
+class GroupCreateSchema(BaseModel):
+    title: constr(min_length=1, max_length=20)
+    max_members: conint(ge=2)
+    type: str
+    # logo_url: str | None = None
+    description: Optional[constr(min_length=1, max_length=200)] = None
+    social_media_links: Optional[str] = None
+
+    @field_validator('type')
+    def validate_group_type(cls, v):
+        try:
+            return GroupType[v.upper()]
+        except KeyError:
+            allowed_values = [e.value for e in GroupType]
+            raise ValueError(
+                f"Invalid group type. Must be one of: {allowed_values}"
+            )
 
 class GroupUpdateSchema(BaseModel):
-    title: str | None = None
-    max_members: int | None = None
-    description: str | None = None
+    title: Optional[constr(min_length=1, max_length=20)] = None
+    max_members: Optional[conint(ge=2)] = None
+    description: Optional[constr(min_length=1, max_length=200)] = None
+    social_media_links: Optional[str] = None
     # logo_url: str | None = None
-    social_media_links: str | None = None
-
-
 class GroupSchema(GroupBaseSchema):
     model_config = ConfigDict(from_attributes=True)
     id: int

@@ -64,8 +64,18 @@ async def update_group(
         group=group,
         session=session,
     )
-
-
+@router.patch('/deactivate',dependencies=[Depends(user_is_owner_of_this_group)])
+async def de_active(
+    group: GroupSchema = Depends(get_group_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.de_activate_group(session=session, group=group)
+@router.patch('/activate',dependencies=[Depends(user_is_owner_of_this_group)])
+async def active(
+    group: GroupSchema = Depends(get_group_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.activate_group(session=session, group=group)
 @router.patch(
     "/logo",
     dependencies=[Depends(user_is_owner_of_this_group)],
@@ -81,7 +91,14 @@ async def update_group_logo(
         session=session,
     )
 
-
+@router.get(
+    '/{owner_id}/group'
+)
+async def get_group_where_i_owner(
+        user : User = Depends(current_active_user),
+        session : AsyncSession = Depends(db_helper.session_getter)
+):
+    return await crud.get_my_group_for_owner(session=session,owner_id=user.id)
 @router.get(
     "/{group_id}/users",
     dependencies=[Depends(user_is_owner_of_this_group)],

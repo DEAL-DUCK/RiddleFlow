@@ -1,10 +1,11 @@
 from fastapi import HTTPException, status, UploadFile
-from sqlalchemy import select, Result
+from sqlalchemy import select, Result, func, delete
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from api_v1.groups.schemas import GroupCreateSchema, GroupUpdateSchema, GroupSchema
+from api_v1.groups.schemas import GroupCreateSchema, GroupUpdateSchema, GroupSchema,GroupStatus
 from core.config import settings
-from core.models import Group, User, GroupUserAssociation
+from core.models import Group, User, GroupUserAssociation, HackathonGroupAssociation
 from core.models.group_user_association import ParticipationStatus
 
 
@@ -13,8 +14,14 @@ async def get_groups(session: AsyncSession) -> list[Group]:
     result: Result = await session.execute(stmt)
     groups = result.scalars().all()
     return list(groups)
-
-
+async def get_my_group_for_owner(
+        session : AsyncSession,
+        owner_id : int
+) ->list[Group]:
+    stmt = select(Group).where(Group.owner_id == owner_id)
+    result : Result = await session.execute(stmt)
+    groups = result.scalars().all()
+    return list(groups)
 async def get_group(session: AsyncSession, group_id: int) -> Group | None:
     return await session.get(Group, group_id)
 
@@ -24,11 +31,30 @@ async def create_group(
     group_in: GroupCreateSchema,
     user_id: int,
 ) -> Group:
+    groups_count = await session.scalar(
+        select(func.count(Group.id))
+    )
+
+    if groups_count >= 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Maximum number of groups (10) has been reached"
+        )
+
+    existing_group = await session.execute(
+        select(Group).where(Group.title == group_in.title)
+    )
+    if existing_group.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Group with this title already exists"
+        )
     group = Group(
         **group_in.model_dump(),
         logo_url=f"{settings.s3.domain_url}/default_logo.jpg",
         owner_id=user_id,
     )
+    group.current_members += 1
     session.add(group)
     await session.commit()
     return group
@@ -81,10 +107,18 @@ async def add_user_in_group(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="creators can't be in group",
         )
+    if group.status == GroupStatus.BANNED :
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"The team id BANNED",
+        )
+
     association = GroupUserAssociation(
         group_id=group.id,
         user_id=user.id,
     )
+    group.status = "ACTIVE"
+    group.updated_at = func.now()
     group.current_members += 1
     session.add(association)
     await session.commit()
@@ -134,3 +168,35 @@ async def get_users_in_group(
         }
         for assoc in associations
     ]
+
+
+async def de_activate_group(
+        session: AsyncSession,
+        group: Group,
+) -> dict:
+    group.status = "INACTIVE"
+    group.updated_at = func.now()
+
+    await session.execute(
+        delete(HackathonGroupAssociation)
+        .where(HackathonGroupAssociation.group_id == group.id)
+    )
+
+    await session.commit()
+    return {
+        'status': 'success',
+        'message': 'Group deactivated successfully',
+        'new_status': 'INACTIVE'
+        }
+async def activate_group(
+        session: AsyncSession,
+        group: Group,
+) -> dict:
+    group.status = "ACTIVE"
+    group.updated_at = func.now()
+    await session.commit()
+    return {
+        'status': 'success',
+        'message': 'Group deactivated successfully',
+        'new_status': 'ACTIVE'
+        }
