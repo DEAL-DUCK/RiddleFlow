@@ -6,14 +6,15 @@ from api_v1.users.schemas import (
     UserCreate,
     UserRole,
 )
-from core.models import db_helper, User
+from core.models import db_helper, User, Group
 from api_v1.auth.fastapi_users import (
     current_active_user,
     current_active_superuser,
     fastapi_users,
 )
-from .crud import is_this_user_admin,get_all_hackathons,del_all_my_hackathon
+from .crud import is_this_user_admin,get_all_hackathons,del_all_my_hackathon,BANNED
 from ..groups.crud import get_groups
+from ..groups.dependencies import get_group_by_id
 from ..hackathons.schemas import HackathonSchema
 from ..submissions.crud import get_submission_by_id_func, get_submission_by_task_id_plus_user_id, \
     delete_submission_by_id, all_submissions, delete_all_submissions_any_user
@@ -87,3 +88,12 @@ async def delete_all_my_hack(
         session : AsyncSession = Depends(db_helper.session_getter)
 ):
     return await del_all_my_hackathon(session=session,user_id=user.id)
+@router.delete('/group/ban',dependencies=[Depends(current_active_superuser)]
+)
+async def banned_group(
+        session : AsyncSession = Depends(db_helper.session_getter),
+        group: Group = Depends(get_group_by_id),
+        user : User = Depends(current_active_superuser)
+):
+    return await BANNED(session=session, group=group)
+

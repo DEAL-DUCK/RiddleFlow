@@ -1,12 +1,12 @@
 from fastapi import Depends, HTTPException
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from api_v1.hackathons.schemas import HackathonBaseSchema, HackathonSchema
-from core.models import User, Hackathon
+from core.models import User, Hackathon, Group, GroupUserAssociation
 
 
 async def is_this_user_admin(
@@ -52,3 +52,21 @@ async def del_all_my_hackathon(
 
     await session.commit()
     return {'ok': True}
+async def BANNED(
+        session : AsyncSession,
+        group : Group
+):
+    group.status = "BANNED"
+    group.updated_at = func.now()
+    associations = await session.scalars(
+        select(GroupUserAssociation)
+        .where(GroupUserAssociation.group_id == group.id)
+        .where(GroupUserAssociation.user_id != group.owner_id))
+    for association in associations:
+        await session.delete(association)
+    group.current_members = 1
+    await session.commit()
+    return {'ok' : f'group with id {group.id} BANNED AHAHAHAHA'}
+
+
+
