@@ -2,6 +2,8 @@ from datetime import datetime
 import logging
 
 from typing import List
+
+from core.models.group import GroupStatus
 from .dependencies2 import act_group
 from fastapi import HTTPException, status
 from sqlalchemy import select, Result, func
@@ -93,9 +95,9 @@ async def create_hackathon(
 ) -> Hackathon:
 
     hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
-    stmt = select(func.count()).select_from(Hackathon).where(Hackathon.creator_id == user_id)
+    stmt = select(func.count()).select_from(Hackathon).where(Hackathon.creator_id == user_id).where(Hackathon.status != HackathonStatus.PLANNED)
     count = await session.scalar(stmt)
-    if count >= 20: #временно . когда таблица решений востановится будет 5
+    if count >= 5:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='The maximum number of hackathons created has been exceeded (max 20)')
     session.add(hackathon)
     await session.commit()
@@ -211,6 +213,11 @@ async def add_user_in_hackathon(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="creators can't be in hackathon members",
         )
+    if hackathon.status == HackathonStatus.ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='hackathon begin. you dont can patch'
+        )
     existing_association = await session.scalar(
         select(HackathonUserAssociation)
         .where(HackathonUserAssociation.hackathon_id == hackathon.id)
@@ -321,7 +328,7 @@ async def add_group_in_hackathon(
 ):
     if not hackathon.allow_teams:
         return HTTPException(status_code=status.HTTP_409_CONFLICT,detail='teams are not allowed to participate in the hackathon')
-    if group.status == 'BANNED':
+    if group.status == GroupStatus.BANNED:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Group {group.id} BANNED",

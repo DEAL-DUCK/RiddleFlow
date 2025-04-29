@@ -6,7 +6,8 @@ from starlette import status
 
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from api_v1.hackathons.schemas import HackathonBaseSchema, HackathonSchema
-from core.models import User, Hackathon, Group, GroupUserAssociation
+from core.models import User, Hackathon, Group, GroupUserAssociation, HackathonGroupAssociation, \
+    HackathonUserAssociation
 from core.models.group import GroupStatus
 
 
@@ -53,21 +54,71 @@ async def del_all_my_hackathon(
 
     await session.commit()
     return {'ok': True}
-async def BANNED(
+async def de_active_user(session : AsyncSession,user:User):
+    user.is_active = False
+    await session.commit()
+    return {'ok' : f'user {user.id} deactive'}
+async def active_user(session : AsyncSession,user:User):
+    user.is_active = True
+    await session.commit()
+    return {'ok' : f'user {user.id} active'}
+async def BANNED(session: AsyncSession, group: Group) -> dict:
+    if group.status == GroupStatus.BANNED:
+        return {
+            'ok': False,
+            'message': f'Group {group.title} is already banned',
+            'group_id': group.id
+        }
+
+    if session.in_transaction():
+        await session.commit()
+
+    result = await session.execute(
+        delete(GroupUserAssociation)
+        .where(GroupUserAssociation.group_id == group.id)
+        .where(GroupUserAssociation.user_id != group.owner_id)
+        .returning(GroupUserAssociation.user_id)
+    )
+    member_ids = [row[0] for row in result.all()]
+
+    deleted_hackathons = await session.execute(
+        delete(HackathonGroupAssociation)
+        .where(HackathonGroupAssociation.group_id == group.id)
+    )
+
+    deleted_individual = 0
+    if member_ids:
+        result = await session.execute(
+            delete(HackathonUserAssociation)
+            .where(HackathonUserAssociation.user_id.in_(member_ids))
+        )
+        deleted_individual = result.rowcount
+
+    group.status = GroupStatus.BANNED
+    group.updated_at = func.now()
+    group.current_members = 1
+
+    await session.commit()
+
+    return {
+        'ok': True,
+        'message': f'Group {group.title} fully banned',
+        'group_id': group.id,
+        'deleted_members': len(member_ids),
+        'deleted_hackathon_associations': deleted_hackathons.rowcount,
+        'deleted_individual_participations': deleted_individual,
+        'remaining_members': 1
+    }
+async def UNBANNED(
         session : AsyncSession,
         group : Group
 ):
-    group.status = 'BANNED'
+    group.status = GroupStatus.ACTIVE.value
     group.updated_at = func.now()
-    associations = await session.scalars(
-        select(GroupUserAssociation)
-        .where(GroupUserAssociation.group_id == group.id)
-        .where(GroupUserAssociation.user_id != group.owner_id))
-    for association in associations:
-        await session.delete(association)
-    group.current_members = 1
     await session.commit()
-    return {'ok' : f'group with id {group.id} BANNED AHAHAHAHA'}
 
-
+    return {
+        'ok': True,
+        'message': f'Group {group.title} (ID: {group.id}) has been unbanned',
+    }
 

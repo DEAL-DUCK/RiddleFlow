@@ -10,6 +10,7 @@ from api_v1.groups.crud import get_group
 from api_v1.hackathons.dependencies import get_hackathon_by_id
 from api_v1.users.dependencies import user_is_participant
 from core.models import db_helper, Group, User, Hackathon
+from core.models.group import GroupStatus
 
 
 async def get_group_by_id(
@@ -29,12 +30,18 @@ async def user_is_owner_of_this_group(
     group: Group = Depends(get_group_by_id),
     user: User = Depends(user_is_participant),
 ):
+    """if group.status == GroupStatus.BANNED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"this group BANNED",
+        )"""
     if group.owner_id == user.id:
         return user
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=f"user {user.id} is not owner of group",
     )
+
 
 
 async def user_is_owner_of_this_group_or_hackathon_creator(
