@@ -1,5 +1,7 @@
 from fastapi import Depends, APIRouter, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
+
 from api_v1.users.crud import get_users, get_user,del_user
 from api_v1.users.schemas import (
     UserRead,
@@ -116,3 +118,31 @@ async def unbanned_group(
         user : User = Depends(current_active_superuser)
 ):
     return await crud.UNBANNED(session=session, group=group)
+
+
+@router.delete("/groups/delete-all",
+               dependencies=[Depends(current_active_superuser)])
+async def delete_all_groups_route(
+        session: AsyncSession = Depends(db_helper.session_getter)
+):
+    return await crud.delete_all_groups(session=session)
+
+
+@router.delete("/groups/{group_id}",
+               dependencies=[Depends(current_active_user)])
+async def delete_group_route(
+        group_id: int,
+        session: AsyncSession = Depends(db_helper.session_getter),
+        current_user: User = Depends(current_active_user)
+):
+    group = await session.get(Group, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    if current_user.id != group.owner_id and not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only owner or admin can delete group"
+        )
+
+    return await crud.delete_group_by_id(session=session, group_id=group_id)

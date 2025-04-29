@@ -249,7 +249,6 @@ async def delete_user_in_hackathon(
         hackathon: Hackathon,
         user: User,
 ):
-    # Находим ассоциацию между пользователем и хакатоном
     association = await session.scalar(
         select(HackathonUserAssociation)
         .where(HackathonUserAssociation.hackathon_id == hackathon.id)

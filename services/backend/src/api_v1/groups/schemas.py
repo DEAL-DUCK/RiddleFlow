@@ -1,6 +1,6 @@
 import enum
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from enum import Enum
 from pydantic import BaseModel, field_validator, constr, conint
 from typing import Optional
@@ -45,6 +45,14 @@ class GroupCreateSchema(BaseModel):
             raise ValueError(
                 f"Invalid group type. Must be one of: {allowed_values}"
             )
+
+    @model_validator(mode="before")
+    def check_max_participants(cls, values):
+        max_members = values.get("max_members")
+        if max_members is not None and max_members <= 0:
+            raise ValueError("max_members must be greater than zero")
+        return values
+
 
 class GroupUpdateSchema(BaseModel):
     title: Optional[constr(min_length=1, max_length=20)] = None

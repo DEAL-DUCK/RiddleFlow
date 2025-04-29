@@ -89,6 +89,16 @@ async def update_group_logo(
         group=group,
         session=session,
     )
+@router.patch(
+    "/change_max_members",
+    dependencies=[Depends(user_is_owner_of_this_group)],
+)
+async def change_group_max_members(
+    new_max_members: int,
+    group: GroupSchema = Depends(get_group_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.update_group_max_members(session=session,group=group,new_max_members=new_max_members)
 @router.get('/user_id/group')
 async def get_group_for_user(
         user : User = Depends(current_active_user),

@@ -384,3 +384,38 @@ async def get_group_for_user_id(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="User is not an owner or member of any group"
     )
+async def update_group_max_members(
+    session: AsyncSession,
+    group: Group,
+    new_max_members: int
+) -> dict:
+
+    hackathon_count = await session.scalar(
+        select(func.count(HackathonGroupAssociation.group_id))
+        .where(HackathonGroupAssociation.group_id == group.id)
+    )
+
+    if hackathon_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change max members for group participating in hackathons"
+        )
+
+    if new_max_members < group.current_members:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"New max members ({new_max_members}) cannot be less than current members count ({group.current_members})"
+        )
+
+    group.max_members = new_max_members
+    group.updated_at = func.now()
+
+    await session.commit()
+
+    return {
+        'ok': True,
+        'message': f"Max members updated to {new_max_members}",
+        'group_id': group.id,
+        'new_max_members': new_max_members,
+        'current_members': group.current_members
+    }
