@@ -121,15 +121,15 @@ async def unbanned_group(
 
 
 @router.delete("/groups/delete-all",
-               dependencies=[Depends(current_active_superuser)])
+               dependencies=[Depends(current_active_superuser)],summary=f'СНЕСЕНА ФУНКЦИЯ')
 async def delete_all_groups_route(
         session: AsyncSession = Depends(db_helper.session_getter)
 ):
-    return await crud.delete_all_groups(session=session)
+    return f'СНЕСЕНА ФУНКЦИЯ'
 
 
 @router.delete("/groups/{group_id}",
-               dependencies=[Depends(current_active_user)])
+               dependencies=[Depends(current_active_user)],summary=f'СНЕСЕНА ФУНКЦИЯ')
 async def delete_group_route(
         group_id: int,
         session: AsyncSession = Depends(db_helper.session_getter),
@@ -145,4 +145,4 @@ async def delete_group_route(
             detail="Only owner or admin can delete group"
         )
 
-    return await crud.delete_group_by_id(session=session, group_id=group_id)
+    return f'СНЕСЕНА ФУНКЦИЯ'
