@@ -12,6 +12,9 @@ from core.models.group_user_association import ParticipationStatus
 from core.models.hackathon import HackathonStatus
 from core.models.hackathon_group_association import TeamStatus
 from .dependencies2 import del_group_in_hack
+from ..users.schemas import UserRole
+
+
 async def get_groups(session: AsyncSession) -> list[Group]:
     stmt = select(Group).order_by(Group.id)
     result: Result = await session.execute(stmt)
@@ -56,8 +59,9 @@ async def create_group(
         **group_in.model_dump(),
         logo_url=f"{settings.s3.domain_url}/default_logo.jpg",
         owner_id=user_id,
+        current_members = 1
+
     )
-    group.current_members += 1
     session.add(group)
     await session.commit()
     return group
@@ -84,7 +88,7 @@ async def update_group_logo(
     return group
 
 
-async def add_user_in_group(
+async def add_user_in_group_for_id(
     session: AsyncSession,
     group: Group,
     user: User,
@@ -128,6 +132,56 @@ async def add_user_in_group(
     return association
 
 
+async def add_user_in_group_for_username(
+        session: AsyncSession,
+        group: Group,
+        user: User,
+):
+
+    existing_association = await session.scalar(
+        select(GroupUserAssociation)
+        .where(GroupUserAssociation.group_id == group.id)
+        .where(GroupUserAssociation.user_id == user.id)
+    )
+
+    if existing_association and not user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"User @{user.username} is already in this group",
+        )
+    if group.max_members <= group.current_members:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Group has reached maximum capacity",
+        )
+
+    if user.user_role == UserRole.CREATOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only participants can join groups",
+        )
+
+    if group.status == GroupStatus.BANNED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Group is banned and cannot accept new members",
+        )
+    association = GroupUserAssociation(
+        group_id=group.id,
+        user_id=user.id,
+    )
+
+    group.status = GroupStatus.ACTIVE.value
+    group.updated_at = func.now()
+    group.current_members += 1
+
+    session.add(association)
+    await session.commit()
+    await session.refresh(association)
+
+    return {'ok':"True",
+            'user_id': association.user_id,
+            'username' : user.username}
 async def delete_user_in_group(
     session: AsyncSession,
     group: Group,
@@ -239,3 +293,94 @@ async def activate_group(
         'message': 'Group deactivated successfully',
         'new_status': 'ACTIVE'
         }
+
+
+async def get_group_for_user_id(
+        session: AsyncSession,
+        user: User
+) -> dict:
+    owner_stmt = select(Group).where(Group.owner_id == user.id)
+    owner_result = await session.execute(owner_stmt)
+    owner_groups = list(owner_result.scalars().all())
+
+    if owner_groups:
+        result = []
+        for group in owner_groups:
+
+            owner_stmt = select(User.username).where(User.id == group.owner_id)
+            owner_result = await session.execute(owner_stmt)
+            owner_username = owner_result.scalar()
+            members_stmt = (
+                select(User.username)
+                .join(GroupUserAssociation, GroupUserAssociation.user_id == User.id)
+                .where(GroupUserAssociation.group_id == group.id)
+            )
+            members_result = await session.execute(members_stmt)
+
+            members = []
+            if owner_username:
+                members.append({
+                    "username": owner_username,
+                    "role": "OWNER"
+                })
+
+            for (username,) in members_result:
+                if username != owner_username:
+                    members.append({
+                        "username": username,
+                        "role": "MEMBER"
+                    })
+
+            result.append({
+                "group": group,
+                "role": "OWNER",
+                "group_members": members
+            })
+
+        return result[0] if len(result) == 1 else result
+    member_stmt = (
+        select(GroupUserAssociation, Group)
+        .join(Group, GroupUserAssociation.group_id == Group.id)
+        .where(GroupUserAssociation.user_id == user.id)
+    )
+    member_result = await session.execute(member_stmt)
+    association_with_group = member_result.first()
+
+    if association_with_group:
+        association, group = association_with_group
+        owner_stmt = select(User.username).where(User.id == group.owner_id)
+        owner_result = await session.execute(owner_stmt)
+        owner_username = owner_result.scalar()
+
+        members_stmt = (
+            select(User.username)
+            .join(GroupUserAssociation, GroupUserAssociation.user_id == User.id)
+            .where(GroupUserAssociation.group_id == group.id)
+        )
+        members_result = await session.execute(members_stmt)
+
+        members = []
+        if owner_username:
+            members.append({
+                "username": owner_username,
+                "role": "OWNER"
+            })
+
+        for (username,) in members_result:
+            if username != owner_username:
+                members.append({
+                    "username": username,
+                    "role": "MEMBER"
+                })
+
+        return {
+            "group": group,
+            "role": "MEMBER",
+            "group_association": association,
+            "group_members": members
+        }
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="User is not an owner or member of any group"
+    )

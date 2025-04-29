@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Path, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -20,6 +21,17 @@ async def get_user_by_id(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"User {user_id} if not found",
     )
+async def get_user_by_username(
+    username: Annotated[str, Path],
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    user = await session.scalar(select(User).where(User.username == username))
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User {username} not found",
+        )
+    return user
 
 
 async def user_is_creator(

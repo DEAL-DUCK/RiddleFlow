@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column("description", sa.String(length=255), nullable=True),
         sa.Column("owner_id", sa.Integer(), nullable=False),
         sa.Column("max_members", sa.Integer(), nullable=False),
-        sa.Column("current_members", sa.Integer(), server_default="0", nullable=False),
+        sa.Column("current_members", sa.Integer(), server_default="1", nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),

@@ -7,6 +7,7 @@ from starlette import status
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from api_v1.hackathons.schemas import HackathonBaseSchema, HackathonSchema
 from core.models import User, Hackathon, Group, GroupUserAssociation
+from core.models.group import GroupStatus
 
 
 async def is_this_user_admin(
@@ -56,7 +57,7 @@ async def BANNED(
         session : AsyncSession,
         group : Group
 ):
-    group.status = "BANNED"
+    group.status = 'BANNED'
     group.updated_at = func.now()
     associations = await session.scalars(
         select(GroupUserAssociation)

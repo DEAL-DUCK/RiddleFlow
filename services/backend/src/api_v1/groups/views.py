@@ -1,9 +1,8 @@
 from fastapi import Depends, APIRouter, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from api_v1.users.dependencies import get_user_by_id
+from api_v1.users.dependencies import get_user_by_id, get_user_by_username
 from .dependencies import get_group_by_id, user_is_owner_of_this_group, upload_file
 from . import crud
-
 from core.models import db_helper, Group, User
 from .schemas import GroupCreateSchema, GroupUpdateSchema, GroupSchema
 from api_v1.auth.fastapi_users import current_active_superuser, current_active_user
@@ -90,7 +89,12 @@ async def update_group_logo(
         group=group,
         session=session,
     )
-
+@router.get('/user_id/group')
+async def get_group_for_user(
+        user : User = Depends(current_active_user),
+        session: AsyncSession = Depends(db_helper.session_getter)
+):
+    return await crud.get_group_for_user_id(session=session,user=user)
 @router.get(
     '/{owner_id}/group'
 )
@@ -111,16 +115,25 @@ async def get_users_in_group(
 
 
 @router.post(
-    "/{group_id}/users",
+    "/{group_id}/user_id",
     dependencies=[Depends(user_is_owner_of_this_group)],
 )
-async def add_user_in_group(
+async def add_user_in_group_by_id(
     group: Group = Depends(get_group_by_id),
     user: User = Depends(get_user_by_id),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.add_user_in_group(group=group, user=user, session=session)
-
+    return await crud.add_user_in_group_for_id(group=group, user=user, session=session)
+@router.post(
+    "/{group_id}/username",
+    dependencies=[Depends(user_is_owner_of_this_group)],
+)
+async def add_user_in_group_by_username(
+    group: Group = Depends(get_group_by_id),
+    user: User = Depends(get_user_by_username),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.add_user_in_group_for_username(group=group, user=user, session=session)
 
 @router.delete(
     "/{group_id}/users",
