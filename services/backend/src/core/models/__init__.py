@@ -1,10 +1,10 @@
 __all__ = {
-    # # "Olympiad",
     "db_helper",
     "User",
     "Profile",
     "Hackathon",
     "HackathonUserAssociation",
+    "ContestUserAssociation",
     "Task",
     "Submission",
     "access_token",
@@ -12,9 +12,11 @@ __all__ = {
     "Group",
     "GroupUserAssociation",
     "HackathonGroupAssociation",
+    "ContestGroupAssociation",
+    "Contest",
 }
 
-# from .olympiad import Olympiad # пока отрубаю
+
 from .user import User
 from .db_helper import db_helper
 from .base import Base
@@ -27,3 +29,6 @@ from .hackathon_group_association import HackathonGroupAssociation
 from .task import Task
 from .access_token import AccessToken
 from .submission import Submission
+from .contest import Contest
+from .contest_group_association import ContestGroupAssociation
+from .contest_user_association import ContestUserAssociation

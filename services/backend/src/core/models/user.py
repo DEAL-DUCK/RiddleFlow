@@ -1,7 +1,6 @@
 import enum
 from typing import TYPE_CHECKING
 
-# from .hackathon_user_association import HackathonUserAssociation
 from .base import Base
 from fastapi_users_db_sqlalchemy import (
     SQLAlchemyBaseUserTable,
@@ -21,6 +20,9 @@ if TYPE_CHECKING:
     from .submission import Submission
     from sqlalchemy.ext.asyncio import AsyncSession
     from .group_user_association import GroupUserAssociation
+    from .contest import Contest
+    from .hackathon_user_association import HackathonUserAssociation
+    from .contest_user_association import ContestUserAssociation
 
 
 class UserRole(enum.Enum):
@@ -54,11 +56,24 @@ class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
         cascade="all, delete-orphan",
     )
 
+    created_contests: Mapped[list["Hackathon"]] = relationship(
+        "Contest",
+        back_populates="creator",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+
     hackathons_details: Mapped[list["HackathonUserAssociation"]] = relationship(
         back_populates="user",
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+    contests_details: Mapped[list["ContestUserAssociation"]] = relationship(
+        back_populates="user",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+
     submissions: Mapped[list["Submission"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",

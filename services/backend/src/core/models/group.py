@@ -23,6 +23,7 @@ class GroupStatus(enum.Enum):
 if TYPE_CHECKING:
     from .hackathon_group_association import HackathonGroupAssociation
     from .group_user_association import GroupUserAssociation
+    from .contest_group_association import ContestGroupAssociation
 
 
 class Group(Base, IdIntPkMixin):
@@ -66,6 +67,10 @@ class Group(Base, IdIntPkMixin):
         cascade="all, delete-orphan",
     )
     hackathons_details: Mapped[list["HackathonGroupAssociation"]] = relationship(
+        back_populates="group",
+        cascade="all, delete-orphan",
+    )
+    contests_details: Mapped[list["ContestGroupAssociation"]] = relationship(
         back_populates="group",
         cascade="all, delete-orphan",
     )
