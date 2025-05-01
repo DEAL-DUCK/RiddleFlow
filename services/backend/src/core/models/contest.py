@@ -1,5 +1,5 @@
 from .base import Base
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Text, DateTime, Enum, Integer, ForeignKey, Index, Boolean
 from sqlalchemy.sql import func
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .contest_user_association import ContestUserAssociation
     from .user import User
     from .contest_task import ContestTask
+    from .contest_archive import ArchivedContest
 
 
 class ContestStatus(enum.Enum):
@@ -68,4 +69,9 @@ class Contest(Base, IdIntPkMixin):
         back_populates="contest",
         lazy="selectin",
         cascade="all, delete-orphan",
+    )
+    archived_record: Mapped[Optional["ArchivedContest"]] = relationship(
+        back_populates="original",
+        cascade="all, delete-orphan",
+        uselist=False
     )
