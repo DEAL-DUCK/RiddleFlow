@@ -9,7 +9,7 @@ from fastapi_users_db_sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Boolean, Index, DateTime, Enum
 from sqlalchemy.sql import func
-import datetime
+from datetime import datetime
 
 from core.types.user_id import UserIdType
 from .mixins.int_pk_id import IdIntPkMixin
@@ -17,10 +17,9 @@ from .mixins.int_pk_id import IdIntPkMixin
 if TYPE_CHECKING:
     from .profile import Profile
     from .hackathon import Hackathon
-    from .submission import Submission
+    from .hackathon_submission import HackathonSubmission
     from sqlalchemy.ext.asyncio import AsyncSession
     from .group_user_association import GroupUserAssociation
-    from .contest import Contest
     from .hackathon_user_association import HackathonUserAssociation
     from .contest_user_association import ContestUserAssociation
 
@@ -74,7 +73,7 @@ class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
         cascade="all, delete-orphan",
     )
 
-    submissions: Mapped[list["Submission"]] = relationship(
+    hackathon_submissions: Mapped[list["HackathonSubmission"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )

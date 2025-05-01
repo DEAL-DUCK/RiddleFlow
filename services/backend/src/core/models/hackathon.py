@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .hackathon_group_association import HackathonGroupAssociation
     from .hackathon_user_association import HackathonUserAssociation
     from .user import User
-    from .task import Task
+    from .hackathon_task import HackathonTask
 
 
 class HackathonStatus(enum.Enum):
@@ -60,7 +60,7 @@ class Hackathon(Base, IdIntPkMixin):
         back_populates="hackathon",
         cascade="all, delete-orphan",
     )
-    tasks: Mapped[list["Task"]] = relationship(
+    tasks: Mapped[list["HackathonTask"]] = relationship(
         back_populates="hackathon",
         cascade="all, delete-orphan",
     )

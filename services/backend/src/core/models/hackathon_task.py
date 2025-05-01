@@ -20,9 +20,8 @@ from .mixins.int_pk_id import IdIntPkMixin
 
 if TYPE_CHECKING:
     from .hackathon import Hackathon
+    from .hackathon_submission import HackathonSubmission
     from .user import User
-    from .submission import Submission
-    from .contest import Contest
 
 
 class TaskType(enum.Enum):
@@ -33,7 +32,8 @@ class TaskType(enum.Enum):
     HARDWARE = "HARDWARE"  # IoT/железо
 
 
-class Task(Base, IdIntPkMixin):
+class HackathonTask(Base, IdIntPkMixin):
+    __tablename__ = "hackathon_tasks"
     __table_args__ = (
         Index("idx_task_hackathon", "hackathon_id"),
         Index("idx_task_type", "task_type", "hackathon_id"),
@@ -45,10 +45,9 @@ class Task(Base, IdIntPkMixin):
         ForeignKey("hackathons.id"),
         nullable=False,
     )
-
+    # creator: Mapped["User"] = relationship(back_populates="created_tasks")
     hackathon: Mapped["Hackathon"] = relationship(back_populates="tasks")
-    # contest: Mapped["Contest"] = relationship(back_populates="tasks")
-    submissions: Mapped[list["Submission"]] = relationship(
+    submissions: Mapped[list["HackathonSubmission"]] = relationship(
         back_populates="task",
         cascade="all, delete-orphan",
     )
@@ -82,9 +81,4 @@ class Task(Base, IdIntPkMixin):
     # creator_id: Mapped[int] = mapped_column(
     #     ForeignKey("users.id"),
     #     nullable=False,
-    # )
-
-    # creator: Mapped["User"] = relationship(back_populates="created_tasks")
-    # submissions: Mapped[list["Submission"]] = relationship(
-    #     back_populates="task", cascade="all, delete-orphan"
     # )

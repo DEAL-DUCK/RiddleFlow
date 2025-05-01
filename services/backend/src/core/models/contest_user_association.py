@@ -5,7 +5,7 @@ from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, UniqueConstraint, Enum, DateTime, Index, Integer
 from sqlalchemy.sql import func
-import datetime
+from datetime import datetime
 from .mixins.int_pk_id import IdIntPkMixin
 
 if TYPE_CHECKING:

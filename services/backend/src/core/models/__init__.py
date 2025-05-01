@@ -5,8 +5,8 @@ __all__ = {
     "Hackathon",
     "HackathonUserAssociation",
     "ContestUserAssociation",
-    "Task",
-    "Submission",
+    "HackathonTask",
+    "HackathonSubmission",
     "access_token",
     "Base",
     "Group",
@@ -26,9 +26,9 @@ from .hackathon import Hackathon
 from .hackathon_user_association import HackathonUserAssociation
 from .group_user_association import GroupUserAssociation
 from .hackathon_group_association import HackathonGroupAssociation
-from .task import Task
 from .access_token import AccessToken
-from .submission import Submission
 from .contest import Contest
 from .contest_group_association import ContestGroupAssociation
 from .contest_user_association import ContestUserAssociation
+from .hackathon_task import HackathonTask
+from .hackathon_submission import HackathonSubmission

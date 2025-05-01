@@ -9,7 +9,7 @@ from .mixins.int_pk_id import IdIntPkMixin
 
 
 if TYPE_CHECKING:
-    from .task import Task
+    from .hackathon_task import HackathonTask
     from .user import User
 
 
@@ -20,21 +20,13 @@ class SubmissionStatus(str, Enum):
     DISQUALIFIED = "DISQUALIFIED"  # Отклонено
 
 
-class Submission(Base, IdIntPkMixin):
+class HackathonSubmission(Base, IdIntPkMixin):
+    __tablename__ = "hackathon_submissions"
     code_url: Mapped[str] = mapped_column(String(255))  # Ссылка на репозиторий
-    # commit_hash: Mapped[str] = mapped_column(String(40))  # Контроль версий
     description: Mapped[str] = mapped_column(Text)  # Описание решения
-
-    # # Медиа
-    # demo_url: Mapped[str] = mapped_column(String(255), nullable=True)  # Демо
-    # video_url: Mapped[str] = mapped_column(String(255), nullable=True)  # Видео
-
-    # Статус и оценки
     status: Mapped[SubmissionStatus] = mapped_column(default=SubmissionStatus.DRAFT)
     # score: Mapped[float] = mapped_column(nullable=True)  # Итоговый балл
     # feedback: Mapped[str] = mapped_column(Text, nullable=True)  # Комментарии жюри
-
-    # Временные метки
     submitted_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), nullable=True
     )
@@ -42,12 +34,7 @@ class Submission(Base, IdIntPkMixin):
         DateTime, default=func.now(), nullable=True
     )
 
-    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"))
+    task_id: Mapped[int] = mapped_column(ForeignKey("hackathon_tasks.id"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    # team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), nullable=True)
-
-    task: Mapped["Task"] = relationship(back_populates="submissions")
-    user: Mapped["User"] = relationship(back_populates="submissions")
-    # attachments: Mapped[list["SubmissionAttachment"]] = relationship(
-    #     cascade="all, delete-orphan"
-    # )
+    task: Mapped["HackathonTask"] = relationship(back_populates="submissions")
+    user: Mapped["User"] = relationship(back_populates="hackathon_submissions")
