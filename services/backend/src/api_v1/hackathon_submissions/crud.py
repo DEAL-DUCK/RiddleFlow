@@ -40,7 +40,8 @@ async def create_submission(
             HackathonUserAssociation.user_id == user_id,
         )
     )
-    if not user_registered:
+    user = await session.get(User,user_id)
+    if not user_registered and not user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Пользователь не зарегистрирован на этот хакатон",
@@ -54,7 +55,7 @@ async def create_submission(
             detail="Хакатон не найден"
         )
 
-    if hackathon.status != HackathonStatus.ACTIVE:
+    if hackathon.status != HackathonStatus.ACTIVE and not user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Решения можно отправлять только в активных хакатонах"
@@ -199,10 +200,10 @@ async def update_submission(
 
 
 async def get_all_submissions_current_user_in_any_hackathon(
-        session: AsyncSession,
-        user: User,
-        hackathon: Hackathon,
-):
+    session: AsyncSession,
+    user: User,
+    hackathon: Hackathon,
+) -> list[dict]:
     query = (
         select(HackathonSubmission)
         .join(HackathonSubmission.task)
@@ -210,17 +211,25 @@ async def get_all_submissions_current_user_in_any_hackathon(
             HackathonSubmission.user_id == user.id,
             HackathonTask.hackathon_id == hackathon.id
         )
-        .options(
-            joinedload(HackathonSubmission.task),
-            joinedload(HackathonSubmission.user)
-        )
         .order_by(HackathonSubmission.submitted_at.desc())
     )
 
     result = await session.execute(query)
     submissions = result.scalars().all()
 
-    return submissions
+    return [
+        {
+            "id": submission.id,
+            "status": submission.status.value,
+            "code_url": submission.code_url,
+            "task_id": submission.task_id,
+            "user_id": submission.user_id,
+            "description": submission.description,
+            "submitted_at": submission.submitted_at.isoformat(),
+            "graded_at": submission.graded_at.isoformat(),
+        }
+        for submission in submissions
+    ]
 
 # async def get_all_evaluations(
 #     session: AsyncSession,

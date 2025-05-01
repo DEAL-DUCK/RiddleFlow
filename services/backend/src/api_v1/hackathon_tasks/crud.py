@@ -93,7 +93,12 @@ async def update_task(
 
     if task is None:
         raise HTTPException(status_code=404, detail="hackathon_tasks not found")
-
+    hackathon = await session.get(Hackathon, task.hackathon_id)
+    if hackathon.status == HackathonStatus.ACTIVE:
+        raise HTTPException(
+            status_code=400,
+            detail="Нельзя изменять задачи активного хакатона"
+        )
     allowed_fields = {"title", "description", "task_type", "hackathon_id"}
     invalid_fields = set(update_data.keys()) - allowed_fields
     if invalid_fields:

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import User
+from .dependencies import verify_user_is_creator_or_participant
 from .schemas import (
     CreateHackathonTaskSchema,
     HackathonTaskSchema,
@@ -43,7 +44,7 @@ async def get_all_tasks_(
 @router.get("/get_all_tasks_in_hackathon")
 async def get_tasks_in_hackathon(
     hackathon_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(verify_user_is_creator_or_participant),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.get_all_task_by_hackathon(
@@ -54,7 +55,7 @@ async def get_tasks_in_hackathon(
 @router.get("/{task_id}")
 async def get_task_by_id(
     task_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(verify_user_is_creator_or_participant),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     task = await crud.get_task_by_id(session=session, task_id=task_id)

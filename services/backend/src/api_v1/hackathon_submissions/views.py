@@ -81,7 +81,7 @@ async def delete_all_submissions_user(
 """
 
 
-@router.patch(
+"""@router.patch(
     "/{submission_id}",
     response_model=HackathonSubmissionRead,
     dependencies=[Depends(check_submission_ownership)],
@@ -95,7 +95,7 @@ async def update_submission_endpoint(
         session=session,
         submission_id=submission_id,
         update_data=update_data.model_dump(exclude_unset=True),
-    )
+    )"""
 
 
 @router.get("/by_hackathon/{hackathon_id}",dependencies=[Depends(current_active_user)])
