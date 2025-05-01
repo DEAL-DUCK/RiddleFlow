@@ -79,8 +79,8 @@ async def api_delete_task(
 @router.patch("/{task_id}")
 async def update_task_endpoint(
     task_id: int,
-    user: User,
     update_data: HackathonTaskUpdateSchema,
+    user: User = Depends(user_is_creator_of_this_hackathon),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.update_task(

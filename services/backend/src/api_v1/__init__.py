@@ -17,12 +17,12 @@ router.include_router(router=admin_router, prefix="/admin")
 router.include_router(router=auth_router, prefix="/auth")
 router.include_router(router=users_router, prefix="/users")
 router.include_router(router=profiles_router, prefix="/profiles")
-router.include_router(router=hackathons_router, prefix="/hackathons")
-#router.include_router(router=contests_router, prefix="/contests")
-router.include_router(
-    router=hackathon_submissions_router, prefix="/hackathon_submissions"
-)
-router.include_router(router=hackathon_tasks_router, prefix="/hackathon_tasks")
-#router.include_router(router=contest_submissions_router, prefix="/contest_submissions")
-#router.include_router(router=contest_tasks_router, prefix="/contest_tasks")
+#router.include_router(router=hackathons_router, prefix="/hackathons")
+router.include_router(router=contests_router, prefix="/contests")
+#router.include_router(
+#    router=hackathon_submissions_router, prefix="/hackathon_submissions"
+#)
+#router.include_router(router=hackathon_tasks_router, prefix="/hackathon_tasks")
+router.include_router(router=contest_submissions_router, prefix="/contest_submissions")
+router.include_router(router=contest_tasks_router, prefix="/contest_tasks")
 router.include_router(router=group_router, prefix="/groups")

@@ -32,6 +32,8 @@ class ContestTask(Base, IdIntPkMixin):
         ForeignKey("contests.id"),
         nullable=False,
     )
+    max_attempts: Mapped[int] = mapped_column(default=5, nullable=False)  # Максимальное количество попыток
+    current_attempts: Mapped[int] = mapped_column(default=0, nullable=False)  # Текущее количество решений
     # creator: Mapped["User"] = relationship(back_populates="created_tasks")
     contest: Mapped["Contest"] = relationship(back_populates="tasks")
     submissions: Mapped[list["ContestSubmission"]] = relationship(
