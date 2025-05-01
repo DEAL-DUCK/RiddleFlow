@@ -26,11 +26,11 @@ class HackathonBaseSchema(BaseModel):
 
 
 class HackathonCreateSchema(BaseModel):
-    title: str = Field(...,max_length=100)
-    description: str = Field(...,max_length=900)
+    title: str = Field(..., max_length=100)
+    description: str = Field(..., max_length=900)
     allow_teams: bool
     max_participants: int = Field(..., gt=0)
-    logo_url: str | None = None
+    # logo_url: str | None = None
     start_time: datetime.datetime | None
     end_time: datetime.datetime | None = None
 
@@ -57,20 +57,19 @@ class HackathonCreateSchema(BaseModel):
 
     @model_validator(mode="before")
     def check_tittle(cls, values):
-            title = values.get("title")
-            if len(title) > 100:
-                raise ValueError("The length is more than 100")
+        title = values.get("title")
+        if len(title) > 100:
+            raise ValueError("The length is more than 100")
 
-            return values
-        # включить на проде
-        # if (
-        #     start_time
-        #     and start_time[:10]
-        #     == datetime.datetime.now(datetime.timezone.utc).date().isoformat()
-        # ):
-        #     raise ValueError("start_time cannot be today")
+        return values
 
-
+    # включить на проде
+    # if (
+    #     start_time
+    #     and start_time[:10]
+    #     == datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    # ):
+    #     raise ValueError("start_time cannot be today")
 
 
 class HackathonUpdatePartial(HackathonCreateSchema):
@@ -80,7 +79,7 @@ class HackathonUpdatePartial(HackathonCreateSchema):
     start_time: datetime.datetime | None = None
     end_time: datetime.datetime | None = None
     allow_teams: bool | None = None
-    logo_url: str | None = None
+    # logo_url: str | None = None
 
 
 class HackathonSchema(HackathonBaseSchema):

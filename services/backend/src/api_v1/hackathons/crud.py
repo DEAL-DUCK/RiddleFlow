@@ -16,7 +16,7 @@ from api_v1.hackathons.schemas import (
     HackathonSchema,
     HackathonBaseSchema,
 )
-from core.config import redis_client
+from core.config import redis_client, settings
 from core.models import (
     Hackathon,
     User,
@@ -94,7 +94,11 @@ async def create_hackathon(
     user_id: int,
 ) -> Hackathon:
 
-    hackathon = Hackathon(**hackathon_in.model_dump(), creator_id=user_id)
+    hackathon = Hackathon(
+        **hackathon_in.model_dump(),
+        creator_id=user_id,
+        logo_url=f"{settings.s3.domain_url}/default_logo.jpg",
+    )
     stmt = (
         select(func.count())
         .select_from(Hackathon)
@@ -130,6 +134,16 @@ async def get_hackathons_for_user(
             status_code=404, detail="No hackathons found for the current user."
         )
     return list(hackathons)
+
+
+async def update_group_logo(
+    session: AsyncSession,
+    hackathon: HackathonSchema,
+    logo_url: str,
+) -> HackathonSchema:
+    hackathon.logo_url = logo_url
+    await session.commit()
+    return hackathon
 
 
 async def get_hackathon_for_creator(session: AsyncSession, user_id: int):

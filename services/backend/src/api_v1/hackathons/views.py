@@ -25,6 +25,7 @@ from ..groups.dependencies import (
     get_group_by_id,
     user_is_owner_of_this_group,
     user_is_owner_of_this_group_or_hackathon_creator,
+    upload_file,
 )
 
 router = APIRouter(tags=["Хакатоны"])
@@ -88,7 +89,7 @@ async def get_hack_when_i_creator(
     summary="""PLANNED
     ACTIVE 
     COMPLETED
-    CANCELED """
+    CANCELED """,
 )
 async def create_hackathon(
     hackathon_in: HackathonCreateSchema,
@@ -100,7 +101,7 @@ async def create_hackathon(
     )
 
 
-@router.patch("/",response_model=HackathonSchema)
+@router.patch("/", response_model=HackathonSchema)
 async def update_hackathon(
     hackathon_in: HackathonUpdatePartial,
     session: AsyncSession = Depends(db_helper.session_getter),
@@ -108,34 +109,56 @@ async def update_hackathon(
     hackathon: Hackathon = Depends(get_hackathon_by_id),
 ):
     return await crud.update_hack(
-        session=session,
-        hackathon_in=hackathon_in,
-        hackathon=hackathon,
-        user=user
+        session=session, hackathon_in=hackathon_in, hackathon=hackathon, user=user
     )
-@router.patch('/hackathon_id}/activate',summary='activate hackathon')
-async def force_activate_hack(
-    hackathon : Hackathon = Depends(get_hackathon_by_id),
-    session : AsyncSession = Depends(db_helper.session_getter),
-    user : User = Depends(user_is_creator_of_this_hackathon)
-):
-    return await crud.activate_hackathon(session=session,hackathon=hackathon)
 
-@router.patch('/{hackathon_id}/deactivate',summary='deactivate hackathon')
+
+@router.patch(
+    "/logo",
+    dependencies=[Depends(user_is_owner_of_this_group)],
+)
+async def update_hackathon_logo(
+    logo_url: str = Depends(upload_file),
+    hackathon: HackathonSchema = Depends(get_hackathon_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.update_hackathon_logo(
+        logo_url=logo_url,
+        hackathon=hackathon,
+        session=session,
+    )
+
+
+@router.patch("/hackathon_id}/activate", summary="activate hackathon")
+async def force_activate_hack(
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+    user: User = Depends(user_is_creator_of_this_hackathon),
+):
+    return await crud.activate_hackathon(session=session, hackathon=hackathon)
+
+
+@router.patch("/{hackathon_id}/deactivate", summary="deactivate hackathon")
 async def cancel_hack(
-    hackathon : Hackathon = Depends(get_hackathon_by_id),
-    session : AsyncSession = Depends(db_helper.session_getter),
-    user : User = Depends(user_is_creator_of_this_hackathon)
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+    user: User = Depends(user_is_creator_of_this_hackathon),
 ):
-    return await crud.cancel_hackathon(session=session,hackathon=hackathon)
-@router.patch('/{hackathon_id}/max_participant')
+    return await crud.cancel_hackathon(session=session, hackathon=hackathon)
+
+
+@router.patch("/{hackathon_id}/max_participant")
 async def change_max_participant(
-    new_max_users : int ,
-    hackathon : Hackathon = Depends(get_hackathon_by_id),
-    session : AsyncSession = Depends(db_helper.session_getter),
-    user : User = Depends(user_is_creator_of_this_hackathon)
+    new_max_users: int,
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+    user: User = Depends(user_is_creator_of_this_hackathon),
 ):
-    return await crud.patch_max_users_in_hack(session=session,hackathon=hackathon,max_participants=new_max_users,user=user)
+    return await crud.patch_max_users_in_hack(
+        session=session, hackathon=hackathon, max_participants=new_max_users, user=user
+    )
+
+
 @router.get(
     "/{hackathon_id}/users",
     dependencies=[Depends(user_is_creator_of_this_hackathon)],
@@ -197,6 +220,7 @@ async def add_group_in_hackathon(
         hackathon=hackathon, group=group, session=session
     )
 
+
 @router.delete(
     "/{hackathon_id}/groups",
     dependencies=[Depends(user_is_owner_of_this_group_or_hackathon_creator)],
@@ -209,6 +233,7 @@ async def delete_group_in_hackathons(
     return await crud.delete_group_in_hackathon(
         hackathon=hackathon, group=group, session=session
     )
+
 
 #
 # @router.get("/{hackathon_id}/jury")
