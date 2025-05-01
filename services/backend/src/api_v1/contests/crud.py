@@ -482,7 +482,7 @@ async def delete_contest(contest_id: int, session: AsyncSession):
     }
 
 
-async def patch_max_users_in_hack(
+async def patch_max_users_in_contest(
     session: AsyncSession, contest: Contest, max_participants: int, user: User
 ) -> ContestSchema:
     if contest.status != ContestStatus.PLANNED and not user.is_superuser:

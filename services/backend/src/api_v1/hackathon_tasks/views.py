@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.models import User
+from core.models import User, HackathonTask
 from .dependencies import verify_user_is_creator_or_participant, verify_user_is_creator_or_participant_by_task
 from .schemas import (
     CreateHackathonTaskSchema,
@@ -15,7 +15,6 @@ from api_v1.auth.fastapi_users import current_active_user, current_active_superu
 
 router = APIRouter(tags=["Задачи Хакатонов"])
 
-
 @router.post(
     "/create_task",
     response_model=HackathonTaskSchema,
@@ -28,63 +27,62 @@ async def create_task(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.create_task_for_hackathon(
-        session=session, task_data=task_data, hackathon_id=hackathon_id
+        session=session,
+        task_data=task_data,
+        hackathon_id=hackathon_id
     )
 
-
-"""@router.get("/get_all_tasks")
-async def get_all_tasks_(
-    session: AsyncSession = Depends(db_helper.session_getter),
-    user: User = Depends(current_active_superuser),
-):
-    result = await crud.get_all_tasks(session=session)
-    return result"""
-
-
-@router.get("/get_all_tasks_in_hackathon")
+@router.get(
+    "/get_all_tasks_in_hackathon",
+    response_model=list[HackathonTaskSchema]
+)
 async def get_tasks_in_hackathon(
     hackathon_id: int,
     user: User = Depends(verify_user_is_creator_or_participant),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.get_all_task_by_hackathon(
-        session=session, hackathon_id=hackathon_id
+    tasks = await crud.get_all_task_by_hackathon(
+        session=session,
+        hackathon_id=hackathon_id
     )
+    return [HackathonTaskSchema.model_validate(task) for task in tasks]
 
-
-@router.get("/{task_id}")
+@router.get(
+    "/{task_id}",
+    response_model=HackathonTaskSchema
+)
 async def get_task_by_id(
     task_id: int,
     user: User = Depends(verify_user_is_creator_or_participant_by_task),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     task = await crud.get_task_by_id(session=session, task_id=task_id)
-    return {
-        "id": task.id,
-        "title": task.title,
-        "description": task.description,
-        "max_attempts": task.max_attempts,
-        "current_attempts": task.current_attempts
-    }
-@router.delete("/{task_id}")
+    return HackathonTaskSchema.model_validate(task)
+
+@router.delete(
+    "/{task_id}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
 async def api_delete_task(
     task_id: int,
     user: User = Depends(user_is_creator_of_this_hackathon),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    result = await crud.delete_task(session=session, task_id=task_id)
-    return result
+    await crud.delete_task(session=session, task_id=task_id)
 
-
-@router.patch("/{task_id}")
+@router.patch(
+    "/{task_id}",
+    response_model=HackathonTaskSchema
+)
 async def update_task_endpoint(
     task_id: int,
     update_data: HackathonTaskUpdateSchema,
     user: User = Depends(user_is_creator_of_this_hackathon),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.update_task(
+    task = await crud.update_task(
         session=session,
         task_id=task_id,
         update_data=update_data.model_dump(exclude_unset=True),
     )
+    return HackathonTaskSchema.model_validate(task)
