@@ -1,8 +1,8 @@
 """create contest_user_associations table
 
-Revision ID: 59d97bc86d86
-Revises: 49e150f994d3
-Create Date: 2025-04-30 19:54:28.903551
+Revision ID: cdb31c1ff421
+Revises: dd1b772ec87d
+Create Date: 2025-05-01 12:08:27.131356
 
 """
 
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "59d97bc86d86"
-down_revision: Union[str, None] = "49e150f994d3"
+revision: str = "cdb31c1ff421"
+down_revision: Union[str, None] = "dd1b772ec87d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -33,7 +33,7 @@ def upgrade() -> None:
                 "COMPLETED",
                 "DISQUALIFIED",
                 "REFUSED",
-                name="participationstatus2",
+                name="participation_status",
             ),
             server_default="REGISTERED",
             nullable=False,

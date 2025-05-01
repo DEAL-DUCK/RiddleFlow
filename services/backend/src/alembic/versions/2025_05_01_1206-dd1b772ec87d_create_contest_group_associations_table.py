@@ -1,8 +1,8 @@
 """create contest_group_associations table
 
-Revision ID: 49e150f994d3
+Revision ID: dd1b772ec87d
 Revises: a7f3e2adb658
-Create Date: 2025-04-30 19:43:57.270756
+Create Date: 2025-05-01 12:06:35.315538
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "49e150f994d3"
+revision: str = "dd1b772ec87d"
 down_revision: Union[str, None] = "a7f3e2adb658"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,7 +33,7 @@ def upgrade() -> None:
                 "COMPLETED",
                 "DISQUALIFIED",
                 "REFUSED",
-                name="teamstatus2",  # Убедитесь, что это имя совпадает с существующим типом
+                name="team_status",
             ),
             server_default="REGISTERED",
             nullable=False,
