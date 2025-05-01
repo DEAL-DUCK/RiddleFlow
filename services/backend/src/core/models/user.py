@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from .profile import Profile
     from .hackathon import Hackathon
     from .hackathon_submission import HackathonSubmission
+    from .contest_submission import ContestSubmission
     from sqlalchemy.ext.asyncio import AsyncSession
     from .group_user_association import GroupUserAssociation
     from .hackathon_user_association import HackathonUserAssociation
@@ -74,6 +75,10 @@ class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
     )
 
     hackathon_submissions: Mapped[list["HackathonSubmission"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    contest_submissions: Mapped[list["ContestSubmission"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )

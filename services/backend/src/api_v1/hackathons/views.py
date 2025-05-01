@@ -115,7 +115,7 @@ async def update_hackathon(
 
 @router.patch(
     "/logo",
-    dependencies=[Depends(user_is_owner_of_this_group)],
+    dependencies=[Depends(user_is_creator_of_this_hackathon)],
 )
 async def update_hackathon_logo(
     logo_url: str = Depends(upload_file),

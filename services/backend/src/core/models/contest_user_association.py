@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from .contest import Contest
 
 
-class ParticipationStatus(enum.Enum):
+class ParticipationStatus2(enum.Enum):
     REGISTERED = "REGISTERED"
     COMPLETED = "COMPLETED"
     DISQUALIFIED = "DISQUALIFIED"
@@ -34,9 +34,9 @@ class ContestUserAssociation(Base, IdIntPkMixin):
         ForeignKey("users.id"),
         nullable=False,
     )
-    user_status: Mapped[ParticipationStatus] = mapped_column(
-        Enum(ParticipationStatus),
-        default=ParticipationStatus.REGISTERED,
+    user_status: Mapped[ParticipationStatus2] = mapped_column(
+        Enum(ParticipationStatus2),
+        default=ParticipationStatus2.REGISTERED,
         server_default="REGISTERED",
     )
     registration_date: Mapped[datetime] = mapped_column(

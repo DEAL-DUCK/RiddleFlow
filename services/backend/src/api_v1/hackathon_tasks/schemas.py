@@ -16,7 +16,7 @@ class CreateHackathonTaskSchema(BaseModel):
     task_type: HackathonTaskType
 
 
-class TaskSchema(BaseModel):
+class HackathonTaskSchema(BaseModel):
     id: int
     title: str
     description: str
@@ -26,7 +26,7 @@ class TaskSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class TaskUpdateSchema(BaseModel):
+class HackathonTaskUpdateSchema(BaseModel):
     title: str | None = None
     description: str | None = None
     task_type: HackathonTaskType | None = None

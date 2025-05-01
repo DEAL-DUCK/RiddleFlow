@@ -136,7 +136,7 @@ async def get_hackathons_for_user(
     return list(hackathons)
 
 
-async def update_group_logo(
+async def update_hackathon_logo(
     session: AsyncSession,
     hackathon: HackathonSchema,
     logo_url: str,

@@ -30,7 +30,7 @@ class ContestCreateSchema(BaseModel):
     description: str = Field(..., max_length=900)
     allow_teams: bool
     max_participants: int = Field(..., gt=0)
-    logo_url: str | None = None
+    # logo_url: str | None = None
     start_time: datetime.datetime | None
     end_time: datetime.datetime | None = None
 
@@ -79,7 +79,7 @@ class ContestUpdatePartial(ContestCreateSchema):
     start_time: datetime.datetime | None = None
     end_time: datetime.datetime | None = None
     allow_teams: bool | None = None
-    logo_url: str | None = None
+    # logo_url: str | None = None
 
 
 class ContestSchema(ContestBaseSchema):

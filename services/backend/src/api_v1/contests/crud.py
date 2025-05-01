@@ -17,7 +17,7 @@ from api_v1.contests.schemas import (
     ContestSchema,
     ContestBaseSchema,
 )
-from core.config import redis_client
+from core.config import redis_client, settings
 from core.models import (
     Contest,
     User,
@@ -27,9 +27,9 @@ from core.models import (
     GroupUserAssociation,
 )
 from core.models.contest import ContestStatus
-from core.models.contest_group_association import TeamStatus
+from core.models.contest_group_association import TeamStatus2
 from core.models.contest_user_association import (
-    ParticipationStatus,
+    ParticipationStatus2,
 )
 
 
@@ -93,7 +93,11 @@ async def create_contest(
     user_id: int,
 ) -> Contest:
 
-    contest = Contest(**contest_in.model_dump(), creator_id=user_id)
+    contest = Contest(
+        **contest_in.model_dump(),
+        creator_id=user_id,
+        logo_url=f"{settings.s3.domain_url}/default_logo.jpg",
+    )
     stmt = (
         select(func.count())
         .select_from(Contest)
@@ -180,6 +184,16 @@ async def update_contest(
     return ContestSchema.model_validate(contest)
 
 
+async def update_contest_logo(
+    session: AsyncSession,
+    contest: ContestSchema,
+    logo_url: str,
+) -> ContestSchema:
+    contest.logo_url = logo_url
+    await session.commit()
+    return contest
+
+
 async def activate_contest(
     session: AsyncSession,
     contest: Contest,
@@ -257,7 +271,7 @@ async def add_user_in_contest(
     association = ContestUserAssociation(
         contest_id=contest.id,
         user_id=user.id,
-        user_status=ParticipationStatus.REGISTERED,
+        user_status=ParticipationStatus2.REGISTERED,
     )
     contest.current_participants += 1
     session.add(association)
@@ -385,7 +399,7 @@ async def add_group_in_contest(
     association = ContestGroupAssociation(
         contest_id=contest.id,
         group_id=group.id,
-        group_status=TeamStatus.REGISTERED,
+        group_status=TeamStatus2.REGISTERED,
     )
     await act_group(session=session, group=group)
     contest.current_participants += group.current_members

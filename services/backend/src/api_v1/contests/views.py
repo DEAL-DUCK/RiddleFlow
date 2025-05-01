@@ -25,6 +25,7 @@ from ..groups.dependencies import (
     get_group_by_id,
     user_is_owner_of_this_group,
     user_is_owner_of_this_group_or_contest_creator,
+    upload_file,
 )
 
 router = APIRouter(tags=["Контесты"])
@@ -107,6 +108,22 @@ async def update_contest(
 ):
     return await crud.update_contest(
         session=session, contest_in=contest_in, contest=contest, user=user
+    )
+
+
+@router.patch(
+    "/logo",
+    dependencies=[Depends(user_is_creator_of_this_contest)],
+)
+async def update_contest_logo(
+    logo_url: str = Depends(upload_file),
+    contest: ContestSchema = Depends(get_contest_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.update_contest_logo(
+        logo_url=logo_url,
+        contest=contest,
+        session=session,
     )
 
 

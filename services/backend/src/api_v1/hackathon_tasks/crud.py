@@ -5,13 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
 from core.models import HackathonTask, Hackathon
-from .schemas import CreateHackathonTaskSchema, TaskSchema
+from .schemas import CreateHackathonTaskSchema, HackathonTaskSchema
 from api_v1.hackathons.dependencies import get_hackathon
 
 
 async def create_task_for_hackathon(
     session: AsyncSession, task_data: CreateHackathonTaskSchema, hackathon_id: int
-) -> TaskSchema:
+) -> HackathonTaskSchema:
     hackathon = await get_hackathon(session, hackathon_id)
     if hackathon is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -24,7 +24,7 @@ async def create_task_for_hackathon(
     session.add(task)
     await session.commit()
     await session.refresh(task)
-    return TaskSchema.model_validate(task)
+    return HackathonTaskSchema.model_validate(task)
 
 
 async def delete_task(task_id: int, session: AsyncSession):
@@ -60,7 +60,7 @@ async def get_all_tasks(
 ):
     result = await session.execute(select(HackathonTask))
     result = result.scalars().all()
-    return [TaskSchema.model_validate(task) for task in result]
+    return [HackathonTaskSchema.model_validate(task) for task in result]
 
 
 async def get_all_task_by_hackathon(

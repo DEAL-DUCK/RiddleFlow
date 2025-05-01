@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from .group import Group
 
 
-class TeamStatus(enum.Enum):
+class TeamStatus2(enum.Enum):
     REGISTERED = "REGISTERED"
     COMPLETED = "COMPLETED"
     DISQUALIFIED = "DISQUALIFIED"
@@ -38,9 +38,9 @@ class ContestGroupAssociation(Base, IdIntPkMixin):
         nullable=False,
     )
 
-    group_status: Mapped[TeamStatus] = mapped_column(
-        Enum(TeamStatus),
-        default=TeamStatus.REGISTERED,
+    group_status: Mapped[TeamStatus2] = mapped_column(
+        Enum(TeamStatus2),
+        default=TeamStatus2.REGISTERED,
         server_default="REGISTERED",
     )
     registration_date: Mapped[datetime] = mapped_column(

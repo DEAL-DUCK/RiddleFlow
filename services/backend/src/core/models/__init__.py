@@ -14,6 +14,8 @@ __all__ = {
     "HackathonGroupAssociation",
     "ContestGroupAssociation",
     "Contest",
+    "ContestTask",
+    "ContestSubmission",
 }
 
 
@@ -32,3 +34,5 @@ from .contest_group_association import ContestGroupAssociation
 from .contest_user_association import ContestUserAssociation
 from .hackathon_task import HackathonTask
 from .hackathon_submission import HackathonSubmission
+from .contest_task import ContestTask
+from .contest_submission import ContestSubmission

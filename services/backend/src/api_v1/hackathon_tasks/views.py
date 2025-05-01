@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import User
-from .schemas import CreateHackathonTaskSchema, TaskSchema, TaskUpdateSchema
+from .schemas import (
+    CreateHackathonTaskSchema,
+    HackathonTaskSchema,
+    HackathonTaskUpdateSchema,
+)
 from . import crud
 from core.models.db_helper import db_helper
 from api_v1.hackathons.dependencies import user_is_creator_of_this_hackathon
@@ -13,7 +17,7 @@ router = APIRouter(tags=["Задачи Хакатонов"])
 
 @router.post(
     "/create_task",
-    response_model=TaskSchema,
+    response_model=HackathonTaskSchema,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_task(
@@ -70,7 +74,7 @@ async def api_delete_task(
 @router.patch("/{task_id}")
 async def update_task_endpoint(
     task_id: int,
-    update_data: TaskUpdateSchema,
+    update_data: HackathonTaskUpdateSchema,
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator_of_this_hackathon),
 ):
