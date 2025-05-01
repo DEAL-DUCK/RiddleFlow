@@ -3,7 +3,7 @@ from .dependencies import user_is_participant_or_admin,check_submission_ownershi
 from fastapi import APIRouter
 from fastapi.params import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from core.models import Submission, User
+from core.models import Submission, User, Hackathon
 from . import crud
 from .schemas import SubmissionCreate
 from api_v1.submissions.schemas import (
@@ -13,6 +13,8 @@ from api_v1.submissions.schemas import (
 )
 from core.models.db_helper import db_helper
 from ..auth.fastapi_users import current_active_user
+from ..hackathons.crud import get_hackathon
+from ..hackathons.dependencies import get_hackathon_by_id
 
 router = APIRouter(tags=["Решения"])
 
@@ -47,15 +49,7 @@ async def get_submission_by_id(
     return submission
 
 
-@router.get("{/task_id}",summary='залупа нерабочая почему-то делает поиск по решениям а не задачам')
-async def get_submissions_by_user_id_and_task_id(
-    task_id: int,
-    current_user: User = Depends(user_is_participant_or_admin),
-    session: AsyncSession = Depends(db_helper.session_getter),
-):
-    return await crud.get_submission_by_task_id_plus_user_id(
-        session=session, task_id=task_id, user_id=current_user.id
-    )
+
 
 
 @router.delete("/{submissions_id}",
@@ -65,7 +59,15 @@ async def delete_submission(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.delete_submission_by_id(session, submission_id)
-
+@router.get("/task/{task_id}",dependencies=[Depends(current_active_user)])
+async def get_submissions_by_user_id_and_task_id(
+    task_id: int,
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.get_submission_by_task_id_plus_user_id(
+        session=session, task_id=task_id, user_id=user.id
+    )
 
 
 """@router.get("/get_all_submissions")
@@ -95,18 +97,13 @@ async def update_submission_endpoint(
     )
 
 
-@router.get("/by_hackathon/{hackathon_id}")
+@router.get("/by_hackathon/{hackathon_id}",dependencies=[Depends(current_active_user)])
 async def get_submissions_by_hackathon(
-    user_id: int,
-    hackathon_id: int,
-    session: AsyncSession = Depends(db_helper.session_getter),
+        user : User = Depends(current_active_user),
+        hackathon : Hackathon = Depends(get_hackathon_by_id),
+        session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return {"submissions.views get_sub_by_hack": "refactor"}
-    # return await get_all_submissions_any_user_in_any_hackathon(
-    #     user_id=user_id,
-    #     session=session,
-    #     hackathon_id=hackathon_id
-    # )
+    return await crud.get_all_submissions_current_user_in_any_hackathon(session=session, user=user, hackathon=hackathon)
 
 
 # @router.get("{all_score}")

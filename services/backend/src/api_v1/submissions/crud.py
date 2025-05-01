@@ -1,14 +1,15 @@
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Coroutine
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from core.models import (
     Submission,
     Task,
-    HackathonUserAssociation,
+    HackathonUserAssociation, Hackathon, User, Group,
 )
 from .schemas import (
     SubmissionCreate,
@@ -147,7 +148,7 @@ async def update_submission(
     session: AsyncSession,
     submission_id: int,
     update_data: Dict[str, Any],
-) -> SubmissionRead:
+) -> dict | None:
     result = await session.execute(
         select(Submission).where(Submission.id == submission_id)
     )
@@ -175,13 +176,37 @@ async def update_submission(
     try:
         await session.commit()
         await session.refresh(submission)
-        return submission
+        return update_data
     except Exception as e:
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}",
         )
+async def get_all_submissions_current_user_in_any_hackathon(
+        session : AsyncSession,
+        user : User,
+        hackathon : Hackathon,
+):
+    query = (
+        select(Submission)
+        .join(Submission.task)
+        .where(
+            Submission.user_id == user.id,
+            Task.hackathon_id == hackathon.id
+        )
+        .options(
+            joinedload(Submission.task),
+            joinedload(Submission.user)
+        )
+        .order_by(Submission.submitted_at.desc())
+    )
+
+    result = await session.execute(query)
+    submissions = result.scalars().all()
+
+    return submissions
+
 
 
 # async def get_all_evaluations(

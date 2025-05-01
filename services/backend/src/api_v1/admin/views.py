@@ -1,14 +1,14 @@
 from fastapi import Depends, APIRouter, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-
+from api_v1.submissions.crud import get_all_submissions_current_user_in_any_hackathon
 from api_v1.users.crud import get_users, get_user,del_user
 from api_v1.users.schemas import (
     UserRead,
     UserCreate,
     UserRole,
 )
-from core.models import db_helper, User, Group
+from core.models import db_helper, User, Group, Hackathon
 from api_v1.auth.fastapi_users import (
     current_active_user,
     current_active_superuser,
@@ -17,6 +17,7 @@ from api_v1.auth.fastapi_users import (
 from . import crud
 from ..groups.crud import get_groups
 from ..groups.dependencies import get_group_by_id
+from ..hackathons.dependencies import get_hackathon_by_id
 from ..hackathons.schemas import HackathonSchema
 from ..submissions.crud import get_submission_by_id_func, get_submission_by_task_id_plus_user_id, \
     delete_submission_by_id, all_submissions, delete_all_submissions_any_user
@@ -119,8 +120,25 @@ async def unbanned_group(
 ):
     return await crud.UNBANNED(session=session, group=group)
 
+@router.get("/task/{task_id}",dependencies=[Depends(current_active_superuser)])
+async def get_submissions_by_user_id_and_task_id(
+    task_id: int,
+    user: User = Depends(get_user_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await get_submission_by_task_id_plus_user_id(
+        session=session, task_id=task_id, user_id=user.id
+    )
 
-@router.delete("/groups/delete-all",
+@router.get("/by_hackathon/{hackathon_id}",dependencies=[Depends(current_active_superuser)])
+async def get_submissions_by_hackathon(
+    user: User = Depends(get_user_by_id),
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await get_all_submissions_current_user_in_any_hackathon(session=session,user = user,hackathon=hackathon)
+
+"""@router.delete("/groups/delete-all",
                dependencies=[Depends(current_active_superuser)],summary=f'СНЕСЕНА ФУНКЦИЯ')
 async def delete_all_groups_route(
         session: AsyncSession = Depends(db_helper.session_getter)
@@ -146,3 +164,4 @@ async def delete_group_route(
         )
 
     return f'СНЕСЕНА ФУНКЦИЯ'
+"""
