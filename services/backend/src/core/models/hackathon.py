@@ -1,5 +1,5 @@
 from .base import Base
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Text, DateTime, Enum, Integer, ForeignKey, Index, Boolean
 from sqlalchemy.sql import func
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .hackathon_user_association import HackathonUserAssociation
     from .user import User
     from .hackathon_task import HackathonTask
+    from hackathon_archive import ArchivedHackathon
 
 
 class HackathonStatus(enum.Enum):
@@ -69,3 +70,4 @@ class Hackathon(Base, IdIntPkMixin):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+    archived_record: Mapped[Optional["ArchivedHackathon"]] = relationship(back_populates="original")
