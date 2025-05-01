@@ -4,12 +4,14 @@ from typing import Dict, Any
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from core.models import (
     HackathonSubmission,
     HackathonTask,
-    HackathonUserAssociation,
+    HackathonUserAssociation, User, Hackathon,
 )
+from core.models.hackathon import HackathonStatus
 from .schemas import (
     HackathonSubmissionCreate,
     HackathonSubmissionRead,
@@ -43,6 +45,20 @@ async def create_submission(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Пользователь не зарегистрирован на этот хакатон",
         )
+    hackathon = await session.scalar(
+        select(Hackathon).where(Hackathon.id == task.hackathon_id)
+    )
+    if not hackathon:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Хакатон не найден"
+        )
+
+    if hackathon.status != HackathonStatus.ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Решения можно отправлять только в активных хакатонах"
+        )
 
     existing_submission = await session.scalar(
         select(HackathonSubmission).where(
@@ -56,6 +72,7 @@ async def create_submission(
             status_code=status.HTTP_409_CONFLICT,
             detail="Решение для этой задачи уже существует",
         )
+
 
     submission_dict = submission_data.model_dump()
     submission_dict.pop("status", None)
@@ -180,6 +197,30 @@ async def update_submission(
             detail=f"Database error: {str(e)}",
         )
 
+
+async def get_all_submissions_current_user_in_any_hackathon(
+        session: AsyncSession,
+        user: User,
+        hackathon: Hackathon,
+):
+    query = (
+        select(HackathonSubmission)
+        .join(HackathonSubmission.task)
+        .where(
+            HackathonSubmission.user_id == user.id,
+            HackathonTask.hackathon_id == hackathon.id
+        )
+        .options(
+            joinedload(HackathonSubmission.task),
+            joinedload(HackathonSubmission.user)
+        )
+        .order_by(HackathonSubmission.submitted_at.desc())
+    )
+
+    result = await session.execute(query)
+    submissions = result.scalars().all()
+
+    return submissions
 
 # async def get_all_evaluations(
 #     session: AsyncSession,

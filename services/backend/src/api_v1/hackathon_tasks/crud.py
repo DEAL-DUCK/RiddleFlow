@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
 from core.models import HackathonTask, Hackathon
+from core.models.hackathon import HackathonStatus
 from .schemas import CreateHackathonTaskSchema, HackathonTaskSchema
 from api_v1.hackathons.dependencies import get_hackathon
 
@@ -15,6 +16,8 @@ async def create_task_for_hackathon(
     hackathon = await get_hackathon(session, hackathon_id)
     if hackathon is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if hackathon.status == HackathonStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='hackathon already begin')
     task = HackathonTask(
         title=task_data.title,
         description=task_data.description,
