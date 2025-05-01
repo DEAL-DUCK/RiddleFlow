@@ -12,6 +12,7 @@ from core.models import (
     HackathonUserAssociation, User, Hackathon,
 )
 from core.models.hackathon import HackathonStatus
+from core.models.hackathon_submission import SubmissionStatus
 from .schemas import (
     HackathonSubmissionCreate,
     HackathonSubmissionRead,
@@ -25,7 +26,7 @@ async def not_submissions():
 
 async def create_submission(
     session: AsyncSession, submission_data: HackathonSubmissionCreate, user_id: int
-) -> HackathonSubmission:
+):
     task = await session.scalar(
         select(HackathonTask).where(HackathonTask.id == submission_data.task_id)
     )
@@ -54,25 +55,17 @@ async def create_submission(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Хакатон не найден"
         )
+    if task.current_attempts >= task.max_attempts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Достигнут лимит попыток ({task.max_attempts}) для этой задачи",
+        )
 
-    if hackathon.status != HackathonStatus.ACTIVE and not user.is_superuser:
+    """if hackathon.status != HackathonStatus.ACTIVE and not user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Решения можно отправлять только в активных хакатонах"
-        )
-
-    existing_submission = await session.scalar(
-        select(HackathonSubmission).where(
-            HackathonSubmission.task_id == submission_data.task_id,
-            HackathonSubmission.user_id == user_id,
-            HackathonSubmission.description == submission_data.description,
-        )
-    )
-    if existing_submission:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Решение для этой задачи уже существует",
-        )
+        )"""
 
 
     submission_dict = submission_data.model_dump()
@@ -81,16 +74,18 @@ async def create_submission(
     new_submission = HackathonSubmission(
         **submission_dict,
         user_id=user_id,
-        status=HackathonSubmissionStatus.SUBMITTED,
+        status=SubmissionStatus.SUBMITTED,
         submitted_at=datetime.utcnow(),
-        graded_at=datetime.utcnow(),
     )
 
     session.add(new_submission)
+
+    task.current_attempts += 1
+
     await session.commit()
     await session.refresh(new_submission)
 
-    return new_submission
+    return {f'решение успешно отправлено':f'осталось попыток {task.max_attempts-task.current_attempts}'}
 
 
 async def get_my_submissions(session: AsyncSession, user_id: int):

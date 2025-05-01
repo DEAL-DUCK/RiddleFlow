@@ -18,6 +18,31 @@ async def create_task_for_hackathon(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     if hackathon.status == HackathonStatus.ACTIVE:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='hackathon already begin')
+    existing_task = await session.execute(
+        select(HackathonTask)
+        .where(
+            HackathonTask.hackathon_id == hackathon_id,
+            HackathonTask.title == task_data.title
+        )
+    )
+    if existing_task.scalar():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Задача с таким названием уже существует в этом хакатоне"
+        )
+
+    existing_description = await session.execute(
+        select(HackathonTask)
+        .where(
+            HackathonTask.hackathon_id == hackathon_id,
+            HackathonTask.description == task_data.description
+        )
+    )
+    if existing_description.scalar():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Задача с таким описанием уже существует в этом хакатоне"
+        )
     task = HackathonTask(
         title=task_data.title,
         description=task_data.description,
@@ -52,7 +77,8 @@ async def get_task_by_id(
     task = result.scalars().first()
     if task is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="hackathon_tasks not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Задача не найдена"
         )
 
     return task
@@ -82,9 +108,9 @@ async def get_all_task_by_hackathon(
 
 
 async def update_task(
-    session: AsyncSession,
-    task_id: int,
-    update_data: dict[str, Any],
+        session: AsyncSession,
+        task_id: int,
+        update_data: dict[str, Any],
 ) -> HackathonTask:
     result = await session.execute(
         select(HackathonTask).where(HackathonTask.id == task_id)
@@ -92,29 +118,42 @@ async def update_task(
     task = result.scalar_one_or_none()
 
     if task is None:
-        raise HTTPException(status_code=404, detail="hackathon_tasks not found")
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+
     hackathon = await session.get(Hackathon, task.hackathon_id)
     if hackathon.status == HackathonStatus.ACTIVE:
         raise HTTPException(
             status_code=400,
             detail="Нельзя изменять задачи активного хакатона"
         )
-    allowed_fields = {"title", "description", "task_type", "hackathon_id"}
+    allowed_fields = {"title", "description", "task_type", "hackathon_id", "max_attempts"}
     invalid_fields = set(update_data.keys()) - allowed_fields
+
     if invalid_fields:
         raise HTTPException(
-            status_code=400, detail=f"Cannot update fields: {', '.join(invalid_fields)}"
+            status_code=400,
+            detail=f"Невозможно обновить поля: {', '.join(invalid_fields)}"
         )
 
-    if (
-        "hackathon_id" in update_data
-        and update_data["hackathon_id"] != task.hackathon_id
-    ):
+    if "max_attempts" in update_data:
+        new_max_attempts = update_data["max_attempts"]
+        if not isinstance(new_max_attempts, int) or new_max_attempts < 1:
+            raise HTTPException(
+                status_code=400,
+                detail="max_attempts должно быть целым числом больше 0"
+            )
+        if new_max_attempts < task.current_attempts:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Новый лимит попыток ({new_max_attempts}) меньше текущего количества решений ({task.current_attempts})"
+            )
+
+    if "hackathon_id" in update_data and update_data["hackathon_id"] != task.hackathon_id:
         hackathon_exists = await session.execute(
             select(Hackathon).where(Hackathon.id == update_data["hackathon_id"])
         )
         if not hackathon_exists.scalar_one_or_none():
-            raise HTTPException(status_code=404, detail="Hackathon not found")
+            raise HTTPException(status_code=404, detail="Хакатон не найден")
 
     for field, value in update_data.items():
         setattr(task, field, value)
@@ -125,4 +164,4 @@ async def update_task(
         return task
     except Exception as e:
         await session.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ошибка базы данных: {str(e)}")

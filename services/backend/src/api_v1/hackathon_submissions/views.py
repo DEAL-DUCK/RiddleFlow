@@ -19,7 +19,7 @@ router = APIRouter(tags=["Решения Хакатонов"])
 
 
 ######
-@router.post("/create", response_model=HackathonSubmissionCreate)
+@router.post("/create")
 async def submissions_create(
     submission_data: HackathonSubmissionCreate,
     current_user: User = Depends(user_is_participant_or_admin),
