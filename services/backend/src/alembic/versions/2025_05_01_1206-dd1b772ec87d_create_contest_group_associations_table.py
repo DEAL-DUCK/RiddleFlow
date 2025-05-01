@@ -33,7 +33,7 @@ def upgrade() -> None:
                 "COMPLETED",
                 "DISQUALIFIED",
                 "REFUSED",
-                name="team_status2",
+                name="teamstatus2",
             ),
             server_default="REGISTERED",
             nullable=False,

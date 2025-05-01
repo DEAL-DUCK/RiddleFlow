@@ -10,6 +10,7 @@ from .users.views import router as users_router
 from .profiles.views import router as profiles_router
 from .auth.views import router as auth_router
 from .groups.views import router as group_router
+from .test_cases.views import router as test_router
 
 
 router = APIRouter(prefix="/v1")
@@ -26,3 +27,4 @@ router.include_router(router=hackathon_tasks_router, prefix="/hackathon_tasks")
 router.include_router(router=contest_submissions_router, prefix="/contest_submissions")
 router.include_router(router=contest_tasks_router, prefix="/contest_tasks")
 router.include_router(router=group_router, prefix="/groups")
+router.include_router(router=test_router, prefix="/tests")

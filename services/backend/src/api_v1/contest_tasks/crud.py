@@ -18,6 +18,8 @@ async def create_task_for_contest(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     task = ContestTask(
         title=task_data.title,
+        time_limit=task_data.time_limit,
+        memory_limit=task_data.memory_limit,
         description=task_data.description,
         contest_id=contest_id,
     )

@@ -16,6 +16,7 @@ __all__ = {
     "Contest",
     "ContestTask",
     "ContestSubmission",
+    "TestCase",
 }
 
 
@@ -36,3 +37,4 @@ from .hackathon_task import HackathonTask
 from .hackathon_submission import HackathonSubmission
 from .contest_task import ContestTask
 from .contest_submission import ContestSubmission
+from .test_case import TestCase

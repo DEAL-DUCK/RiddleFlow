@@ -32,6 +32,8 @@ class ContestTask(Base, IdIntPkMixin):
         ForeignKey("contests.id"),
         nullable=False,
     )
+    time_limit: Mapped[int] = mapped_column(Integer, nullable=False)
+    memory_limit: Mapped[int] = mapped_column(Integer, nullable=False)
     # creator: Mapped["User"] = relationship(back_populates="created_tasks")
     contest: Mapped["Contest"] = relationship(back_populates="tasks")
     submissions: Mapped[list["ContestSubmission"]] = relationship(

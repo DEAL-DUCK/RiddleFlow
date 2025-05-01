@@ -72,8 +72,8 @@ async def create_submission(
     session.add(new_submission)
     await session.commit()
     await session.refresh(new_submission)
-
-    return new_submission
+    task = check_code.delay(new_submission.id)
+    return task
 
 
 async def get_my_submissions(session: AsyncSession, user_id: int):

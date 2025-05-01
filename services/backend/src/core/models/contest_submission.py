@@ -17,7 +17,9 @@ class SubmissionStatus2(str, Enum):
     DRAFT = "DRAFT"  # Черновик
     SUBMITTED = "SUBMITTED"  # Отправлено
     GRADED = "GRADED"  # Проверено
-    DISQUALIFIED = "DISQUALIFIED"  # Отклонено
+    WRONG_ANSWER = "WRONG_ANSWER"
+    TIME_LIMIT_EXCEEDED = "TIME_LIMIT_EXCEEDED"
+    RUNTIME_ERROR = "RUNTIME_ERROR"
 
 
 class ContestSubmission(Base, IdIntPkMixin):
