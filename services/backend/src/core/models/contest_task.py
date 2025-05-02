@@ -9,7 +9,7 @@ from sqlalchemy import (
     DateTime,
     Index,
     Integer,
-    Enum,
+    Enum, Boolean,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -40,6 +40,7 @@ class ContestTask(Base, IdIntPkMixin):
         back_populates="task",
         cascade="all, delete-orphan",
     )
+    is_archived : Mapped[bool] = mapped_column(Boolean,default=False)
 
     # max_score: Mapped[int] = mapped_column(Integer, default=100)
     # deadline: Mapped[datetime] = mapped_column(DateTime, nullable=True)
