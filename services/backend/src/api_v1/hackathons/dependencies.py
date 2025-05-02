@@ -13,6 +13,8 @@ async def get_hackathon_by_id(
     session: AsyncSession = Depends(db_helper.session_getter),
 ) -> Hackathon:
     hackathon = await get_hackathon(session=session, hackathon_id=hackathon_id)
+    if hackathon.is_archived :
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='hackathon archived')
     if hackathon is not None:
         return hackathon
     raise HTTPException(

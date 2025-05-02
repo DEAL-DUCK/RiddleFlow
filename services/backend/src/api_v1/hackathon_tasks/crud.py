@@ -71,10 +71,9 @@ async def get_task_by_id(
     session: AsyncSession,
     task_id: int,
 ):
-    result = await session.execute(
-        select(HackathonTask).where(HackathonTask.id == task_id)
-    )
-    task = result.scalars().first()
+    task = await session.get(HackathonTask,task_id)
+    if task.is_archived :
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='task archived')
     if task is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -165,3 +164,13 @@ async def update_task(
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Ошибка базы данных: {str(e)}")
+async def archive(session:AsyncSession,task:HackathonTask):
+    if task.hackathon.status == HackathonStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail=f'хакатон уже идет')
+    task.is_archived = True
+    await session.commit()
+    return {'ok':f'task {task.id} is archived'}
+async def unarchive(session:AsyncSession,task:HackathonTask):
+    task.is_archived = False
+    await session.commit()
+    return {'ok':f'task {task.id} is unarchived'}

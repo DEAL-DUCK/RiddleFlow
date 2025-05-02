@@ -114,3 +114,13 @@ async def update_task(
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+async def archive(session:AsyncSession,task:ContestTask):
+    if task.contest.status == ContestStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail=f'хакатон уже идет')
+    task.is_archived = True
+    await session.commit()
+    return {'ok':f'task {task.id} is archived'}
+async def unarchive(session:AsyncSession,task:ContestTask):
+    task.is_archived = False
+    await session.commit()
+    return {'ok':f'task {task.id} is unarchived'}

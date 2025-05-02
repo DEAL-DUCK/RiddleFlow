@@ -61,7 +61,7 @@ async def get_contests(session: AsyncSession) -> list[ContestSchema]:
     #     contests_data = json.loads(cached_contests)
     #     return [ContestSchema(**contest) for contest in contests_data]
 
-    stmt = select(Contest).order_by(Contest.id)
+    stmt = select(Contest).where(Contest.is_archived == False).order_by(Contest.id)
     result: Result = await session.execute(stmt)
     contests = result.scalars().all()
 
@@ -509,6 +509,16 @@ async def patch_max_users_in_contest(
     await session.refresh(contest)
 
     return ContestSchema.model_validate(contest)
+async def archive(session:AsyncSession,contest:Contest):
+    if contest.status == ContestStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='contest not completed')
+    contest.is_archived = True
+    await session.commit()
+    return [{'ok':f'contest {contest.id} is archived'},contest]
+async def unarchive(session:AsyncSession,contest:Contest):
+    contest.is_archived = False
+    await session.commit()
+    return [{'ok':f'contest {contest.id} is unarchived'},contest]
 
 
 # async def get_user_in_contest(

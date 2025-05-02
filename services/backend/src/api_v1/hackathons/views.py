@@ -234,7 +234,14 @@ async def delete_group_in_hackathons(
         hackathon=hackathon, group=group, session=session
     )
 
-
+@router.patch('/archive/in',dependencies=[Depends(user_is_creator_of_this_hackathon)])
+async def archived(hackathon : Hackathon = Depends(get_hackathon_by_id),
+        session: AsyncSession = Depends(db_helper.session_getter)):
+    return await crud.archive(session=session,hackathon=hackathon)
+@router.patch('/archive/un',dependencies=[Depends(user_is_creator_of_this_hackathon)])
+async def unarchived(hackathon : Hackathon = Depends(get_hackathon_by_id),
+        session: AsyncSession = Depends(db_helper.session_getter)):
+    return await crud.unarchive(session=session,hackathon=hackathon)
 #
 # @router.get("/{hackathon_id}/jury")
 # async def get_hackathon_jury(

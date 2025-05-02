@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.models import User
+from core.models import User, ContestTask
 from .dependencies import verify_user_is_creator_or_participant
 from .schemas import CreateContestTaskSchema, ContestTaskSchema, ContestTaskUpdateSchema
 from . import crud
@@ -78,3 +78,11 @@ async def update_task_endpoint(
         task_id=task_id,
         update_data=update_data.model_dump(exclude_unset=True),
     )
+@router.patch('/archive/in',dependencies=[Depends(user_is_creator_of_this_contest)])
+async def archived(task : ContestTask= Depends(get_task_by_id),
+        session: AsyncSession = Depends(db_helper.session_getter)):
+    return await crud.archive(session=session,task=task)
+@router.patch('/archive/un',dependencies=[Depends(user_is_creator_of_this_contest)])
+async def unarchived(task : ContestTask = Depends(get_task_by_id),
+        session: AsyncSession = Depends(db_helper.session_getter)):
+    return await crud.unarchive(session=session,task=task)

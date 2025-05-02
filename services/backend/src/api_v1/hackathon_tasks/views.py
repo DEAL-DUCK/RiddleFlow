@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.models import User, HackathonTask
+from core.models import User, HackathonTask, Hackathon
 from .dependencies import verify_user_is_creator_or_participant, verify_user_is_creator_or_participant_by_task
 from .schemas import (
     CreateHackathonTaskSchema,
@@ -10,7 +10,7 @@ from .schemas import (
 )
 from . import crud
 from core.models.db_helper import db_helper
-from api_v1.hackathons.dependencies import user_is_creator_of_this_hackathon
+from api_v1.hackathons.dependencies import user_is_creator_of_this_hackathon, get_hackathon_by_id
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 
 router = APIRouter(tags=["Задачи Хакатонов"])
@@ -86,3 +86,12 @@ async def update_task_endpoint(
         update_data=update_data.model_dump(exclude_unset=True),
     )
     return HackathonTaskSchema.model_validate(task)
+@router.patch('/archive/in',dependencies=[Depends(user_is_creator_of_this_hackathon)])
+async def archived(task : HackathonTask= Depends(get_task_by_id),
+        session: AsyncSession = Depends(db_helper.session_getter)):
+    return await crud.archive(session=session,task=task)
+@router.patch('/archive/un',dependencies=[Depends(user_is_creator_of_this_hackathon)])
+async def unarchived(task : HackathonTask = Depends(get_task_by_id),
+        session: AsyncSession = Depends(db_helper.session_getter)):
+    return await crud.unarchive(session=session,task=task)
+#

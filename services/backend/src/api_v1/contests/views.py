@@ -30,6 +30,14 @@ from ..groups.dependencies import (
 
 router = APIRouter(tags=["Контесты"])
 
+@router.patch('/archive/in',dependencies=[Depends(user_is_creator_of_this_contest),])
+async def archived(contest : Contest = Depends(get_contest_by_id),
+        session: AsyncSession = Depends(db_helper.session_getter)):
+    return await crud.archive(session=session,contest=contest)
+@router.patch('/archive/un',dependencies=[Depends(user_is_creator_of_this_contest)])
+async def unarchived(contest : Contest = Depends(get_contest_by_id),
+        session: AsyncSession = Depends(db_helper.session_getter)):
+    return await crud.unarchive(session=session,contest=contest)
 
 @router.get("/", response_model=list[ContestSchema])
 async def get_contests(
