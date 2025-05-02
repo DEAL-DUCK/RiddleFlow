@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from . import schemas
-from services.backend.src.core.models.db_helper import db_helper
+from core.models import db_helper
 from . import crud
 
 router = APIRouter(tags=["Жюри"])
@@ -13,7 +13,7 @@ router = APIRouter(tags=["Жюри"])
 )
 async def add_jury_member_to_hackathon(
     data: schemas.JuryCreate,
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.add_jury_to_hackathon(
         session=session,
@@ -26,7 +26,7 @@ async def add_jury_member_to_hackathon(
 async def del_jury_from_hackathon(
         jury_id : int,
         hackathon_id : int,
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency)
+    session: AsyncSession = Depends(db_helper.session_getter)
 ):
     return await crud.remove_jury_from_hackathon(
         session=session,
@@ -38,7 +38,7 @@ async def del_jury_from_hackathon(
 )
 async def get_all_hackathons_where_this_jury_work(
 jury_id : int,
-session: AsyncSession = Depends(db_helper.scoped_session_dependency)
+session: AsyncSession = Depends(db_helper.session_getter)
 
 ):
     return await crud.get_hackathons_judged_by_jury(
@@ -48,7 +48,7 @@ session: AsyncSession = Depends(db_helper.scoped_session_dependency)
 @router.get("/{jury_id}/evaluations")
 async def get_jury_evaluations(
     jury_id: int,
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency)
+    session: AsyncSession = Depends(db_helper.session_getter)
 ):
     return await crud.get_jury_evaluations_with_details(session, jury_id)
 

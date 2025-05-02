@@ -3,11 +3,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
-from core.models import JuryEvaluation, Submission, Jury, JuryHackathonAssociation
+from core.models import JuryEvaluation, HackathonSubmission, Jury, JuryHackathonAssociation
 from core.models.hackathon_submission import SubmissionStatus
 from .schemas import EvaluationSchema, EvaluationsUpdateSchema
 from ..jurys.crud import any_not
-from api_v1.submissions.views import create_submission
+from api_v1.hackathon_submissions.views import submissions_create
 
 
 async def create_evaluation(
@@ -19,9 +19,9 @@ async def create_evaluation(
 ) -> EvaluationSchema:
     try:
         submission = await session.scalar(
-            select(Submission)
-            .options(selectinload(Submission.task))
-            .where(Submission.id == submission_id)
+            select(HackathonSubmission)
+            .options(selectinload(HackathonSubmission.task))
+            .where(HackathonSubmission.id == submission_id)
         )
         if not submission:
             raise HTTPException(
@@ -115,7 +115,7 @@ async def delete_evaluation(
         evaluation = await session.scalar(
             select(JuryEvaluation)
             .options(
-                selectinload(JuryEvaluation.submission).selectinload(Submission.evaluations)
+                selectinload(JuryEvaluation.submission).selectinload(HackathonSubmission.evaluations)
             )
             .where(JuryEvaluation.id == evaluation_id)
         )

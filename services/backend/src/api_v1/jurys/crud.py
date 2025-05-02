@@ -1,11 +1,15 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from core.models import Hackathon, User , JuryEvaluation
-from core.models.hack_jury_assosiation import JuryHackathonAssociation
-from core.models.jury import Jury
-from core.models.hackathon_submission import HackathonSubmission
-from core.models.hackathon_task import HackathonTask
+from core.models import(
+Hackathon,
+Jury,
+JuryHackathonAssociation,
+JuryEvaluation,
+HackathonSubmission,
+HackathonTask,
+User
+)
 from .schemas import JuryResponse
 from fastapi import HTTPException, status
 def any_not(ann: str):
@@ -111,16 +115,8 @@ async def remove_jury_from_hackathon(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}"
         )
-async def what_hackathon_sudit(
-        session: AsyncSession,
-        jury_id: int,
-):
-    if await session.get(Jury,jury_id) is None: return any_not('jury')
-    hackathons = await session.execute(
-        select(Jury)
-        .where(Jury.jury_id == jury_id)
-        .where
-    )
+
+
 
 async def get_hackathons_judged_by_jury(session: AsyncSession, jury_id: int):
     result = await session.execute(

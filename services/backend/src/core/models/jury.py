@@ -18,13 +18,13 @@ class Jury(Base):
         unique=True,
         nullable=False
     )
-    user: Mapped[User] = relationship(
+    user: Mapped["User"] = relationship(
         back_populates="jury_profile",
         lazy="selectin"
     )
 
 
-    judged_hackathons: Mapped[list[Hackathon]] = relationship(
+    judged_hackathons: Mapped[list["Hackathon"]] = relationship(
         secondary="jury_hackathon_association",
         back_populates="jury_members",
         lazy="selectin"
@@ -33,7 +33,7 @@ class Jury(Base):
     specialization: Mapped[str] = mapped_column(String(100), nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)
     evaluations_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    evaluations: Mapped[list[JuryEvaluation]] = relationship(
+    evaluations: Mapped[list["JuryEvaluation"]] = relationship(
         back_populates="jury",
         cascade="all, delete-orphan",
         lazy="selectin"
