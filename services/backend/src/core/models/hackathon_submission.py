@@ -11,6 +11,7 @@ from .mixins.int_pk_id import IdIntPkMixin
 if TYPE_CHECKING:
     from .hackathon_task import HackathonTask
     from .user import User
+    from .JuryEvaluation import JuryEvaluation
 
 
 class SubmissionStatus(str, Enum):
@@ -38,3 +39,8 @@ class HackathonSubmission(Base, IdIntPkMixin):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     task: Mapped["HackathonTask"] = relationship(back_populates="submissions")
     user: Mapped["User"] = relationship(back_populates="hackathon_submissions")
+    evaluations: Mapped[list["JuryEvaluation"]] = relationship(
+        back_populates="submission",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )

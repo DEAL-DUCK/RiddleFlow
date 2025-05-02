@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from .hackathon_user_association import HackathonUserAssociation
     from .user import User
     from .hackathon_task import HackathonTask
+    from .jury import Jury
+    from .JuryEvaluation import JuryEvaluation
 
 
 
@@ -70,4 +72,14 @@ class Hackathon(Base, IdIntPkMixin):
         back_populates="hackathon",
         lazy="selectin",
         cascade="all, delete-orphan",
+    )
+    jury_members: Mapped[list["Jury"]] = relationship(
+        secondary="jury_hackathon_association",
+        back_populates="judged_hackathons",
+        lazy="selectin"
+    )
+    jury_evaluations: Mapped[list["JuryEvaluation"]] = relationship(
+        back_populates="hackathon",
+        lazy="selectin",
+        cascade="all, delete-orphan"
     )
