@@ -1,9 +1,10 @@
 from datetime import datetime
 import logging
 
-from typing import List
+from typing import List, Optional
 
 from core.models.group import GroupStatus
+from core.models.hackathon_archive import ArchivedHackathon
 from .dependencies2 import act_group
 from fastapi import HTTPException, status
 from sqlalchemy import select, Result, func
@@ -513,7 +514,6 @@ async def patch_max_users_in_hack(
     await session.refresh(hackathon)
 
     return HackathonSchema.model_validate(hackathon)
-
 
 # async def get_user_in_hackathon(
 #     session: AsyncSession,

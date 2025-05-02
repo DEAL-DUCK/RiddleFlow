@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from .contest_user_association import ContestUserAssociation
     from .user import User
     from .contest_task import ContestTask
-    from .contest_archive import ArchivedContest
+
 
 
 class ContestStatus(enum.Enum):
@@ -53,6 +53,7 @@ class Contest(Base, IdIntPkMixin):
         nullable=False,
     )
     logo_url: Mapped[str] = mapped_column(String(255), nullable=True)
+    is_archived : Mapped[bool] = mapped_column(Boolean,default=False)
     creator: Mapped["User"] = relationship(
         back_populates="created_contests",
         lazy="selectin",
@@ -70,8 +71,4 @@ class Contest(Base, IdIntPkMixin):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
-    archived_record: Mapped[Optional["ArchivedContest"]] = relationship(
-        back_populates="original",
-        cascade="all, delete-orphan",
-        uselist=False
-    )
+

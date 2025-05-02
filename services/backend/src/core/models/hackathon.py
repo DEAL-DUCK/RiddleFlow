@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from .hackathon_user_association import HackathonUserAssociation
     from .user import User
     from .hackathon_task import HackathonTask
-    from hackathon_archive import ArchivedHackathon
+
 
 
 class HackathonStatus(enum.Enum):
@@ -53,6 +53,7 @@ class Hackathon(Base, IdIntPkMixin):
         nullable=False,
     )
     logo_url: Mapped[str] = mapped_column(String(255), nullable=True)
+    is_archived : Mapped[bool] = mapped_column(Boolean,default=False)
     creator: Mapped["User"] = relationship(
         back_populates="created_hackathons",
         lazy="selectin",
@@ -70,4 +71,3 @@ class Hackathon(Base, IdIntPkMixin):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
-    archived_record: Mapped[Optional["ArchivedHackathon"]] = relationship(back_populates="original")
