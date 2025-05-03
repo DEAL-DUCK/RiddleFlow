@@ -27,13 +27,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/test-cors")
-async def test_cors():
-    return {"message": "CORS test"}
-
-@app.get("/")
-def home():
-    return "Hello, World!"
 
 app.include_router(router=router_v1, prefix=settings.api.prefix)
 
