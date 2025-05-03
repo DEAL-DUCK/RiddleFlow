@@ -17,7 +17,7 @@ router = APIRouter(tags=["Решения Контестов"])
 
 
 ######
-@router.post("/create", response_model=ContestSubmissionCreate)
+@router.post("/create")
 async def submissions_create(
     submission_data: ContestSubmissionCreate,
     current_user: User = Depends(user_is_participant_or_admin),

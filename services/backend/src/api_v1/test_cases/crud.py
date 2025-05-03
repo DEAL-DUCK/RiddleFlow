@@ -40,4 +40,4 @@ async def get_tests(
 ):
     result = await session.execute(select(TestCase))
     result = result.scalars().all()
-    return [TestSchema.model_validate(test) for test in result]
+    return [test for test in result]

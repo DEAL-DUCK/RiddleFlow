@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from tasks.celery_app import check_code
 from core.models import (
     ContestSubmission,
     ContestTask,
@@ -24,15 +25,21 @@ async def not_submissions():
 
 async def create_submission(
     session: AsyncSession, submission_data: ContestSubmissionCreate, user_id: int
-) -> ContestSubmission:
+) -> Dict[str, Any]:
+    """
+    Create new submission and start code checking process.
+    Returns submission details with task information.
+    """
+    # Verify task exists
     task = await session.scalar(
         select(ContestTask).where(ContestTask.id == submission_data.task_id)
     )
     if not task:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
         )
 
+    # Verify user is registered for the contest
     user_registered = await session.scalar(
         select(ContestUserAssociation).where(
             ContestUserAssociation.contest_id == task.contest_id,
@@ -42,38 +49,25 @@ async def create_submission(
     if not user_registered:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Пользователь не зарегистрирован на этот хакатон",
+            detail="User is not registered for this contest",
         )
 
-    # existing_submission = await session.scalar(
-    #     select(ContestSubmission).where(
-    #         ContestSubmission.task_id == submission_data.task_id,
-    #         ContestSubmission.user_id == user_id,
-    #         ContestSubmission.description == submission_data.description,
-    #     )
-    # )
-    # if existing_submission:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_409_CONFLICT,
-    #         detail="Решение для этой задачи уже существует",
-    #     )
-
-    submission_dict = submission_data.model_dump()
-    submission_dict.pop("status", None)
-
+    # Create new submission
     new_submission = ContestSubmission(
-        **submission_dict,
+        **submission_data.model_dump(exclude={"status"}),
         user_id=user_id,
-        status=ContestSubmissionStatus.SUBMITTED,
+        status="SUBMITTED",
         submitted_at=datetime.utcnow(),
-        graded_at=datetime.utcnow(),
     )
 
     session.add(new_submission)
     await session.commit()
     await session.refresh(new_submission)
-    task = check_code.delay(new_submission.id)
-    return task
+
+    # Start async checking process
+    celery_task = check_code(new_submission.id)
+
+    return celery_task
 
 
 async def get_my_submissions(session: AsyncSession, user_id: int):

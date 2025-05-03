@@ -29,8 +29,14 @@ async def create_test(
 
 
 @router.get("/")
-async def get_tests_(
+async def get_tests(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    result = await crud.get_tests(session=session)
-    return result
+    test = await crud.get_tests(session=session)
+    return [
+        {
+            "id": result.id,
+            "input": result.expected_output,
+        }
+        for result in test
+    ]
