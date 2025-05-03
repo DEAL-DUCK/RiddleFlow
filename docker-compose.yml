@@ -44,6 +44,8 @@ services:
     build:
       context: ./services/backend
     command: ["sh", "-c", "sleep 5 && celery -A tasks.celery_app worker --loglevel=info"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       pg:
         condition: service_healthy
@@ -57,6 +59,8 @@ services:
     build:
       context: ./services/backend
     command: ["sh", "-c", "sleep 5 && celery -A tasks.celery_app beat --loglevel=info"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       pg:
         condition: service_healthy
@@ -75,6 +79,7 @@ services:
       - 5000:5000
     volumes:
       - ./services/backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock  # Монтируем сокет Docker
     depends_on:
       pg:
         condition: service_healthy
@@ -84,12 +89,15 @@ services:
         condition: service_healthy
     command: >
       bash -c "uvicorn main:app --reload --host 0.0.0.0 --port 5000 && alembic upgrade head"
+    privileged: true
 
 
   flower:
     build:
       context: ./services/backend
     command: ["celery", "-A", "tasks.celery_app", "flower", "--broker=redis://redis_celery:6379/0"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "5555:5555"
     depends_on:
