@@ -291,7 +291,7 @@ async def delete_user_in_hackathon(
         .where(HackathonUserAssociation.user_id == user.id)
     )
 
-    if association:
+    if association or user.is_superuser and hackathon.status != HackathonStatus.ACTIVE:
         hackathon.current_participants -= 1
         await session.delete(association)
         await session.commit()

@@ -8,7 +8,7 @@ from . import crud
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from api_v1.hackathons.dependencies import (
     get_hackathon_by_id,
-    user_is_creator_of_this_hackathon,
+    user_is_creator_of_this_hackathon, user_is_part_of_this_hackathon,
 )
 from api_v1.users.dependencies import (
     get_user_by_id,
@@ -183,11 +183,11 @@ async def add_user_in_hackathon(
 
 
 @router.delete(
-    "/{hackathon_id}/users", dependencies=[Depends(user_is_creator_of_this_hackathon)]
+    "/{hackathon_id}/users", dependencies=[Depends(current_active_user)]
 )
 async def delete_user_in_hackathon(
     hackathon: Hackathon = Depends(get_hackathon_by_id),
-    user: User = Depends(user_is_participant),
+    user: User = Depends(user_is_part_of_this_hackathon),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.delete_user_in_hackathon(

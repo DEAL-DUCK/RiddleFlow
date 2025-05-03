@@ -1,136 +1,134 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from core.models import(
-Hackathon,
-Jury,
-JuryHackathonAssociation,
-JuryEvaluation,
-HackathonSubmission,
-HackathonTask,
-User
+from sqlalchemy.orm import load_only, selectinload, joinedload
+
+from core.models import (
+    Hackathon,
+    Jury,
+    JuryHackathonAssociation,
+    JuryEvaluation,
+    HackathonSubmission,
+    HackathonTask,
+    User, HackathonUserAssociation
 )
-from .schemas import JuryResponse
+from core.models.hackathon import HackathonStatus
+from .schemas import JuryResponse, JuryCreate
 from fastapi import HTTPException, status
+
+from ..evaluations.schemas import EvaluationReadSchema
+
+
 def any_not(ann: str):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'{ann} not found.')
 
 async def add_jury_to_hackathon(
         session: AsyncSession,
-        user_id: int,
-        hackathon_id: int,
-) -> JuryResponse:
-    user = await session.execute(select(User).where(User.id == user_id))
-    user = user.scalar_one_or_none()
-    if not user: any_not('user')
-    hackathon = await session.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
-    hackathon = hackathon.scalar_one_or_none()
-    if not hackathon: any_not('hackathon')
-    jury = await session.execute(select(Jury).where(Jury.user_id == user_id))
-    jury = jury.scalar_one_or_none()
+        user : User,
+        hackathon : Hackathon
+):
+    user_check = await session.scalar(
+        select(HackathonUserAssociation)
+        .where(Hackathon.id == hackathon.id)
+        .where(User.id == user.id
+    )
+    .where(User.id == user.id))
+    if user_check:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Пользователь уже участвует в этом хакатоне"
+        )
+    jury_association = await session.scalar(
+        select(JuryHackathonAssociation)
+        .join(Jury, JuryHackathonAssociation.jury_id == Jury.id)
+        .where(Jury.user_id == user.id)
+        .where(JuryHackathonAssociation.hackathon_id == hackathon.id)
+    )
+
+    if jury_association:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Пользователь уже судит в этом хакатоне"
+        )
+
+    jury = await session.scalar(
+        select(Jury).where(Jury.user_id == user.id)
+    )
+
     if not jury:
-        jury = Jury(user_id=user_id)
+        jury = Jury(user_id=user.id)
         session.add(jury)
-        try:
-            await session.commit()
-            await session.refresh(jury)
-        except IntegrityError:
-            await session.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create jury record",
-            )
-
-    existing_assoc = await session.execute(
-        select(JuryHackathonAssociation).where(
-            JuryHackathonAssociation.jury_id == jury.id,
-            JuryHackathonAssociation.hackathon_id == hackathon_id
-        )
-    )
-
-    if existing_assoc.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User is already a jury member for this hackathon",
-        )
-
-    try:
-        association = JuryHackathonAssociation(
-            jury_id=jury.id,
-            hackathon_id=hackathon_id
-        )
-        session.add(association)
-        await session.commit()
-        await session.refresh(association)
-    except IntegrityError as e:
-        await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to add jury to hackathon: {str(e)}",
-        )
-
-    return JuryResponse(
-        status="success",
+        await session.flush()
+    new_association = JuryHackathonAssociation(
         jury_id=jury.id,
-        hackathon_id=hackathon_id,
-        user_id=user_id,
+        hackathon_id=hackathon.id
     )
+    session.add(new_association)
+    await session.commit()
+
+    return {
+        "status": "success",
+        "message": "Пользователь добавлен в жюри хакатона",
+        "jury_id": jury.id,
+        "hackathon_id": hackathon.id
+    }
+
+
 
 
 async def remove_jury_from_hackathon(
         session: AsyncSession,
-        jury_id: int,
-        hackathon_id: int,
+        jury:Jury,
+        hackathon:Hackathon,
 ):
+    if hackathon.status == HackathonStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='нельзя удалить жюри из активного хакатона')
+    jury_association = await session.scalar(
+        select(JuryHackathonAssociation)
+        .join(Jury, JuryHackathonAssociation.jury_id == Jury.id)
+        .where(Jury.id == jury.id)
+        .where(JuryHackathonAssociation.hackathon_id == hackathon.id)
+    )
+    await session.delete(jury_association)
+    await session.delete(jury)
+    await session.commit()
+    return {'ok':f'jury {jury.id} deleted from hackathon {hackathon.id}'}
 
-    hackathon = await session.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
-    if not hackathon.scalar_one_or_none(): any_not('hackathon')
-    jury = await session.execute(select(Jury).where(Jury.id == jury_id))
-    if not jury.scalar_one_or_none(): any_not('jury')
-    try:
-        result = await session.execute(
-            delete(JuryHackathonAssociation)
-            .where(
-                JuryHackathonAssociation.jury_id == jury_id,
-                JuryHackathonAssociation.hackathon_id == hackathon_id
-            )
-        )
-        await session.commit()
-        if result.rowcount == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="This jury is not assigned to the specified hackathon"
-            )
-
-        return {
-            "status": "success",
-            "message": "Jury removed from hackathon successfully",
-            "jury_id": jury_id,
-            "hackathon_id": hackathon_id
-        }
-
-    except IntegrityError as e:
-        await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
-        )
-
-
-
-async def get_hackathons_judged_by_jury(session: AsyncSession, jury_id: int):
+async def get_hackathons_judged_by_jury(session: AsyncSession,jury:Jury):
     result = await session.execute(
         select(Hackathon)
         .join(JuryHackathonAssociation, Hackathon.id == JuryHackathonAssociation.hackathon_id)
-        .where(JuryHackathonAssociation.jury_id == jury_id)
+        .where(JuryHackathonAssociation.jury_id == jury.id)
+        .options(
+            load_only(
+                Hackathon.id,
+                Hackathon.title,
+                Hackathon.description,
+                Hackathon.status,
+                Hackathon.start_time,
+                Hackathon.end_time,
+            ),
+        )
     )
-    return list(result.scalars().all())
+
+    hackathons = result.scalars().all()
+    return [
+        {
+            "id": hackathon.id,
+            "title": hackathon.title,
+            "description": hackathon.description,
+            "status": hackathon.status.value,
+            "start_time": hackathon.start_time.isoformat() if hackathon.start_time else None,
+            "end_time": hackathon.end_time.isoformat() if hackathon.end_time else None,
+            "logo_url": hackathon.logo_url,
+        }
+        for hackathon in hackathons
+    ]
 
 async def get_jury_evaluations_with_details(
     session: AsyncSession,
-    jury_id: int
+    jury:Jury
 ):
-    try:
         query = (
             select(
                 HackathonSubmission.description,
@@ -144,7 +142,7 @@ async def get_jury_evaluations_with_details(
             .join(HackathonSubmission, JuryEvaluation.submission_id == HackathonSubmission.id)
             .join(HackathonTask, HackathonTask.id == HackathonSubmission.task_id)
             .join(Hackathon, Hackathon.id == HackathonTask.hackathon_id)
-            .where(JuryEvaluation.jury_id == jury_id)
+            .where(JuryEvaluation.jury_id == jury.id)
         )
 
         result = await session.execute(query)
@@ -160,10 +158,26 @@ async def get_jury_evaluations_with_details(
             for row in evaluations
         }
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Ошибка при получении оценок: {str(e)}"
+
+async def get_jury_evaluations_with_this_hackathon(
+        session: AsyncSession,
+        jury: Jury,
+        hackathon : Hackathon
+):
+    stmt = (
+        select(JuryEvaluation)
+        .where(
+            JuryEvaluation.hackathon_id == hackathon.id,
+            JuryEvaluation.jury_id == jury.id
         )
+        .options(
+            joinedload(JuryEvaluation.jury),
+            joinedload(JuryEvaluation.submission),
+            joinedload(JuryEvaluation.hackathon)
+        )
+        .order_by(JuryEvaluation.created_at.desc())
+    )
 
-
+    result = await session.execute(stmt)
+    evaluations = result.scalars().all()
+    return [EvaluationReadSchema.model_validate(eval) for eval in evaluations]

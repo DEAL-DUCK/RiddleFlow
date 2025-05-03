@@ -95,17 +95,7 @@ async def get_my_submissions(session: AsyncSession, user_id: int):
     return submissions if submissions else await not_submissions()
 
 
-async def get_submission_by_id_func(
-    session: AsyncSession, submission_id: int, user_id: int
-):
-    stmt = (
-        select(HackathonSubmission)
-        .where(HackathonSubmission.id == submission_id)
-        .where(HackathonSubmission.user_id == user_id)
-    )
-    result = await session.execute(stmt)
-    submission = result.scalars().first()
-    return submission if submission else await not_submissions()
+
 
 
 async def get_submission_by_task_id_plus_user_id(

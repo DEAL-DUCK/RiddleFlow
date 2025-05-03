@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
 
-from core.models import Contest, ContestTask, ContestSubmission
+from core.models import Contest, ContestTask, ContestSubmission, Jury
 from core.models.db_helper import db_helper
 from api_v1.auth.fastapi_users import current_active_superuser
 from api_v1.users.crud import get_users, get_user, del_user
@@ -30,15 +30,15 @@ from ..groups.dependencies import get_group_by_id
 from ..hackathons.dependencies import get_hackathon_by_id
 from ..hackathons.schemas import HackathonSchema
 from ..hackathon_submissions.crud import (
-    get_submission_by_id_func,
     get_submission_by_task_id_plus_user_id,
     delete_submission_by_id,
     all_submissions,
     delete_all_submissions_any_user, get_all_submissions_current_user_in_any_hackathon,
 )
-from ..hackathon_submissions.schemas import HackathonSubmissionRead
+from ..hackathon_submissions.dependencies import get_submission_by_id_func
 from ..hackathon_tasks.crud import get_all_tasks
-from ..hackathons.crud import delete_hackathon
+from ..hackathons.crud import delete_hackathon, delete_user_in_hackathon, add_user_in_hackathon
+from ..jurys.depends import get_jury_by_id
 
 router = APIRouter(tags=["АДМИН"])
 
@@ -115,8 +115,25 @@ async def del_hack(
     hackathon_id: int, session: AsyncSession = Depends(db_helper.session_getter)
 ):
     return await delete_hackathon(session=session, hackathon_id=hackathon_id)
-
-
+@router.post("/{hackathon_id}/users",dependencies=[Depends(current_active_superuser)])
+async def add_user_in_hackathon_for_admin(
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    user: User = Depends(get_user_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    association = await add_user_in_hackathon(
+        hackathon=hackathon, user=user, session=session
+    )
+    return association
+@router.delete('/user/delete_user_in_hack',dependencies=[Depends(current_active_superuser)])
+async def delete_user_in_hackathon_for_admin(
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    user: User = Depends(get_user_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await delete_user_in_hackathon(
+        hackathon=hackathon, user=user, session=session
+    )
 @router.patch("/user/deactive", dependencies=[Depends(crud.is_this_user_admin)])
 async def de_activate_user(
     user: User = Depends(get_user_by_id),
@@ -218,7 +235,7 @@ async def delete_group_route(
 
     return f"СНЕСЕНА ФУНКЦИЯ"""
 
-router = APIRouter(tags=["Контесты (Админ)"])
+
 
 @router.get("/contests/", response_model=List[ContestSchema])
 async def admin_get_all_contests(
