@@ -1,7 +1,7 @@
 """add max_attempts and current_attempts to hackathon_tasks
 
 Revision ID: 5b265eef9239
-Revises: d42134de7ff5
+Revises: 36f9d93c952c  # ИСПРАВЛЕНО: было d42134de7ff5
 Create Date: 2025-05-01 19:06:54.167191
 
 """
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "5b265eef9239"
-down_revision: Union[str, None] = "d42134de7ff5"
+down_revision: Union[str, None] = "36f9d93c952c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
