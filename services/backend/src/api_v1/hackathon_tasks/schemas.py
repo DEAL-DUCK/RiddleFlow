@@ -14,6 +14,7 @@ class CreateHackathonTaskSchema(BaseModel):
     title: str
     description: str
     task_type: HackathonTaskType
+    max_attempts: int = 5
 
 
 class HackathonTaskSchema(BaseModel):
@@ -31,3 +32,4 @@ class HackathonTaskUpdateSchema(BaseModel):
     description: str | None = None
     task_type: HackathonTaskType | None = None
     hackathon_id: int | None = None
+    max_attempts: int = 5

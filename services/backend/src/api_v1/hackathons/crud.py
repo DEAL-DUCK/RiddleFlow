@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 
-from typing import List
+from typing import List, Optional
 
 from core.models.group import GroupStatus
 from .dependencies2 import act_group
@@ -60,7 +60,7 @@ async def get_hackathons(session: AsyncSession) -> list[HackathonSchema]:
     #     hackathons_data = json.loads(cached_hackathons)
     #     return [HackathonSchema(**hackathon) for hackathon in hackathons_data]
 
-    stmt = select(Hackathon).order_by(Hackathon.id)
+    stmt = select(Hackathon).where(Hackathon.is_archived == False).order_by(Hackathon.id)
     result: Result = await session.execute(stmt)
     hackathons = result.scalars().all()
 
@@ -291,7 +291,7 @@ async def delete_user_in_hackathon(
         .where(HackathonUserAssociation.user_id == user.id)
     )
 
-    if association:
+    if association or user.is_superuser and hackathon.status != HackathonStatus.ACTIVE:
         hackathon.current_participants -= 1
         await session.delete(association)
         await session.commit()
@@ -513,6 +513,16 @@ async def patch_max_users_in_hack(
     await session.refresh(hackathon)
 
     return HackathonSchema.model_validate(hackathon)
+async def archive(session:AsyncSession,hackathon:Hackathon):
+    if hackathon.status == HackathonStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='hackathon not completed')
+    hackathon.is_archived = True
+    await session.commit()
+    return {'ok':f'contest {hackathon.id} is archived'}
+async def unarchive(session:AsyncSession,hackathon:Hackathon):
+    hackathon.is_archived = False
+    await session.commit()
+    return {'ok':f'hackathon {hackathon.id} is unarchived'}
 
 
 # async def get_user_in_hackathon(

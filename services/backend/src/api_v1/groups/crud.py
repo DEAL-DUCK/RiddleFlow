@@ -104,6 +104,18 @@ async def add_user_in_group_for_id(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"User  {user.id} is already participating in this group",
         )
+
+    existing_association = await session.scalar(
+        select(HackathonGroupAssociation)
+        .join(HackathonGroupAssociation.hackathon)
+        .where(
+            HackathonGroupAssociation.group_id == group.id,
+            Hackathon.status == HackathonStatus.ACTIVE))
+    if existing_association:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Group  {group.id} is already participating  hackathon ",
+        )
     if group.max_members == group.current_members:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

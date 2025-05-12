@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
 from core.models import ContestTask, Contest
+from core.models.contest import ContestStatus
 from .schemas import CreateContestTaskSchema, ContestTaskSchema
 from api_v1.contests.dependencies import get_contest
 
@@ -23,6 +24,8 @@ async def create_task_for_contest(
         description=task_data.description,
         contest_id=contest_id,
     )
+    if contest.status == ContestStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='contest already begin')
     session.add(task)
     await session.commit()
     await session.refresh(task)
@@ -113,3 +116,13 @@ async def update_task(
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+async def archive(session:AsyncSession,task:ContestTask):
+    if task.contest.status == ContestStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail=f'хакатон уже идет')
+    task.is_archived = True
+    await session.commit()
+    return {'ok':f'task {task.id} is archived'}
+async def unarchive(session:AsyncSession,task:ContestTask):
+    task.is_archived = False
+    await session.commit()
+    return {'ok':f'task {task.id} is unarchived'}

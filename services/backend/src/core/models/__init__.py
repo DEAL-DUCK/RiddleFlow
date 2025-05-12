@@ -17,6 +17,9 @@ __all__ = {
     "ContestTask",
     "ContestSubmission",
     "TestCase",
+    "JuryEvaluation",
+    'JuryHackathonAssociation',
+    "Jury"
 }
 
 
@@ -38,3 +41,7 @@ from .hackathon_submission import HackathonSubmission
 from .contest_task import ContestTask
 from .contest_submission import ContestSubmission
 from .test_case import TestCase
+
+from .jury import Jury
+from .hack_jury_assosiation import JuryHackathonAssociation
+from .JuryEvaluation import JuryEvaluation

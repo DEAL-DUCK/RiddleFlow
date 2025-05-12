@@ -1,6 +1,8 @@
+from typing import List
+
 from fastapi import Depends, HTTPException
 
-from sqlalchemy import select, delete, func
+from sqlalchemy import select, delete, func, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -8,7 +10,7 @@ from api_v1.auth.fastapi_users import current_active_user, current_active_superu
 from api_v1.groups.dependencies2 import delete_group_in_hackathon
 from api_v1.hackathons.schemas import HackathonBaseSchema, HackathonSchema
 from core.models import User, Hackathon, Group, GroupUserAssociation, HackathonGroupAssociation, \
-    HackathonUserAssociation
+    HackathonUserAssociation, Contest, Jury
 from core.models.group import GroupStatus
 
 
@@ -114,3 +116,19 @@ async def UNBANNED(
         'message': f'Group {group.title} (ID: {group.id}) has been unbanned',
     }
 
+async def del_all_my_contest(
+    session: AsyncSession,
+    user_id: int
+) -> dict:
+    stmt = select(Contest).where(Contest.creator_id == user_id)
+    result = await session.execute(stmt)
+    contests = result.scalars().all()
+    for contest in contests:
+        await session.delete(contest)
+    await session.commit()
+    return {'ok': True}
+async def get_jurys(session: AsyncSession)->List[Jury]:
+    stmt = select(Jury).order_by(Jury.id)
+    result: Result = await session.execute(stmt)
+    jurys = result.scalars().all()
+    return list(jurys)

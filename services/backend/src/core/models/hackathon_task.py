@@ -9,7 +9,7 @@ from sqlalchemy import (
     DateTime,
     Index,
     Integer,
-    Enum,
+    Enum, Boolean,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -40,7 +40,10 @@ class HackathonTask(Base, IdIntPkMixin):
     )
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    max_attempts: Mapped[int] = mapped_column(default=5, nullable=False)  # Максимальное количество попыток
+    current_attempts: Mapped[int] = mapped_column(default=0, nullable=False)  # Текущее количество решений
     task_type: Mapped[TaskType] = mapped_column(Enum(TaskType), nullable=False)
+    is_archived : Mapped[bool] = mapped_column(Boolean,default=False)
     hackathon_id: Mapped[int] = mapped_column(
         ForeignKey("hackathons.id"),
         nullable=False,

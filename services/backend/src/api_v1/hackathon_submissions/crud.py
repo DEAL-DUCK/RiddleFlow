@@ -4,12 +4,15 @@ from typing import Dict, Any
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from core.models import (
     HackathonSubmission,
     HackathonTask,
-    HackathonUserAssociation,
+    HackathonUserAssociation, User, Hackathon,
 )
+from core.models.hackathon import HackathonStatus
+from core.models.hackathon_submission import SubmissionStatus
 from .schemas import (
     HackathonSubmissionCreate,
     HackathonSubmissionRead,
@@ -23,7 +26,7 @@ async def not_submissions():
 
 async def create_submission(
     session: AsyncSession, submission_data: HackathonSubmissionCreate, user_id: int
-) -> HackathonSubmission:
+):
     task = await session.scalar(
         select(HackathonTask).where(HackathonTask.id == submission_data.task_id)
     )
@@ -38,24 +41,32 @@ async def create_submission(
             HackathonUserAssociation.user_id == user_id,
         )
     )
-    if not user_registered:
+    user = await session.get(User,user_id)
+    if not user_registered and not user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Пользователь не зарегистрирован на этот хакатон",
         )
-
-    existing_submission = await session.scalar(
-        select(HackathonSubmission).where(
-            HackathonSubmission.task_id == submission_data.task_id,
-            HackathonSubmission.user_id == user_id,
-            HackathonSubmission.description == submission_data.description,
-        )
+    hackathon = await session.scalar(
+        select(Hackathon).where(Hackathon.id == task.hackathon_id)
     )
-    if existing_submission:
+    if not hackathon:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Решение для этой задачи уже существует",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Хакатон не найден"
         )
+    if task.current_attempts >= task.max_attempts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Достигнут лимит попыток ({task.max_attempts}) для этой задачи",
+        )
+
+    """if hackathon.status != HackathonStatus.ACTIVE and not user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Решения можно отправлять только в активных хакатонах"
+        )"""
+
 
     submission_dict = submission_data.model_dump()
     submission_dict.pop("status", None)
@@ -63,16 +74,18 @@ async def create_submission(
     new_submission = HackathonSubmission(
         **submission_dict,
         user_id=user_id,
-        status=HackathonSubmissionStatus.SUBMITTED,
+        status=SubmissionStatus.SUBMITTED,
         submitted_at=datetime.utcnow(),
-        graded_at=datetime.utcnow(),
     )
 
     session.add(new_submission)
+
+    task.current_attempts += 1
+
     await session.commit()
     await session.refresh(new_submission)
 
-    return new_submission
+    return {f'решение успешно отправлено':f'осталось попыток {task.max_attempts-task.current_attempts}'}
 
 
 async def get_my_submissions(session: AsyncSession, user_id: int):
@@ -82,17 +95,7 @@ async def get_my_submissions(session: AsyncSession, user_id: int):
     return submissions if submissions else await not_submissions()
 
 
-async def get_submission_by_id_func(
-    session: AsyncSession, submission_id: int, user_id: int
-):
-    stmt = (
-        select(HackathonSubmission)
-        .where(HackathonSubmission.id == submission_id)
-        .where(HackathonSubmission.user_id == user_id)
-    )
-    result = await session.execute(stmt)
-    submission = result.scalars().first()
-    return submission if submission else await not_submissions()
+
 
 
 async def get_submission_by_task_id_plus_user_id(
@@ -180,6 +183,38 @@ async def update_submission(
             detail=f"Database error: {str(e)}",
         )
 
+
+async def get_all_submissions_current_user_in_any_hackathon(
+    session: AsyncSession,
+    user: User,
+    hackathon: Hackathon,
+) -> list[dict]:
+    query = (
+        select(HackathonSubmission)
+        .join(HackathonSubmission.task)
+        .where(
+            HackathonSubmission.user_id == user.id,
+            HackathonTask.hackathon_id == hackathon.id
+        )
+        .order_by(HackathonSubmission.submitted_at.desc())
+    )
+
+    result = await session.execute(query)
+    submissions = result.scalars().all()
+
+    return [
+        {
+            "id": submission.id,
+            "status": submission.status.value,
+            "code_url": submission.code_url,
+            "task_id": submission.task_id,
+            "user_id": submission.user_id,
+            "description": submission.description,
+            "submitted_at": submission.submitted_at.isoformat(),
+            "graded_at": submission.graded_at.isoformat(),
+        }
+        for submission in submissions
+    ]
 
 # async def get_all_evaluations(
 #     session: AsyncSession,

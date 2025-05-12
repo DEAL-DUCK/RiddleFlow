@@ -9,7 +9,7 @@ from sqlalchemy import (
     DateTime,
     Index,
     Integer,
-    Enum,
+    Enum, Boolean,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -32,6 +32,8 @@ class ContestTask(Base, IdIntPkMixin):
         ForeignKey("contests.id"),
         nullable=False,
     )
+    max_attempts: Mapped[int] = mapped_column(default=5, nullable=False)  # Максимальное количество попыток
+    current_attempts: Mapped[int] = mapped_column(default=0, nullable=False)  # Текущее количество решений
     time_limit: Mapped[int] = mapped_column(Integer, nullable=False)
     memory_limit: Mapped[int] = mapped_column(Integer, nullable=False)
     # creator: Mapped["User"] = relationship(back_populates="created_tasks")
@@ -40,6 +42,7 @@ class ContestTask(Base, IdIntPkMixin):
         back_populates="task",
         cascade="all, delete-orphan",
     )
+    is_archived : Mapped[bool] = mapped_column(Boolean,default=False)
 
     # max_score: Mapped[int] = mapped_column(Integer, default=100)
     # deadline: Mapped[datetime] = mapped_column(DateTime, nullable=True)

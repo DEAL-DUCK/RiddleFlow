@@ -15,6 +15,8 @@ async def get_contest_by_id(
     session: AsyncSession = Depends(db_helper.session_getter),
 ) -> Contest:
     contest = await get_contest(session=session, contest_id=contest_id)
+    if contest.is_archived :
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='contest archived')
     if contest is not None:
         return contest
     raise HTTPException(

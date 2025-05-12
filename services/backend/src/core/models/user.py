@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from .group_user_association import GroupUserAssociation
     from .hackathon_user_association import HackathonUserAssociation
     from .contest_user_association import ContestUserAssociation
+    from .jury import Jury
 
 
 class UserRole(enum.Enum):
@@ -86,6 +87,12 @@ class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
         back_populates="user",
         lazy="selectin",
         cascade="all, delete-orphan",
+    )
+    jury_profile: Mapped["Jury"] = relationship(
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
 
     @classmethod

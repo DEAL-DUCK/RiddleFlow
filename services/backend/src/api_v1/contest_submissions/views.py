@@ -43,8 +43,7 @@ async def get_submission_by_id(
 
 
 @router.get(
-    "{/task_id}",
-    summary="залупа нерабочая почему-то делает поиск по решениям а не задачам",
+    "/tasks/{task_id}",
 )
 async def get_submissions_by_user_id_and_task_id(
     task_id: int,
