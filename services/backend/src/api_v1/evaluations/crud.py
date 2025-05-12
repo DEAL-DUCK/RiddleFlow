@@ -1,12 +1,12 @@
 from datetime import datetime
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_, func, exists
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status, Depends
 from core.models import JuryEvaluation, HackathonSubmission, Jury, JuryHackathonAssociation, db_helper
 from core.models.hackathon_submission import SubmissionStatus
-from core.models.hackathon import HackathonStatus
+from core.models.hackathon import HackathonStatus, Hackathon
 from .depends import get_current_jury
 from .schemas import  EvaluationCreateSchema,EvaluationReadSchema,EvaluationUpdateSchema
 from ..jurys.crud import any_not
@@ -34,6 +34,17 @@ async def create_evaluation(
     )
     if existing_eval.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You have already evaluated this submission")
+    is_jury_for_hackathon = await session.execute(
+        select(exists().where(
+            JuryHackathonAssociation.jury_id == jury.id,
+            JuryHackathonAssociation.hackathon_id == submission.task.hackathon_id
+        ))
+    )
+    if not is_jury_for_hackathon.scalar():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Вы не назначены жюри на этот хакатон"
+        )
 
     evaluation = JuryEvaluation(
         **data_in.model_dump(),

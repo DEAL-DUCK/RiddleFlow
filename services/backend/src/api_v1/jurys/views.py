@@ -12,10 +12,8 @@ from ..users.dependencies import get_user_by_id
 router = APIRouter(tags=["Жюри"])
 
 
-
 @router.post(
     "/hackathon/add",
-    status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(user_is_creator_of_this_hackathon)]
 )
 async def add_jury_member_to_hackathon_endpoint(
@@ -50,6 +48,12 @@ session: AsyncSession = Depends(db_helper.session_getter)):
         session=session,
         jury=jury
     )
+@router.get("/my_jury_profile/get_all")
+async def get_all_my_evalution(
+        session : AsyncSession = Depends(db_helper.session_getter),
+        jury : Jury = Depends(get_current_jury)
+):
+    return await crud.get_all_my_evaluation(session=session,jury=jury)
 
 @router.get(
     '/get_all_hackathons_where_this_jury_work/for_hackathon_id',

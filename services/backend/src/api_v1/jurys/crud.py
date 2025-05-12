@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, Result
 from sqlalchemy.orm import load_only, selectinload, joinedload
 
 from core.models import (
@@ -181,3 +181,11 @@ async def get_jury_evaluations_with_this_hackathon(
     result = await session.execute(stmt)
     evaluations = result.scalars().all()
     return [EvaluationReadSchema.model_validate(eval) for eval in evaluations]
+async def get_all_my_evaluation(
+        session : AsyncSession,
+        jury : Jury
+):
+    stmt = select(JuryEvaluation).where(JuryEvaluation.jury == jury)
+    result:Result  = await session.execute(stmt)
+    evaluation = result.scalars().all()
+    return [EvaluationReadSchema.model_validate(eval) for eval in evaluation]
