@@ -43,6 +43,8 @@ services:
   celery_worker:
     build:
       context: ./services/backend
+    env_file:
+      - ./services/backend/src/.env.docker
     command: ["sh", "-c", "sleep 5 && celery -A tasks.celery_app worker --loglevel=info"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -58,6 +60,8 @@ services:
   celery_beat:
     build:
       context: ./services/backend
+    env_file:
+      - ./services/backend/src/.env.docker
     command: ["sh", "-c", "sleep 5 && celery -A tasks.celery_app beat --loglevel=info"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -95,6 +99,8 @@ services:
   flower:
     build:
       context: ./services/backend
+    env_file:
+      - ./services/backend/src/.env.docker
     command: ["celery", "-A", "tasks.celery_app", "flower", "--broker=redis://redis_celery:6379/0"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
