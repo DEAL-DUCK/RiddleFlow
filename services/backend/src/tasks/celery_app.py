@@ -1,20 +1,20 @@
 import datetime
 import enum
 import logging
-import time
 
 import docker
-from celery.schedules import crontab
 from celery import Celery
+from celery.schedules import crontab
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
-from core.models import Hackathon, ContestSubmission, ContestTask, TestCase
+
 from core.config import settings
+from core.models import Hackathon, ContestSubmission, ContestTask, TestCase, Contest
 
 celery_app = Celery(
-    main=settings.celery.CELERY_MAIN,
-    broker=settings.celery.CELERY_BROKER,
-    backend=settings.celery.CELERY_BACKEND,
+    main=settings.celery.celery_main,
+    broker=settings.celery.celery_broker,
+    backend=settings.celery.celery_backend,
 )
 
 DATABASE_URL = "postgresql://user:password@pg:5432/RiddleFlowDB"
@@ -23,6 +23,13 @@ SessionLocal = sessionmaker(bind=engine)
 
 
 class HackathonStatus(enum.Enum):
+    PLANNED = "PLANNED"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    CANCELED = "CANCELED"
+
+
+class ContestStatus(enum.Enum):
     PLANNED = "PLANNED"
     ACTIVE = "ACTIVE"
     COMPLETED = "COMPLETED"
@@ -139,9 +146,12 @@ def check_code(self, submission_id):
 @celery_app.task
 def check_hackathon_times():
     with SessionLocal() as session:
-        stmt = select(Hackathon)
-        result = session.execute(stmt)
-        hackathons = result.scalars().all()
+        stmt1 = select(Hackathon)
+        stmt2 = select(Contest)
+        result1 = session.execute(stmt1)
+        result2 = session.execute(stmt2)
+        hackathons = result1.scalars().all()
+        contests = result2.scalars().all()
         for hackathon in hackathons:
             now = datetime.datetime.now(datetime.UTC)
             logging.info(f"{hackathon.status}")
@@ -150,16 +160,36 @@ def check_hackathon_times():
             ):
                 hackathon.status = "ACTIVE"
                 logging.info(
-                    f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA, \n id = {hackathon.id}, \n start = {hackathon.start_time}, \n now = {now}"
+                    f"id = {hackathon.id}, \n start = {hackathon.start_time}, \n now = {now}"
                 )
-            if str(hackathon.status) == str(HackathonStatus.ACTIVE) and (
-                now > hackathon.end_time
-            ):
+            if (
+                str(hackathon.status) == str(HackathonStatus.ACTIVE)
+                or str(hackathon.status) == str(HackathonStatus.PLANNED)
+            ) and (now > hackathon.end_time):
                 hackathon.status = "COMPLETED"
                 logging.info(
-                    f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA, \n id = {hackathon.id}, \n start = {hackathon.end_time}, \n now = {now}"
+                    f"id = {hackathon.id}, \n start = {hackathon.end_time}, \n now = {now}"
                 )
-        session.commit()  # Коммит после завершения всех изменений
+
+        for contest in contests:
+            now = datetime.datetime.now(datetime.UTC)
+            logging.info(f"{contest.status}")
+            if str(contest.status) == str(ContestStatus.PLANNED) and (
+                contest.start_time <= now < contest.end_time
+            ):
+                contest.status = "ACTIVE"
+                logging.info(
+                    f"id = {contest.id}, \n start = {contest.start_time}, \n now = {now}"
+                )
+            if (
+                str(contest.status) == str(ContestStatus.ACTIVE)
+                or str(contest.status) == str(ContestStatus.PLANNED)
+            ) and (now > contest.end_time):
+                contest.status = "COMPLETED"
+                logging.info(
+                    f"id = {contest.id}, \n start = {contest.end_time}, \n now = {now}"
+                )
+        session.commit()
 
 
 celery_app.conf.beat_schedule = {

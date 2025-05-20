@@ -48,6 +48,9 @@ def serialize_contests(contests):
             "current_participants": contest.current_participants,
             "created_at": (contest.created_at.isoformat()),
             "creator_id": contest.creator_id,
+            "logo_url": contest.logo_url,
+            "allow_teams": contest.allow_teams,
+            "updated_at": contest.updated_at.isoformat(),
         }
         for contest in contests
     ]
@@ -55,11 +58,11 @@ def serialize_contests(contests):
 
 # Ваша функция get_contests
 async def get_contests(session: AsyncSession) -> list[ContestSchema]:
-    # cached_contests = redis_client.get("contests")
+    cached_contests = redis_client.get("contests")
 
-    # if cached_contests:
-    #     contests_data = json.loads(cached_contests)
-    #     return [ContestSchema(**contest) for contest in contests_data]
+    if cached_contests:
+        contests_data = json.loads(cached_contests)
+        return [ContestSchema(**contest) for contest in contests_data]
 
     stmt = select(Contest).where(Contest.is_archived == False).order_by(Contest.id)
     result: Result = await session.execute(stmt)
@@ -67,9 +70,7 @@ async def get_contests(session: AsyncSession) -> list[ContestSchema]:
 
     contest_schemas = [ContestSchema.model_validate(contest) for contest in contests]
 
-    # redis_client.set(
-    #     "contests", json.dumps(serialize_contests(contest_schemas)), ex=30
-    # )
+    redis_client.set("contests", json.dumps(serialize_contests(contest_schemas)), ex=50)
 
     return contest_schemas
 
@@ -509,16 +510,22 @@ async def patch_max_users_in_contest(
     await session.refresh(contest)
 
     return ContestSchema.model_validate(contest)
-async def archive(session:AsyncSession,contest:Contest):
+
+
+async def archive(session: AsyncSession, contest: Contest):
     if contest.status == ContestStatus.ACTIVE:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='contest not completed')
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="contest not completed"
+        )
     contest.is_archived = True
     await session.commit()
-    return [{'ok':f'contest {contest.id} is archived'},contest]
-async def unarchive(session:AsyncSession,contest:Contest):
+    return [{"ok": f"contest {contest.id} is archived"}, contest]
+
+
+async def unarchive(session: AsyncSession, contest: Contest):
     contest.is_archived = False
     await session.commit()
-    return [{'ok':f'contest {contest.id} is unarchived'},contest]
+    return [{"ok": f"contest {contest.id} is unarchived"}, contest]
 
 
 # async def get_user_in_contest(

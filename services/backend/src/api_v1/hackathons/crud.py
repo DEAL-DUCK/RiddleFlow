@@ -47,6 +47,9 @@ def serialize_hackathons(hackathons):
             "current_participants": hackathon.current_participants,
             "created_at": (hackathon.created_at.isoformat()),
             "creator_id": hackathon.creator_id,
+            "logo_url": hackathon.logo_url,
+            "allow_teams": hackathon.allow_teams,
+            "updated_at": hackathon.updated_at.isoformat(),
         }
         for hackathon in hackathons
     ]
@@ -54,13 +57,15 @@ def serialize_hackathons(hackathons):
 
 # Ваша функция get_hackathons
 async def get_hackathons(session: AsyncSession) -> list[HackathonSchema]:
-    # cached_hackathons = redis_client.get("hackathons")
+    cached_hackathons = redis_client.get("hackathons")
 
-    # if cached_hackathons:
-    #     hackathons_data = json.loads(cached_hackathons)
-    #     return [HackathonSchema(**hackathon) for hackathon in hackathons_data]
+    if cached_hackathons:
+        hackathons_data = json.loads(cached_hackathons)
+        return [HackathonSchema(**hackathon) for hackathon in hackathons_data]
 
-    stmt = select(Hackathon).where(Hackathon.is_archived == False).order_by(Hackathon.id)
+    stmt = (
+        select(Hackathon).where(Hackathon.is_archived == False).order_by(Hackathon.id)
+    )
     result: Result = await session.execute(stmt)
     hackathons = result.scalars().all()
 
@@ -68,9 +73,9 @@ async def get_hackathons(session: AsyncSession) -> list[HackathonSchema]:
         HackathonSchema.model_validate(hackathon) for hackathon in hackathons
     ]
 
-    # redis_client.set(
-    #     "hackathons", json.dumps(serialize_hackathons(hackathon_schemas)), ex=30
-    # )
+    redis_client.set(
+        "hackathons", json.dumps(serialize_hackathons(hackathon_schemas)), ex=50
+    )
 
     return hackathon_schemas
 
@@ -513,16 +518,22 @@ async def patch_max_users_in_hack(
     await session.refresh(hackathon)
 
     return HackathonSchema.model_validate(hackathon)
-async def archive(session:AsyncSession,hackathon:Hackathon):
+
+
+async def archive(session: AsyncSession, hackathon: Hackathon):
     if hackathon.status == HackathonStatus.ACTIVE:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='hackathon not completed')
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="hackathon not completed"
+        )
     hackathon.is_archived = True
     await session.commit()
-    return {'ok':f'contest {hackathon.id} is archived'}
-async def unarchive(session:AsyncSession,hackathon:Hackathon):
+    return {"ok": f"contest {hackathon.id} is archived"}
+
+
+async def unarchive(session: AsyncSession, hackathon: Hackathon):
     hackathon.is_archived = False
     await session.commit()
-    return {'ok':f'hackathon {hackathon.id} is unarchived'}
+    return {"ok": f"hackathon {hackathon.id} is unarchived"}
 
 
 # async def get_user_in_hackathon(
