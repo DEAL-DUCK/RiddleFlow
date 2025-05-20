@@ -1,28 +1,24 @@
 from contextlib import asynccontextmanager
 
+import redis
 from aiobotocore.session import get_session
 from pydantic import BaseModel, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import redis
-
-
-class ApiPrefix(BaseModel):
-    prefix: str = "/api"
 
 
 class RunConfig(BaseModel):
-    host: str = "0.0.0.0"
-    port: int = 8000
+    host: str
+    port: int
 
 
 class DbSettings(BaseModel):
     url: PostgresDsn
-    echo: bool = False
-    echo_pool: bool = False
-    max_overflow: int = 10
-    pool_size: int = 50
-    pool_timeout: int = 30
-    pool_recycle: int = 3600
+    echo: bool
+    echo_pool: bool
+    max_overflow: int
+    pool_size: int
+    pool_timeout: int
+    pool_recycle: int
 
     naming_convention: dict[str, str] = {
         "ix": "ix_%(column_0_label)s",
@@ -34,43 +30,42 @@ class DbSettings(BaseModel):
 
 
 class AccessToken(BaseModel):
-    lifetime_seconds: int = 3600000  # ПОМЕНЯТЬ ПРИ СОЗДАНИИ REFRESH JWT
+    lifetime_seconds: int
     reset_password_token_secret: str
     verification_token_secret: str
 
 
-class RedisConfig:
-    REDIS_HOST = "redis_cache"
-    REDIS_PORT = 6379
-    REDIS_DB = 0
+class RedisConfig(BaseModel):
+    redis_host: str
+    redis_port: str
+    redis_db: str
 
 
-class CeleryConfig:
-    CELERY_MAIN = "tasks"
-    CELERY_BROKER = "redis://redis_celery:6379/0"
-    CELERY_BACKEND = "redis://redis_celery:6379/0"
+class CeleryConfig(BaseModel):
+    celery_main: str
+    celery_broker: str
+    celery_backend: str
 
 
 class S3Config(BaseModel):
-    access_key: str = "7a55abe43bf44246938f347062ea1a5f"
-    secret_key: str = "904deb287fc7447a86f103c89ed2a462"
-    endpoint_url: str = "https://s3.ru-7.storage.selcloud.ru"
-    bucket_name: str = "riddle-flow-public-bucket"
-    domain_url: str = "https://8111c3e1-45b1-4f66-a978-cc168f520971.selstorage.ru"
+    access_key: str
+    secret_key: str
+    endpoint_url: str
+    bucket_name: str
+    domain_url: str
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=(".env", ".env.template", ".env.local"),
+        env_file=(".env", ".env.local"),
         case_sensitive=False,
         env_nested_delimiter="__",
         env_prefix="APP_CONFIG__",
     )
-    run: RunConfig = RunConfig()
-    api: ApiPrefix = ApiPrefix()
-    redis: RedisConfig = RedisConfig()
-    celery: CeleryConfig = CeleryConfig()
-    s3: S3Config = S3Config()
+    run: RunConfig
+    redis: RedisConfig
+    celery: CeleryConfig
+    s3: S3Config
     db: DbSettings
     access_token: AccessToken
 
@@ -113,9 +108,9 @@ class S3Client:
 settings = Settings()
 
 redis_client = redis.StrictRedis(
-    host=settings.redis.REDIS_HOST,
-    port=settings.redis.REDIS_PORT,
-    db=settings.redis.REDIS_DB,
+    host=settings.redis.redis_host,
+    port=settings.redis.redis_port,
+    db=settings.redis.redis_db,
     decode_responses=True,
 )
 
