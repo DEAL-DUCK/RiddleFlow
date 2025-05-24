@@ -25,6 +25,14 @@ git clone https://github.com/yourusername/RiddleFlow.git
 cd RiddleFlow
 ```
 
+Создайте виртуальное окружение и выполните миграции
+
+```bash
+cd services/backend/src
+pip install -r requirements.txt
+alembic upgrade head
+```
+
 ### Запуск приложения
 
 1. Соберите и запустите контейнеры:
