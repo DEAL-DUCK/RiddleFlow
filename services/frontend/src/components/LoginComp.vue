@@ -1,4 +1,4 @@
-<!-- src/components/Login.vue -->
+<!-- src/components/LoginComp.vue -->
 <template>
   <div class="container">
     <h1>Вход</h1>
@@ -45,7 +45,7 @@
 import axios from 'axios';
 
 export default {
-  name: 'Login',
+  name: 'LoginComp',
   data() {
     return {
       email: '',

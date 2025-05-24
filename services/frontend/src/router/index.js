@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HackathonList from '../components/HackathonList.vue';
-import Register from '../components/Register.vue';
-import Login from '../components/Login.vue';
-import Profile from '../components/Profile.vue';
+import RegisterComp from '../components/RegisterComp.vue';
+import LoginComp from '../components/LoginComp.vue';
+import ProfileComp from '../components/ProfileComp.vue';
 import HackathonDetail from '../components/HackathonDetail.vue';
 import CreateHackathon from '../components/CreateHackathon.vue';
 
@@ -16,17 +16,17 @@ const routes = [
   {
     path: '/register',
     name: 'Register',
-    component: Register,
+    component: RegisterComp,
   },
   {
     path: '/login',
     name: 'Login',
-    component: Login,
+    component: LoginComp,
   },
   {
     path: '/profile',
     name: 'Profile',
-    component: Profile,
+    component: ProfileComp,
     meta: { requiresAuth: true }, // Защита маршрута
   },
   {
