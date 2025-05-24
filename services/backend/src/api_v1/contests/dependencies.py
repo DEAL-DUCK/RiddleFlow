@@ -35,8 +35,20 @@ async def user_is_creator_of_this_contest(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=f"user {user.id} is not creator of this contest",
     )
-
-
+def get_active_contest(
+        contest : Contest = Depends(get_contest_by_id),
+):
+    if contest.status != 'ACTIVE':
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail='контест еще не активен')
+    return contest
+def get_inactive_contest(
+        contest : Contest = Depends(get_contest_by_id),
+):
+    if contest.status == 'PLANNED' or contest.status == 'INACTIVE':
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail='контест  активен')
+    return contest
 # async def get_user_in_contest_by_id(
 #     user_id: Annotated[int, Path(ge=1)],
 #     contest: Contest = Depends(get_contest_by_id),

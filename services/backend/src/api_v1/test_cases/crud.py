@@ -16,14 +16,6 @@ async def create_test_for_contest(
     contest_id: int,
     task_id: int,
 ) -> TestSchema:
-    contest = await get_contest(session, contest_id)
-    if contest is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    task = await session.scalar(select(ContestTask).where(ContestTask.id == task_id))
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена"
-        )
     test = TestCase(
         input=test_data.input,
         expected_output=test_data.expected_output,

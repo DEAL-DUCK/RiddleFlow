@@ -1,11 +1,11 @@
 from typing import Any
 
-
+from fastapi.params import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
-from core.models import ContestTask, Contest
+from core.models import ContestTask, Contest, db_helper
 from core.models.contest import ContestStatus
 from .schemas import CreateContestTaskSchema, ContestTaskSchema
 from api_v1.contests.dependencies import get_contest
@@ -44,9 +44,9 @@ async def delete_task(task_id: int, session: AsyncSession):
     return {"ok": "contest_tasks deleted"}
 
 
-async def get_task_by_id(
-    session: AsyncSession,
+async def get_contest_task_by_id(
     task_id: int,
+    session : AsyncSession = Depends(db_helper.session_getter)
 ):
     result = await session.execute(select(ContestTask).where(ContestTask.id == task_id))
     task = result.scalars().first()
