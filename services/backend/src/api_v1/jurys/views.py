@@ -6,7 +6,7 @@ from . import crud
 from .depends import get_jury_by_id, is_this_user_jury_this_hackathon
 from ..auth.fastapi_users import current_active_user, current_active_superuser
 from ..evaluations.depends import get_current_jury
-from ..hackathons.dependencies import get_hackathon_by_id, user_is_creator_of_this_hackathon
+from ..hackathons.dependencies import get_hackathon_by_id, user_is_creator_of_this_hackathon, get_inactive_hackathon
 from ..users.dependencies import get_user_by_id
 
 router = APIRouter(tags=["Жюри"])
@@ -18,7 +18,7 @@ router = APIRouter(tags=["Жюри"])
 )
 async def add_jury_member_to_hackathon_endpoint(
     user : User = Depends(get_user_by_id),
-    hackathon : Hackathon = Depends(get_hackathon_by_id),
+    hackathon : Hackathon = Depends(get_inactive_hackathon),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.add_jury_to_hackathon(hackathon=hackathon,user=user,session=session)

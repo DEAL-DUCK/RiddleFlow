@@ -1,11 +1,11 @@
 from typing import Any
 
 from fastapi.params import Depends
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
-from core.models import ContestTask, Contest, db_helper
+from core.models import ContestTask, Contest, db_helper, TestCase
 from core.models.contest import ContestStatus
 from .schemas import CreateContestTaskSchema, ContestTaskSchema
 from api_v1.contests.dependencies import get_contest
@@ -34,12 +34,16 @@ async def create_task_for_contest(
 
 async def delete_task(task_id: int, session: AsyncSession):
     task = await session.get(ContestTask, task_id)
-    if task:
+    contest = await get_contest(session=session,contest_id=task.contest_id)
+    if task and contest.status != 'ACTIVE':
+        await session.execute(
+            delete(TestCase).where(TestCase.task_id == task_id)
+        )
         await session.delete(task)
         await session.commit()
     else:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="contest_tasks not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="contest_tasks not found or constest status - active"
         )
     return {"ok": "contest_tasks deleted"}
 
@@ -88,7 +92,9 @@ async def update_task(
 ) -> ContestTask:
     result = await session.execute(select(ContestTask).where(ContestTask.id == task_id))
     task = result.scalar_one_or_none()
-
+    contest = await get_contest(session=session,contest_id=task.contest_id)
+    if contest.status == 'ACTIVE':
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='contest active')
     if task is None:
         raise HTTPException(status_code=404, detail="contest_tasks not found")
 

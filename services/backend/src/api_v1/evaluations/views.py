@@ -21,7 +21,8 @@ from typing import Annotated
 
 @router.get("/admin/")
 async def get_all_evalutions(
-        session : AsyncSession = Depends(db_helper.session_getter)
+        session : AsyncSession = Depends(db_helper.session_getter),
+        user : User = Depends(current_active_superuser)
 ):
     return await crud.get_all_evaluations(session)
 

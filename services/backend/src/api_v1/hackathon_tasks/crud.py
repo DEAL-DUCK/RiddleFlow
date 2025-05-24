@@ -57,6 +57,10 @@ async def create_task_for_hackathon(
 
 async def delete_task(task_id: int, session: AsyncSession):
     task = await session.get(HackathonTask, task_id)
+    hackathon = await get_hackathon(session,task.hackathon_id)
+    if hackathon.status == 'ACTIVE':
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail='hackathon active')
     if task:
         await session.delete(task)
         await session.commit()

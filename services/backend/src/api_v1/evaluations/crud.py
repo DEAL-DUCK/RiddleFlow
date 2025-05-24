@@ -45,6 +45,8 @@ async def create_evaluation(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Вы не назначены жюри на этот хакатон"
         )
+    if submission.task.hackathon.status != 'ACTIVE':
+        raise 'хакатон еще не начался'
 
     evaluation = JuryEvaluation(
         **data_in.model_dump(),
@@ -66,7 +68,8 @@ async def delete_evaluation(
     evaluation = await session.get(JuryEvaluation, evaluation_id)
     if not evaluation:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evaluation not found")
-
+    if evaluation.hackathon.status != 'ACTIVE':
+        raise HTTPException(detail='хакатон еще не начался',status_code=status.HTTP_409_CONFLICT)
     if evaluation.jury_id != current_jury.id and not current_jury.user.is_superuser:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this evaluation")
 
@@ -87,6 +90,11 @@ async def update_evaluation(
         .where(JuryEvaluation.id == evaluation_id)
     )
     evaluation = evaluation.scalar_one_or_none()
+    if evaluation.hackathon.status != "ACTIVE":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can only update evaluations for active hackathons"
+        )
     if not evaluation:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evaluation not found")
     if evaluation.jury_id != current_jury.id:
