@@ -185,7 +185,7 @@ async def add_user_in_hackathon(
 @router.delete(
     "/{hackathon_id}/users", dependencies=[Depends(current_active_user)]
 )
-async def delete_user_in_hackathon(
+async def delete_user_in_hackathon_for_participant(
     hackathon: Hackathon = Depends(get_hackathon_by_id),
     user: User = Depends(user_is_part_of_this_hackathon),
     session: AsyncSession = Depends(db_helper.session_getter),
@@ -193,7 +193,17 @@ async def delete_user_in_hackathon(
     return await crud.delete_user_in_hackathon(
         hackathon=hackathon, user=user, session=session
     )
-
+@router.delete(
+    "/{hackathon_id}/creator", dependencies=[Depends(user_is_creator_of_this_hackathon)]
+)
+async def delete_user_in_hackathon_for_creator(
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    user: User = Depends(get_user_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.delete_user_in_hackathon(
+        hackathon=hackathon, user=user, session=session
+    )
 
 @router.get(
     "/{hackathon_id}/groups",

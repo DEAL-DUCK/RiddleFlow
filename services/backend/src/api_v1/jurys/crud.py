@@ -29,11 +29,11 @@ async def add_jury_to_hackathon(
 ):
     user_check = await session.scalar(
         select(HackathonUserAssociation)
-        .where(Hackathon.id == hackathon.id)
-        .where(User.id == user.id
+        .where(HackathonUserAssociation.hackathon_id == hackathon.id)
+        .where(HackathonUserAssociation.user_id == user.id)
     )
-    .where(User.id == user.id))
     if user_check:
+        print(user_check)
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Пользователь уже участвует в этом хакатоне"

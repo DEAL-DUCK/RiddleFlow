@@ -9,6 +9,7 @@ from core.models.hackathon_submission import SubmissionStatus
 from core.models.hackathon import HackathonStatus, Hackathon
 from .depends import get_current_jury
 from .schemas import  EvaluationCreateSchema,EvaluationReadSchema,EvaluationUpdateSchema
+from ..auth.fastapi_users import current_active_user
 from ..jurys.crud import any_not
 from api_v1.hackathon_submissions.views import submissions_create
 from ..jurys.depends import get_jury_by_id, is_this_user_jury_this_hackathon, is_this_user_jury
@@ -46,7 +47,7 @@ async def create_evaluation(
             detail="Вы не назначены жюри на этот хакатон"
         )
     if submission.task.hackathon.status != 'ACTIVE':
-        raise 'хакатон еще не начался'
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='хакатон еще не начался')
 
     evaluation = JuryEvaluation(
         **data_in.model_dump(),
