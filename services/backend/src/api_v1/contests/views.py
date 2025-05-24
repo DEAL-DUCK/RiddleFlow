@@ -160,7 +160,7 @@ async def change_max_participant(
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator_of_this_contest),
 ):
-    return await crud.patch_max_users_in_hack(
+    return await crud.patch_max_users_in_contest(
         session=session, contest=contest, max_participants=new_max_users, user=user
     )
 

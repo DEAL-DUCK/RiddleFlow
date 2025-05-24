@@ -4,19 +4,20 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
+from api_v1.contests.crud import get_contests, get_contest
 from api_v1.test_cases.schemas import CreateTestSchema, TestSchema
 from core.models import TestCase, ContestTask
 from api_v1.hackathons.dependencies import get_hackathon
 
 
-async def create_test_for_hackathon(
+async def create_test_for_contest(
     session: AsyncSession,
     test_data: CreateTestSchema,
-    hackathon_id: int,
+    contest_id: int,
     task_id: int,
 ) -> TestSchema:
-    hackathon = await get_hackathon(session, hackathon_id)
-    if hackathon is None:
+    contest = await get_contest(session, contest_id)
+    if contest is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     task = await session.scalar(select(ContestTask).where(ContestTask.id == task_id))
     if not task:
