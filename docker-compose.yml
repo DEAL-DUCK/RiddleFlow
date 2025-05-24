@@ -1,10 +1,13 @@
 services:
   pg:
     image: postgres
+    env_file:
+      - .env
+      - services/backend/src/.env.docker
     environment:
-      POSTGRES_DB: RiddleFlowDB
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -44,7 +47,8 @@ services:
     build:
       context: ./services/backend
     env_file:
-      - ./services/backend/src/.env.docker
+      - .env
+      - services/backend/src/.env.docker
     command: ["sh", "-c", "sleep 5 && celery -A tasks.celery_app worker --loglevel=info"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -54,14 +58,15 @@ services:
       redis_celery:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://user:password@pg:5432/RiddleFlowDB
-      - REDIS_CELERY_URL=redis://redis_celery:6379/0
+      DATABASE_URL: ${POSTGRES_DB}
+      REDIS_CELERY_URL: ${REDIS_CELERY_URL}
 
   celery_beat:
     build:
       context: ./services/backend
     env_file:
-      - ./services/backend/src/.env.docker
+      - .env
+      - services/backend/src/.env.docker
     command: ["sh", "-c", "sleep 5 && celery -A tasks.celery_app beat --loglevel=info"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -71,19 +76,20 @@ services:
       redis_celery:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://user:password@pg:5432/RiddleFlowDB
-      - REDIS_CELERY_URL=redis://redis_celery:6379/0
+      DATABASE_URL: ${POSTGRES_DB}
+      REDIS_CELERY_URL: ${REDIS_CELERY_URL}
 
 
   backend:
     build: ./services/backend
     env_file:
-      - ./services/backend/src/.env.docker
+      - .env
+      - services/backend/src/.env.docker
     ports:
       - 5000:5000
     volumes:
       - ./services/backend:/app
-      - /var/run/docker.sock:/var/run/docker.sock  # Монтируем сокет Docker
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       pg:
         condition: service_healthy
@@ -100,7 +106,8 @@ services:
     build:
       context: ./services/backend
     env_file:
-      - ./services/backend/src/.env.docker
+      - .env
+      - services/backend/src/.env.docker
     command: ["celery", "-A", "tasks.celery_app", "flower", "--broker=redis://redis_celery:6379/0"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
