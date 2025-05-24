@@ -198,16 +198,9 @@ async def activate_contest(
     session: AsyncSession,
     contest: Contest,
 ):
-    if (
-        contest.status == ContestStatus.PLANNED
-        or contest.status == ContestStatus.CANCELED
-    ):
-        contest.status = ContestStatus.ACTIVE
-        contest.updated_at = datetime.now()
-    if contest.status == ContestStatus.COMPLETED:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="contest completed"
-        )
+
+    contest.status = ContestStatus.ACTIVE
+    contest.updated_at = datetime.now()
     await session.commit()
     await session.refresh(contest)
 
@@ -510,8 +503,6 @@ async def patch_max_users_in_contest(
 
     return ContestSchema.model_validate(contest)
 async def archive(session:AsyncSession,contest:Contest):
-    if contest.status == ContestStatus.ACTIVE:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='contest not completed')
     contest.is_archived = True
     await session.commit()
     return [{'ok':f'contest {contest.id} is archived'},contest]

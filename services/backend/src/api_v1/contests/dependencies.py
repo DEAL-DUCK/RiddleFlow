@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Path, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api_v1.auth.fastapi_users import current_active_user
 from api_v1.contests.crud import get_contest
 from api_v1.users.dependencies import user_is_creator
 from core.models import db_helper, Contest, User, Group
@@ -37,17 +38,20 @@ async def user_is_creator_of_this_contest(
     )
 def get_active_contest(
         contest : Contest = Depends(get_contest_by_id),
+        user : User = Depends(current_active_user)
 ):
-    if contest.status != 'ACTIVE':
+    if contest.status != 'ACTIVE' and not user.is_superuser:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail='контест еще не активен')
     return contest
 def get_inactive_contest(
         contest : Contest = Depends(get_contest_by_id),
+        user : User = Depends(current_active_user)
 ):
-    if contest.status == 'PLANNED' or contest.status == 'INACTIVE':
+    if contest.status == 'PLANNED' and contest.status == 'INACTIVE' and not user.is_superuser:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail='контест  активен')
+
     return contest
 # async def get_user_in_contest_by_id(
 #     user_id: Annotated[int, Path(ge=1)],

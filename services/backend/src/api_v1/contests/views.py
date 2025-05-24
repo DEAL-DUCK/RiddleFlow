@@ -8,7 +8,7 @@ from . import crud
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from api_v1.contests.dependencies import (
     get_contest_by_id,
-    user_is_creator_of_this_contest,
+    user_is_creator_of_this_contest, get_inactive_contest,
 )
 from api_v1.users.dependencies import (
     get_user_by_id,
@@ -31,7 +31,7 @@ from ..groups.dependencies import (
 router = APIRouter(tags=["Контесты"])
 
 @router.patch('/archive/in',dependencies=[Depends(user_is_creator_of_this_contest),])
-async def archived(contest : Contest = Depends(get_contest_by_id),
+async def archived(contest : Contest = Depends(get_inactive_contest),
         session: AsyncSession = Depends(db_helper.session_getter)):
     return await crud.archive(session=session,contest=contest)
 @router.patch('/archive/un',dependencies=[Depends(user_is_creator_of_this_contest)])
@@ -112,7 +112,7 @@ async def update_contest(
     contest_in: ContestUpdatePartial,
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator_of_this_contest),
-    contest: Contest = Depends(get_contest_by_id),
+    contest: Contest = Depends(get_inactive_contest),
 ):
     return await crud.update_contest(
         session=session, contest_in=contest_in, contest=contest, user=user
@@ -137,7 +137,7 @@ async def update_contest_logo(
 
 @router.patch("/contest_id}/activate", summary="activate contest")
 async def force_activate_hack(
-    contest: Contest = Depends(get_contest_by_id),
+    contest: Contest = Depends(get_inactive_contest),
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator_of_this_contest),
 ):
@@ -145,7 +145,7 @@ async def force_activate_hack(
 
 
 @router.patch("/{contest_id}/deactivate", summary="deactivate contest")
-async def cancel_hack(
+async def cancel_contest(
     contest: Contest = Depends(get_contest_by_id),
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator_of_this_contest),
@@ -156,7 +156,7 @@ async def cancel_hack(
 @router.patch("/{contest_id}/max_participant")
 async def change_max_participant(
     new_max_users: int,
-    contest: Contest = Depends(get_contest_by_id),
+    contest: Contest = Depends(get_inactive_contest),
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator_of_this_contest),
 ):

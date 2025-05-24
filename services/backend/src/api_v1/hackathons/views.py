@@ -8,7 +8,7 @@ from . import crud
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from api_v1.hackathons.dependencies import (
     get_hackathon_by_id,
-    user_is_creator_of_this_hackathon, user_is_part_of_this_hackathon,
+    user_is_creator_of_this_hackathon, user_is_part_of_this_hackathon,get_inactive_hackathon,
 )
 from api_v1.users.dependencies import (
     get_user_by_id,
@@ -106,7 +106,7 @@ async def update_hackathon(
     hackathon_in: HackathonUpdatePartial,
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator_of_this_hackathon),
-    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    hackathon: Hackathon = Depends(get_inactive_hackathon),
 ):
     return await crud.update_hack(
         session=session, hackathon_in=hackathon_in, hackathon=hackathon, user=user
@@ -150,7 +150,7 @@ async def cancel_hack(
 @router.patch("/{hackathon_id}/max_participant")
 async def change_max_participant(
     new_max_users: int,
-    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    hackathon: Hackathon = Depends(get_inactive_hackathon),
     session: AsyncSession = Depends(db_helper.session_getter),
     user: User = Depends(user_is_creator_of_this_hackathon),
 ):
@@ -172,7 +172,7 @@ async def get_users_in_hackathon(
 
 @router.post("/{hackathon_id}/users")
 async def add_user_in_hackathon(
-    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    hackathon: Hackathon = Depends(get_inactive_hackathon),
     user: User = Depends(user_is_participant),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):

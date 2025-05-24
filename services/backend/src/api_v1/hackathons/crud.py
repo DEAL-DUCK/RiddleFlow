@@ -52,7 +52,6 @@ def serialize_hackathons(hackathons):
     ]
 
 
-# Ваша функция get_hackathons
 async def get_hackathons(session: AsyncSession) -> list[HackathonSchema]:
     # cached_hackathons = redis_client.get("hackathons")
 
