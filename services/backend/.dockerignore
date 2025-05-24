@@ -1,6 +1,0 @@
-src/.env
-src/.env.docker
-src/.env.local
-.env
-.env.docker
-.env.local
