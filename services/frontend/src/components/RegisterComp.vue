@@ -76,7 +76,7 @@
 import axios from 'axios';
 
 export default {
-  name: 'Register',
+  name: 'RegisterComp',
   data() {
     return {
       username: '',
