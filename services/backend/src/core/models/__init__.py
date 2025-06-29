@@ -18,8 +18,8 @@ __all__ = {
     "ContestSubmission",
     "TestCase",
     "JuryEvaluation",
-    'JuryHackathonAssociation',
-    "Jury"
+    "JuryHackathonAssociation",
+    "Jury",
 }
 
 

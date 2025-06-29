@@ -25,13 +25,20 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("specialization", sa.String(length=100), nullable=True),
-        sa.Column("is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False),
-        sa.Column("evaluations_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column(
+            "is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False
+        ),
+        sa.Column(
+            "evaluations_count",
+            sa.Integer(),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["users.id"],
             name=op.f("fk_jurys_user_id_users"),
-            ondelete="CASCADE"
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_jurys")),
         sa.UniqueConstraint("user_id", name=op.f("uq_jurys_user_id")),
@@ -52,13 +59,13 @@ def upgrade() -> None:
             ["hackathon_id"],
             ["hackathons.id"],
             name=op.f("fk_jury_hackathon_association_hackathon_id_hackathons"),
-            ondelete="CASCADE"
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["jury_id"],
             ["jurys.id"],
             name=op.f("fk_jury_hackathon_association_jury_id_jurys"),
-            ondelete="CASCADE"
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_jury_hackathon_association")),
     )
@@ -77,24 +84,26 @@ def upgrade() -> None:
         sa.Column("hackathon_id", sa.Integer(), nullable=False),
         sa.Column("score", sa.Integer(), nullable=False),
         sa.Column("comment", sa.String(length=500), nullable=True),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
+        ),
         sa.ForeignKeyConstraint(
             ["hackathon_id"],
             ["hackathons.id"],
             name=op.f("fk_jury_evaluations_hackathon_id_hackathons"),
-            ondelete="CASCADE"
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["jury_id"],
             ["jurys.id"],
             name=op.f("fk_jury_evaluations_jury_id_jurys"),
-            ondelete="CASCADE"
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["submission_id"],
             ["hackathon_submissions.id"],
             name=op.f("fk_jury_evaluations_submission_id_hackathon_submissions"),
-            ondelete="CASCADE"
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_jury_evaluations")),
         sa.UniqueConstraint("jury_id", "submission_id", name="uq_jury_submission"),
@@ -104,9 +113,6 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table("jury_evaluations")
-    op.drop_index(
-        "idx_jury_hackathon_unique",
-        table_name="jury_hackathon_association"
-    )
+    op.drop_index("idx_jury_hackathon_unique", table_name="jury_hackathon_association")
     op.drop_table("jury_hackathon_association")
     op.drop_table("jurys")

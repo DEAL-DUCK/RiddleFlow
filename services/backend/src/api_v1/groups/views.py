@@ -63,18 +63,24 @@ async def update_group(
         group=group,
         session=session,
     )
-@router.patch('/deactivate',dependencies=[Depends(user_is_owner_of_this_group)])
+
+
+@router.patch("/deactivate", dependencies=[Depends(user_is_owner_of_this_group)])
 async def de_active(
     group: GroupSchema = Depends(get_group_by_id),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.de_activate_group(session=session, group=group)
-@router.patch('/activate',dependencies=[Depends(user_is_owner_of_this_group)])
+
+
+@router.patch("/activate", dependencies=[Depends(user_is_owner_of_this_group)])
 async def active(
     group: GroupSchema = Depends(get_group_by_id),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.activate_group(session=session, group=group)
+
+
 @router.patch(
     "/logo",
     dependencies=[Depends(user_is_owner_of_this_group)],
@@ -89,6 +95,8 @@ async def update_group_logo(
         group=group,
         session=session,
     )
+
+
 @router.patch(
     "/change_max_members",
     dependencies=[Depends(user_is_owner_of_this_group)],
@@ -98,21 +106,27 @@ async def change_group_max_members(
     group: GroupSchema = Depends(get_group_by_id),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.update_group_max_members(session=session,group=group,new_max_members=new_max_members)
-@router.get('/user_id/group')
+    return await crud.update_group_max_members(
+        session=session, group=group, new_max_members=new_max_members
+    )
+
+
+@router.get("/user_id/group")
 async def get_group_for_user(
-        user : User = Depends(current_active_user),
-        session: AsyncSession = Depends(db_helper.session_getter)
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.get_group_for_user_id(session=session,user=user)
-@router.get(
-    '/{owner_id}/group'
-)
+    return await crud.get_group_for_user_id(session=session, user=user)
+
+
+@router.get("/{owner_id}/group")
 async def get_group_where_i_owner(
-        user : User = Depends(current_active_user),
-        session : AsyncSession = Depends(db_helper.session_getter)
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.get_my_group_for_owner(session=session,owner_id=user.id)
+    return await crud.get_my_group_for_owner(session=session, owner_id=user.id)
+
+
 @router.get(
     "/{group_id}/users",
     dependencies=[Depends(user_is_owner_of_this_group)],
@@ -134,6 +148,8 @@ async def add_user_in_group_by_id(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await crud.add_user_in_group_for_id(group=group, user=user, session=session)
+
+
 @router.post(
     "/{group_id}/username",
     dependencies=[Depends(user_is_owner_of_this_group)],
@@ -143,7 +159,10 @@ async def add_user_in_group_by_username(
     user: User = Depends(get_user_by_username),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.add_user_in_group_for_username(group=group, user=user, session=session)
+    return await crud.add_user_in_group_for_username(
+        group=group, user=user, session=session
+    )
+
 
 @router.delete(
     "/{group_id}/users",

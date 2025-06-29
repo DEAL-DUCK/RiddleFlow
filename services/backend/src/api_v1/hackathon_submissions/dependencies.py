@@ -36,6 +36,8 @@ async def check_submission_ownership(
             detail="You don't have permission to access this submission",
         )
     return submission
+
+
 async def get_submission_by_id_func(
     session: AsyncSession, submission_id: int, user_id: int
 ):
@@ -47,6 +49,8 @@ async def get_submission_by_id_func(
     result = await session.execute(stmt)
     submission = result.scalars().first()
     return submission if submission else await not_submissions()
+
+
 """async def check_for_submission_submitted(
         session: AsyncSession,
         submission : HackathonSubmission = Depends(get_submission_by_id_func),

@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from core.models import User, GroupUserAssociation
 
 if TYPE_CHECKING:
-    from core.models import User,Hackathon
+    from core.models import User, Hackathon
 
 
 async def get_users(session: AsyncSession) -> list[User]:
@@ -20,17 +20,20 @@ async def get_users(session: AsyncSession) -> list[User]:
 
 async def get_user(session: AsyncSession, user_id: int = None) -> User | None:
     return await session.get(User, user_id)
-async def del_user(session:AsyncSession,user_id:int):
+
+
+async def del_user(session: AsyncSession, user_id: int):
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
     user = result.scalar_one_or_none()
 
     if user is None:
-        return f'user with id : {user_id} not found'
+        return f"user with id : {user_id} not found"
 
     await session.delete(user)
     await session.commit()
-    return f'user with id : {user_id} deleted'
+    return f"user with id : {user_id} deleted"
+
 
 # ненадобность, из-за подключённой регистрации
 
@@ -42,8 +45,6 @@ async def del_user(session:AsyncSession,user_id:int):
 #     session.add(profile)
 #     await session.commit()
 #     return user
-
-
 
 
 # ПОТОМ УДАЛЮ ЭТО ДЛЯ УДОБСТВА И СОЗДАНИЯ АДМИНА

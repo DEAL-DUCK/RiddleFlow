@@ -92,7 +92,7 @@ class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
-        lazy="selectin"
+        lazy="selectin",
     )
 
     @classmethod

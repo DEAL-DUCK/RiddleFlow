@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from .JuryEvaluation import JuryEvaluation
 
 
-
 class HackathonStatus(enum.Enum):
     PLANNED = "PLANNED"
     ACTIVE = "ACTIVE"
@@ -55,7 +54,7 @@ class Hackathon(Base, IdIntPkMixin):
         nullable=False,
     )
     logo_url: Mapped[str] = mapped_column(String(255), nullable=True)
-    is_archived : Mapped[bool] = mapped_column(Boolean,default=False)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
     creator: Mapped["User"] = relationship(
         back_populates="created_hackathons",
         lazy="selectin",
@@ -76,10 +75,8 @@ class Hackathon(Base, IdIntPkMixin):
     jury_members: Mapped[list["Jury"]] = relationship(
         secondary="jury_hackathon_association",
         back_populates="judged_hackathons",
-        lazy="selectin"
+        lazy="selectin",
     )
     jury_evaluations: Mapped[list["JuryEvaluation"]] = relationship(
-        back_populates="hackathon",
-        lazy="selectin",
-        cascade="all, delete-orphan"
+        back_populates="hackathon", lazy="selectin", cascade="all, delete-orphan"
     )

@@ -8,10 +8,10 @@ class EvaluationUpdateSchema(BaseModel):
     comment: Optional[str] = Field(None, max_length=500)
     score: Optional[float] = Field(None, ge=0, le=10)
 
+
 class EvaluationCreateSchema(BaseModel):
     score: int = Field(..., gt=0, le=10)
     comment: str | None = Field(None, max_length=500)
-
 
 
 class EvaluationReadSchema(EvaluationCreateSchema):

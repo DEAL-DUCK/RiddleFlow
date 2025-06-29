@@ -18,7 +18,6 @@ from ..hackathons.schemas import HackathonSchema
 router = APIRouter(tags=["Пользователь"])
 
 
-
 router.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),
 )
@@ -35,9 +34,10 @@ router.include_router(
 # ):
 #     return await crud.create_user(session=session, user_in=user_in)
 
+
 @router.get("/admin/{'sd'}")
 async def admin_user(
-    user : User = Depends(current_active_user),
-    session: AsyncSession = Depends(db_helper.session_getter)
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.for_ivan_func(session=session,user_id=user.id)
+    return await crud.for_ivan_func(session=session, user_id=user.id)

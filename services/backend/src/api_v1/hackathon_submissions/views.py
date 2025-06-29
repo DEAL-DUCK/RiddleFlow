@@ -44,18 +44,15 @@ async def get_submission_by_id(
     return submission
 
 
-
-
-
-@router.get("/task/{task_id}",dependencies=[Depends(current_active_user)])
+@router.get("/task/{task_id}", dependencies=[Depends(current_active_user)])
 async def get_submissions_by_user_id_and_task_id(
-     task_id: int,
-     user: User = Depends(current_active_user),
-     session: AsyncSession = Depends(db_helper.session_getter),
- ):
-     return await crud.get_submission_by_task_id_plus_user_id(
-         session=session, task_id=task_id, user_id=user.id
-     )
+    task_id: int,
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.get_submission_by_task_id_plus_user_id(
+        session=session, task_id=task_id, user_id=user.id
+    )
 
 
 @router.delete("/{submissions_id}", dependencies=[Depends(check_submission_ownership)])
@@ -98,15 +95,15 @@ async def update_submission_endpoint(
     )"""
 
 
-@router.get("/by_hackathon/{hackathon_id}",dependencies=[Depends(current_active_user)])
+@router.get("/by_hackathon/{hackathon_id}", dependencies=[Depends(current_active_user)])
 async def get_submissions_by_hackathon(
-        user : User = Depends(current_active_user),
-         hackathon : Hackathon = Depends(get_hackathon_by_id),
-         session: AsyncSession = Depends(db_helper.session_getter),
+    user: User = Depends(current_active_user),
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await crud.get_all_submissions_current_user_in_any_hackathon(session=session, user=user, hackathon=hackathon)
-
-
+    return await crud.get_all_submissions_current_user_in_any_hackathon(
+        session=session, user=user, hackathon=hackathon
+    )
 
 
 # @router.get("{all_score}")

@@ -16,8 +16,10 @@ async def get_contest_by_id(
     session: AsyncSession = Depends(db_helper.session_getter),
 ) -> Contest:
     contest = await get_contest(session=session, contest_id=contest_id)
-    if contest.is_archived :
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='contest archived')
+    if contest.is_archived:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="contest archived"
+        )
     if contest is not None:
         return contest
     raise HTTPException(
@@ -36,23 +38,35 @@ async def user_is_creator_of_this_contest(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=f"user {user.id} is not creator of this contest",
     )
+
+
 def get_active_contest(
-        contest : Contest = Depends(get_contest_by_id),
-        user : User = Depends(current_active_user)
+    contest: Contest = Depends(get_contest_by_id),
+    user: User = Depends(current_active_user),
 ):
-    if contest.status != 'ACTIVE' and not user.is_superuser:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail='контест еще не активен')
+    if contest.status != "ACTIVE" and not user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="контест еще не активен"
+        )
     return contest
+
+
 def get_inactive_contest(
-        contest : Contest = Depends(get_contest_by_id),
-        user : User = Depends(current_active_user)
+    contest: Contest = Depends(get_contest_by_id),
+    user: User = Depends(current_active_user),
 ):
-    if contest.status == 'PLANNED' and contest.status == 'INACTIVE' and not user.is_superuser:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail='контест  активен')
+    if (
+        contest.status == "PLANNED"
+        and contest.status == "INACTIVE"
+        and not user.is_superuser
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="контест  активен"
+        )
 
     return contest
+
+
 # async def get_user_in_contest_by_id(
 #     user_id: Annotated[int, Path(ge=1)],
 #     contest: Contest = Depends(get_contest_by_id),

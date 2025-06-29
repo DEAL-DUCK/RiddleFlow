@@ -25,7 +25,9 @@ async def create_task_for_contest(
         contest_id=contest_id,
     )
     if contest.status == ContestStatus.ACTIVE:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='contest already begin')
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="contest already begin"
+        )
     session.add(task)
     await session.commit()
     await session.refresh(task)
@@ -34,23 +36,21 @@ async def create_task_for_contest(
 
 async def delete_task(task_id: int, session: AsyncSession):
     task = await session.get(ContestTask, task_id)
-    contest = await get_contest(session=session,contest_id=task.contest_id)
-    if task and contest.status != 'ACTIVE':
-        await session.execute(
-            delete(TestCase).where(TestCase.task_id == task_id)
-        )
+    contest = await get_contest(session=session, contest_id=task.contest_id)
+    if task and contest.status != "ACTIVE":
+        await session.execute(delete(TestCase).where(TestCase.task_id == task_id))
         await session.delete(task)
         await session.commit()
     else:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="contest_tasks not found or constest status - active"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="contest_tasks not found or constest status - active",
         )
     return {"ok": "contest_tasks deleted"}
 
 
 async def get_contest_task_by_id(
-    task_id: int,
-    session : AsyncSession = Depends(db_helper.session_getter)
+    task_id: int, session: AsyncSession = Depends(db_helper.session_getter)
 ):
     result = await session.execute(select(ContestTask).where(ContestTask.id == task_id))
     task = result.scalars().first()
@@ -92,9 +92,11 @@ async def update_task(
 ) -> ContestTask:
     result = await session.execute(select(ContestTask).where(ContestTask.id == task_id))
     task = result.scalar_one_or_none()
-    contest = await get_contest(session=session,contest_id=task.contest_id)
-    if contest.status == 'ACTIVE':
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='contest active')
+    contest = await get_contest(session=session, contest_id=task.contest_id)
+    if contest.status == "ACTIVE":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="contest active"
+        )
     if task is None:
         raise HTTPException(status_code=404, detail="contest_tasks not found")
 
@@ -122,13 +124,19 @@ async def update_task(
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-async def archive(session:AsyncSession,task:ContestTask):
+
+
+async def archive(session: AsyncSession, task: ContestTask):
     if task.contest.status == ContestStatus.ACTIVE:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail=f'хакатон уже идет')
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=f"хакатон уже идет"
+        )
     task.is_archived = True
     await session.commit()
-    return {'ok':f'task {task.id} is archived'}
-async def unarchive(session:AsyncSession,task:ContestTask):
+    return {"ok": f"task {task.id} is archived"}
+
+
+async def unarchive(session: AsyncSession, task: ContestTask):
     task.is_archived = False
     await session.commit()
-    return {'ok':f'task {task.id} is unarchived'}
+    return {"ok": f"task {task.id} is unarchived"}

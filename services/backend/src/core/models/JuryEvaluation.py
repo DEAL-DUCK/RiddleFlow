@@ -12,20 +12,23 @@ if TYPE_CHECKING:
 
 
 class JuryEvaluation(Base):
-    __tablename__ = 'jury_evaluations'
+    __tablename__ = "jury_evaluations"
     __table_args__ = (
-
-        UniqueConstraint('jury_id', 'submission_id', name='uq_jury_submission'),
+        UniqueConstraint("jury_id", "submission_id", name="uq_jury_submission"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
-    jury_id: Mapped[int] = mapped_column(ForeignKey('jurys.id'))
+    jury_id: Mapped[int] = mapped_column(ForeignKey("jurys.id"))
     submission_id: Mapped[int] = mapped_column(ForeignKey("hackathon_submissions.id"))
-    submission: Mapped["HackathonSubmission"] = relationship(back_populates="evaluations")
+    submission: Mapped["HackathonSubmission"] = relationship(
+        back_populates="evaluations"
+    )
     score: Mapped[int] = mapped_column(nullable=False)
     comment: Mapped[str] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=func.now())
     jury: Mapped["Jury"] = relationship(back_populates="evaluations")
     hackathon: Mapped["Hackathon"] = relationship(back_populates="jury_evaluations")
-    hackathon_id: Mapped[int] = mapped_column(ForeignKey("hackathons.id"), nullable=False)
+    hackathon_id: Mapped[int] = mapped_column(
+        ForeignKey("hackathons.id"), nullable=False
+    )

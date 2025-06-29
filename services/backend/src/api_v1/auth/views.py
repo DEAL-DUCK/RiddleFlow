@@ -38,33 +38,33 @@ router.include_router(
                             "value": {
                                 "detail": {
                                     "code": "INVALID_ROLE",
-                                    "reason": "Role must be either PARTICIPANT or CREATOR"
+                                    "reason": "Role must be either PARTICIPANT or CREATOR",
                                 }
-                            }
+                            },
                         },
                         "USERNAME_EXISTS": {
                             "summary": "Username already exists",
                             "value": {
                                 "detail": {
                                     "code": "USERNAME_EXISTS",
-                                    "reason": "This username is already taken"
+                                    "reason": "This username is already taken",
                                 }
-                            }
+                            },
                         },
                         "EMAIL_EXISTS": {
                             "summary": "Email already exists",
                             "value": {
                                 "detail": {
                                     "code": "EMAIL_EXISTS",
-                                    "reason": "User with this email already exists"
+                                    "reason": "User with this email already exists",
                                 }
-                            }
-                        }
+                            },
+                        },
                     }
                 }
-            }
+            },
         }
-    }
+    },
 )
 async def register(
     request: Request,
@@ -80,7 +80,7 @@ async def register(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail={
                         "code": "EMAIL_EXISTS",
-                        "reason": "User with this email already exists"
+                        "reason": "User with this email already exists",
                     },
                 )
         except exceptions.UserNotExists:
@@ -94,21 +94,19 @@ async def register(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
                     "code": "USERNAME_EXISTS",
-                    "reason": "This username is already taken"
+                    "reason": "This username is already taken",
                 },
             )
 
         user_data = user_create.model_dump()
         protected_fields = {
-            'is_active': True,
-            'is_superuser': False,
-            'is_verified': False
+            "is_active": True,
+            "is_superuser": False,
+            "is_verified": False,
         }
 
         created_user = await user_manager.create(
-            UserCreate(**{**user_data, **protected_fields}),
-            safe=True,
-            request=request
+            UserCreate(**{**user_data, **protected_fields}), safe=True, request=request
         )
 
         profile = Profile(user_id=created_user.id)
@@ -121,10 +119,7 @@ async def register(
         if "Invalid role" in str(e):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "code": "INVALID_ROLE",
-                    "reason": str(e)
-                },
+                detail={"code": "INVALID_ROLE", "reason": str(e)},
             )
         raise
     except exceptions.InvalidPasswordException as e:

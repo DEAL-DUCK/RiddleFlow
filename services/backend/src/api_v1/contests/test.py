@@ -39,7 +39,7 @@ def contest_data():
         "start_time": datetime.now() + timedelta(days=1),
         "end_time": datetime.now() + timedelta(days=2),
         "max_participants": 10,
-        "allow_teams": True
+        "allow_teams": True,
     }
 
 
@@ -49,7 +49,7 @@ def user_data():
         "username": f"testuser_{uuid4()}",
         "email": f"test_{uuid4()}@example.com",
         "password": "password123",
-        "user_role": "PARTICIPANT"
+        "user_role": "PARTICIPANT",
     }
 
 
@@ -60,13 +60,15 @@ def group_data():
         "description": "Test group description",
         "max_members": 5,
         "owner_id": 1,
-        "current_members": 3
+        "current_members": 3,
     }
 
 
 class TestContestFunctions:
     @pytest.mark.asyncio
-    async def test_get_contests(self, db_session: AsyncSession, contest_data, user_data):
+    async def test_get_contests(
+        self, db_session: AsyncSession, contest_data, user_data
+    ):
         user = User(**user_data)
         db_session.add(user)
         await db_session.commit()
@@ -78,4 +80,3 @@ class TestContestFunctions:
         contests = await get_contests(db_session)
         assert len(contests) == 2
         assert contests[0].title == contest_data["title"]
-

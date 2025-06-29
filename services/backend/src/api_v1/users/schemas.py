@@ -1,5 +1,3 @@
-
-
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from fastapi_users import schemas
 from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
@@ -33,8 +31,12 @@ class UserCreate(schemas.BaseUserCreate):
     user_role: str
 
 """
+
+
 class UserUpdate(schemas.BaseUserUpdate):
     username: str
+
+
 class UserRole(str, Enum):
     PARTICIPANT = "PARTICIPANT"
     CREATOR = "CREATOR"
@@ -43,10 +45,11 @@ class UserRole(str, Enum):
 class UserCreate(schemas.BaseUserCreate):
     username: str = Field(..., min_length=1, max_length=40)
     user_role: str = UserRole.PARTICIPANT.value
+
     class Config:
         extra = "forbid"
 
-    @field_validator('user_role')
+    @field_validator("user_role")
     @classmethod
     def validate_user_role(cls, v: str) -> str:
         if v not in [role.value for role in UserRole]:
@@ -68,7 +71,7 @@ class UserRead(schemas.BaseUser[UserIdType]):
     is_superuser: bool = False
     is_verified: bool = False
 
-    @field_validator('user_role')
+    @field_validator("user_role")
     @classmethod
     def validate_user_role(cls, v: str) -> str:
         if v not in [role.value for role in UserRole]:

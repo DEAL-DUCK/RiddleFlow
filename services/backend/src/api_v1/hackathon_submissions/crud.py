@@ -9,7 +9,9 @@ from sqlalchemy.orm import joinedload
 from core.models import (
     HackathonSubmission,
     HackathonTask,
-    HackathonUserAssociation, User, Hackathon,
+    HackathonUserAssociation,
+    User,
+    Hackathon,
 )
 from core.models.hackathon import HackathonStatus
 from core.models.hackathon_submission import SubmissionStatus
@@ -41,7 +43,7 @@ async def create_submission(
             HackathonUserAssociation.user_id == user_id,
         )
     )
-    user = await session.get(User,user_id)
+    user = await session.get(User, user_id)
     if not user_registered and not user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -52,8 +54,7 @@ async def create_submission(
     )
     if not hackathon:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Хакатон не найден"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Хакатон не найден"
         )
     if task.current_attempts >= task.max_attempts:
         raise HTTPException(
@@ -66,7 +67,6 @@ async def create_submission(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Решения можно отправлять только в активных хакатонах"
         )"""
-
 
     submission_dict = submission_data.model_dump()
     submission_dict.pop("status", None)
@@ -85,7 +85,9 @@ async def create_submission(
     await session.commit()
     await session.refresh(new_submission)
 
-    return {f'решение успешно отправлено':f'осталось попыток {task.max_attempts-task.current_attempts}'}
+    return {
+        f"решение успешно отправлено": f"осталось попыток {task.max_attempts-task.current_attempts}"
+    }
 
 
 async def get_my_submissions(session: AsyncSession, user_id: int):
@@ -93,9 +95,6 @@ async def get_my_submissions(session: AsyncSession, user_id: int):
     result = await session.execute(stmt)
     submissions = result.scalars().all()
     return submissions if submissions else await not_submissions()
-
-
-
 
 
 async def get_submission_by_task_id_plus_user_id(
@@ -194,7 +193,7 @@ async def get_all_submissions_current_user_in_any_hackathon(
         .join(HackathonSubmission.task)
         .where(
             HackathonSubmission.user_id == user.id,
-            HackathonTask.hackathon_id == hackathon.id
+            HackathonTask.hackathon_id == hackathon.id,
         )
         .order_by(HackathonSubmission.submitted_at.desc())
     )
@@ -215,6 +214,7 @@ async def get_all_submissions_current_user_in_any_hackathon(
         }
         for submission in submissions
     ]
+
 
 # async def get_all_evaluations(
 #     session: AsyncSession,

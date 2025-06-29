@@ -23,21 +23,11 @@ def upgrade() -> None:
     """Upgrade schema."""
     op.add_column(
         "contest_tasks",
-        sa.Column(
-            "is_archived",
-            sa.Boolean(),
-            server_default="false",
-            nullable=False
-        )
+        sa.Column("is_archived", sa.Boolean(), server_default="false", nullable=False),
     )
     op.add_column(
         "hackathon_tasks",
-        sa.Column(
-            "is_archived",
-            sa.Boolean(),
-            server_default="false",
-            nullable=False
-        )
+        sa.Column("is_archived", sa.Boolean(), server_default="false", nullable=False),
     )
 
 

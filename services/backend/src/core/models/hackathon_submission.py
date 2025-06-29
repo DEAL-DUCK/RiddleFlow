@@ -40,7 +40,5 @@ class HackathonSubmission(Base, IdIntPkMixin):
     task: Mapped["HackathonTask"] = relationship(back_populates="submissions")
     user: Mapped["User"] = relationship(back_populates="hackathon_submissions")
     evaluations: Mapped[list["JuryEvaluation"]] = relationship(
-        back_populates="submission",
-        cascade="all, delete-orphan",
-        lazy="selectin"
+        back_populates="submission", cascade="all, delete-orphan", lazy="selectin"
     )

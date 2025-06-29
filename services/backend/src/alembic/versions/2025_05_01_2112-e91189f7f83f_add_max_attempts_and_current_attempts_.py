@@ -22,11 +22,11 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.add_column(
         "contest_tasks",
-        sa.Column("max_attempts", sa.Integer(), server_default="5", nullable=False)
+        sa.Column("max_attempts", sa.Integer(), server_default="5", nullable=False),
     )
     op.add_column(
         "contest_tasks",
-        sa.Column("current_attempts", sa.Integer(), server_default="0", nullable=False)
+        sa.Column("current_attempts", sa.Integer(), server_default="0", nullable=False),
     )
     op.alter_column("contest_tasks", "max_attempts", server_default=None)
     op.alter_column("contest_tasks", "current_attempts", server_default=None)

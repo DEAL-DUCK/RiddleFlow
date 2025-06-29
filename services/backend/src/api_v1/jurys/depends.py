@@ -13,11 +13,12 @@ from api_v1.hackathons.dependencies import get_hackathon_by_id
 from core.models import User, Hackathon, db_helper, JuryHackathonAssociation
 from core.models.jury import Jury
 
+
 async def get_jury_by_id(
     jury_id: Annotated[int, Path],
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    jury = await session.get(Jury,jury_id)
+    jury = await session.get(Jury, jury_id)
     if jury is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -27,28 +28,29 @@ async def get_jury_by_id(
 
 
 async def is_this_user_jury(
-        session: AsyncSession = Depends(db_helper.session_getter),
-        user: User = Depends(current_active_user)
+    session: AsyncSession = Depends(db_helper.session_getter),
+    user: User = Depends(current_active_user),
 ) -> Jury:
     result = await session.execute(select(Jury).where(Jury.user_id == user.id))
     jury = result.scalar_one_or_none()
 
     if not jury:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User is not a jury member"
+            status_code=status.HTTP_403_FORBIDDEN, detail="User is not a jury member"
         )
 
     return jury
+
+
 async def is_this_user_jury_this_hackathon(
-        session : AsyncSession = Depends(db_helper.session_getter),
-        jury: Jury = Depends(get_jury_by_id),
-        hackathon : Hackathon = Depends(get_hackathon_by_id)
+    session: AsyncSession = Depends(db_helper.session_getter),
+    jury: Jury = Depends(get_jury_by_id),
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
 ):
-    stmt = select(
-        JuryHackathonAssociation
-    ).where(JuryHackathonAssociation.hackathon_id == hackathon.id).where(
-        JuryHackathonAssociation.jury_id == jury.id
+    stmt = (
+        select(JuryHackathonAssociation)
+        .where(JuryHackathonAssociation.hackathon_id == hackathon.id)
+        .where(JuryHackathonAssociation.jury_id == jury.id)
     )
     association = await session.execute(stmt)
     if association:
@@ -57,5 +59,3 @@ async def is_this_user_jury_this_hackathon(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"жюри {jury.id} не судит этот хакатон ",
     )
-
-

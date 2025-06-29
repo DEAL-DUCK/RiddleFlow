@@ -5,6 +5,7 @@ from enum import Enum
 from pydantic import BaseModel, field_validator, constr, conint
 from typing import Optional
 
+
 class GroupStatus(enum.Enum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
@@ -36,15 +37,13 @@ class GroupCreateSchema(BaseModel):
     description: Optional[constr(min_length=1, max_length=200)] = None
     social_media_links: Optional[str] = None
 
-    @field_validator('type')
+    @field_validator("type")
     def validate_group_type(cls, v):
         try:
             return GroupType[v.upper()]
         except KeyError:
             allowed_values = [e.value for e in GroupType]
-            raise ValueError(
-                f"Invalid group type. Must be one of: {allowed_values}"
-            )
+            raise ValueError(f"Invalid group type. Must be one of: {allowed_values}")
 
     @model_validator(mode="before")
     def check_max_participants(cls, values):
@@ -60,6 +59,8 @@ class GroupUpdateSchema(BaseModel):
     description: Optional[constr(min_length=1, max_length=200)] = None
     social_media_links: Optional[str] = None
     # logo_url: str | None = None
+
+
 class GroupSchema(GroupBaseSchema):
     model_config = ConfigDict(from_attributes=True)
     id: int

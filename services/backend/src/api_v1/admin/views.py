@@ -33,11 +33,16 @@ from ..hackathon_submissions.crud import (
     get_submission_by_task_id_plus_user_id,
     delete_submission_by_id,
     all_submissions,
-    delete_all_submissions_any_user, get_all_submissions_current_user_in_any_hackathon,
+    delete_all_submissions_any_user,
+    get_all_submissions_current_user_in_any_hackathon,
 )
 from ..hackathon_submissions.dependencies import get_submission_by_id_func
 from ..hackathon_tasks.crud import get_all_tasks
-from ..hackathons.crud import delete_hackathon, delete_user_in_hackathon, add_user_in_hackathon
+from ..hackathons.crud import (
+    delete_hackathon,
+    delete_user_in_hackathon,
+    add_user_in_hackathon,
+)
 from ..jurys.depends import get_jury_by_id
 
 router = APIRouter(tags=["АДМИН"])
@@ -115,7 +120,9 @@ async def del_hack(
     hackathon_id: int, session: AsyncSession = Depends(db_helper.session_getter)
 ):
     return await delete_hackathon(session=session, hackathon_id=hackathon_id)
-@router.post("/{hackathon_id}/users",dependencies=[Depends(current_active_superuser)])
+
+
+@router.post("/{hackathon_id}/users", dependencies=[Depends(current_active_superuser)])
 async def add_user_in_hackathon_for_admin(
     hackathon: Hackathon = Depends(get_hackathon_by_id),
     user: User = Depends(get_user_by_id),
@@ -125,7 +132,11 @@ async def add_user_in_hackathon_for_admin(
         hackathon=hackathon, user=user, session=session
     )
     return association
-@router.delete('/user/delete_user_in_hack',dependencies=[Depends(current_active_superuser)])
+
+
+@router.delete(
+    "/user/delete_user_in_hack", dependencies=[Depends(current_active_superuser)]
+)
 async def delete_user_in_hackathon_for_admin(
     hackathon: Hackathon = Depends(get_hackathon_by_id),
     user: User = Depends(get_user_by_id),
@@ -134,6 +145,8 @@ async def delete_user_in_hackathon_for_admin(
     return await delete_user_in_hackathon(
         hackathon=hackathon, user=user, session=session
     )
+
+
 @router.patch("/user/deactive", dependencies=[Depends(crud.is_this_user_admin)])
 async def de_activate_user(
     user: User = Depends(get_user_by_id),
@@ -185,22 +198,27 @@ async def unbanned_group(
 
 @router.get("/task/{task_id}", dependencies=[Depends(current_active_superuser)])
 async def get_submissions_hackathon_by_user_id_and_task_id(
-        task_id: int,
-        user: User = Depends(get_user_by_id),
-        session: AsyncSession = Depends(db_helper.session_getter),
+    task_id: int,
+    user: User = Depends(get_user_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return await get_submission_by_task_id_plus_user_id(
         session=session, task_id=task_id, user_id=user.id
     )
 
 
-@router.get("/by_hackathon/{hackathon_id}", dependencies=[Depends(current_active_superuser)])
+@router.get(
+    "/by_hackathon/{hackathon_id}", dependencies=[Depends(current_active_superuser)]
+)
 async def get_submissions_by_hackathon(
-        user: User = Depends(get_user_by_id),
-        hackathon: Hackathon = Depends(get_hackathon_by_id),
-        session: AsyncSession = Depends(db_helper.session_getter),
+    user: User = Depends(get_user_by_id),
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    return await get_all_submissions_current_user_in_any_hackathon(session=session, user=user, hackathon=hackathon)
+    return await get_all_submissions_current_user_in_any_hackathon(
+        session=session, user=user, hackathon=hackathon
+    )
+
 
 """@router.delete(
     "/groups/delete-all",
@@ -236,7 +254,6 @@ async def delete_group_route(
     return f"СНЕСЕНА ФУНКЦИЯ"""
 
 
-
 @router.get("/contests/", response_model=List[ContestSchema])
 async def admin_get_all_contests(
     session: AsyncSession = Depends(db_helper.session_getter),
@@ -246,6 +263,7 @@ async def admin_get_all_contests(
     result = await session.execute(select(Contest))
     contests = result.scalars().all()
     return [ContestSchema.model_validate(contest) for contest in contests]
+
 
 @router.get("/contests/tasks/", response_model=List[ContestTaskSchema])
 async def admin_get_all_contest_tasks(
@@ -257,6 +275,7 @@ async def admin_get_all_contest_tasks(
     tasks = result.scalars().all()
     return [ContestTaskSchema.model_validate(task) for task in tasks]
 
+
 @router.get("/contests/submissions/", response_model=List[ContestSubmissionRead])
 async def admin_get_all_contest_submissions(
     session: AsyncSession = Depends(db_helper.session_getter),
@@ -266,6 +285,8 @@ async def admin_get_all_contest_submissions(
     result = await session.execute(select(ContestSubmission))
     submissions = result.scalars().all()
     return [ContestSubmissionRead.model_validate(sub) for sub in submissions]
+
+
 @router.delete("/contest/all_del", dependencies=[Depends(current_active_superuser)])
 async def delete_all_my_hack(
     user: User = Depends(current_active_superuser),

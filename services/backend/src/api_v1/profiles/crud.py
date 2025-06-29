@@ -15,9 +15,9 @@ async def get_profile(session: AsyncSession, user_id: int) -> Profile | None:
 
 
 async def get_profile_by_username(
-        username: str,
-        session: AsyncSession = Depends(db_helper.session_getter),
-        current_user: User = Depends(current_active_user)
+    username: str,
+    session: AsyncSession = Depends(db_helper.session_getter),
+    current_user: User = Depends(current_active_user),
 ) -> ProfileSchema:
     result = await session.execute(
         select(User)
@@ -28,14 +28,11 @@ async def get_profile_by_username(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with username '{username}' not found"
+            detail=f"User with username '{username}' not found",
         )
     if not user.profile:
         user.profile = Profile(
-            user_id=user.id,
-            first_name=None,
-            last_name=None,
-            birth_date=None
+            user_id=user.id, first_name=None, last_name=None, birth_date=None
         )
         session.add(user.profile)
         await session.commit()
@@ -49,9 +46,9 @@ async def get_profile_by_username(
 
 
 async def update_profile(
-        session: AsyncSession,
-        profile: Profile,
-        profile_update: ProfileUpdateSchema,
+    session: AsyncSession,
+    profile: Profile,
+    profile_update: ProfileUpdateSchema,
 ) -> ProfileSchema:
     update_data = profile_update.model_dump(exclude_unset=True)
 

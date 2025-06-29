@@ -10,6 +10,7 @@ from api_v1.users.dependencies import user_is_creator, user_is_participant
 from core.models import db_helper, Hackathon, User, Group, HackathonUserAssociation
 from core.models.hackathon import HackathonStatus
 
+
 async def get_hackathon_by_id(
     hackathon_id: Annotated[int, Path],
     session: AsyncSession = Depends(db_helper.session_getter),
@@ -22,9 +23,10 @@ async def get_hackathon_by_id(
         )
 
     if hackathon.is_archived:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail='hackathon archived')
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="hackathon archived"
+        )
     return hackathon
-
 
 
 async def user_is_creator_of_this_hackathon(
@@ -40,13 +42,13 @@ async def user_is_creator_of_this_hackathon(
 
 
 async def user_is_part_of_this_hackathon(
-        hackathon: Hackathon = Depends(get_hackathon_by_id),
-        user: User = Depends(user_is_participant),
-        session: AsyncSession = Depends(db_helper.session_getter),
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    user: User = Depends(user_is_participant),
+    session: AsyncSession = Depends(db_helper.session_getter),
 ):
     stmt = select(HackathonUserAssociation).where(
         HackathonUserAssociation.hackathon_id == hackathon.id,
-        HackathonUserAssociation.user_id == user.id
+        HackathonUserAssociation.user_id == user.id,
     )
     result = await session.execute(stmt)
     association = result.scalar_one_or_none()
@@ -56,27 +58,36 @@ async def user_is_part_of_this_hackathon(
 
     else:
         raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail=f"User {user.id} is not a participant of hackathon {hackathon.id}"
-    )
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User {user.id} is not a participant of hackathon {hackathon.id}",
+        )
+
+
 def get_active_hackathon(
-        hackathon : Hackathon = Depends(get_hackathon_by_id),
-        user : User = Depends(current_active_user)
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    user: User = Depends(current_active_user),
 ):
-    if hackathon.status != 'ACTIVE' and not user.is_superuser:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail='контест еще не активен')
+    if hackathon.status != "ACTIVE" and not user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="контест еще не активен"
+        )
     return hackathon
+
+
 def get_inactive_hackathon(
-        hackathon : Hackathon = Depends(get_hackathon_by_id),
-        user : User = Depends(current_active_user)
+    hackathon: Hackathon = Depends(get_hackathon_by_id),
+    user: User = Depends(current_active_user),
 ):
-    if hackathon.status == 'PLANNED' and hackathon.status == 'INACTIVE' and not user.is_superuser:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail='контест  активен')
+    if (
+        hackathon.status == "PLANNED"
+        and hackathon.status == "INACTIVE"
+        and not user.is_superuser
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="контест  активен"
+        )
 
     return hackathon
-
 
 
 # async def get_user_in_hackathon_by_id(

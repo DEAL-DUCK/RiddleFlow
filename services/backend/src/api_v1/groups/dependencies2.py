@@ -4,14 +4,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
-from core.models import Group, Hackathon, GroupUserAssociation, HackathonGroupAssociation, User, \
-    HackathonUserAssociation
+from core.models import (
+    Group,
+    Hackathon,
+    GroupUserAssociation,
+    HackathonGroupAssociation,
+    User,
+    HackathonUserAssociation,
+)
 
 
 async def delete_group_in_hackathon(
-        session: AsyncSession,
-        hackathon: Hackathon,
-        group: Group,
+    session: AsyncSession,
+    hackathon: Hackathon,
+    group: Group,
 ):
     association = await session.scalar(
         select(HackathonGroupAssociation)
@@ -40,16 +46,16 @@ async def delete_group_in_hackathon(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Group {group.id} is not participating in this hackathon",
     )
-async def del_group_in_hack(
-        session : AsyncSession,
-        group : Group,
-        hackathon : Hackathon
-):
-    await delete_group_in_hackathon(session=session,hackathon=hackathon,group=group)
+
+
+async def del_group_in_hack(session: AsyncSession, group: Group, hackathon: Hackathon):
+    await delete_group_in_hackathon(session=session, hackathon=hackathon, group=group)
+
+
 async def delete_user_in_hackathon(
-        session: AsyncSession,
-        hackathon: Hackathon,
-        user: User,
+    session: AsyncSession,
+    hackathon: Hackathon,
+    user: User,
 ):
     # Находим ассоциацию между пользователем и хакатоном
     association = await session.scalar(

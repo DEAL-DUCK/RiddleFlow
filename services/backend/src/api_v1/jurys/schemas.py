@@ -9,6 +9,8 @@ class JuryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
 class JuryCreate(BaseModel):
     user_id: int
     hackathon_id: int

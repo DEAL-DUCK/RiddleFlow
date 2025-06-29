@@ -7,10 +7,7 @@ from sqlalchemy.util import await_only
 
 from . import crud
 from api_v1.profiles.dependencies import get_profile_by_id
-from api_v1.profiles.schemas import (
-    ProfileSchema,
-    ProfileUpdateSchema
-)
+from api_v1.profiles.schemas import ProfileSchema, ProfileUpdateSchema
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from core.models import db_helper, User
 from .crud import get_profile_by_username
@@ -38,11 +35,9 @@ async def get_profile(
 ):
     return profile
 
-@router.get(
-    '/{username}')
-async def get_public_profile(
-        profile : ProfileSchema = Depends(get_profile_by_username)
-):
+
+@router.get("/{username}")
+async def get_public_profile(profile: ProfileSchema = Depends(get_profile_by_username)):
     return profile
 
 

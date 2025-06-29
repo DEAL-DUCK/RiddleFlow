@@ -7,7 +7,10 @@ from core.models.db_helper import db_helper
 from api_v1.hackathons.dependencies import user_is_creator_of_this_hackathon
 from .schemas import CreateTestSchema
 from ..contest_tasks.crud import get_contest_task_by_id
-from ..contests.dependencies import user_is_creator_of_this_contest, get_inactive_contest
+from ..contests.dependencies import (
+    user_is_creator_of_this_contest,
+    get_inactive_contest,
+)
 
 router = APIRouter(tags=["Тесты"])
 
@@ -17,8 +20,8 @@ router = APIRouter(tags=["Тесты"])
 )
 async def create_test(
     test_data: CreateTestSchema,
-    contest : Contest = Depends(get_inactive_contest),
-    task : ContestTask = Depends(get_contest_task_by_id),
+    contest: Contest = Depends(get_inactive_contest),
+    task: ContestTask = Depends(get_contest_task_by_id),
     user: User = Depends(user_is_creator_of_this_contest),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):

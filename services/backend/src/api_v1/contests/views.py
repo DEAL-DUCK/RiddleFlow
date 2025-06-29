@@ -8,7 +8,8 @@ from . import crud
 from api_v1.auth.fastapi_users import current_active_user, current_active_superuser
 from api_v1.contests.dependencies import (
     get_contest_by_id,
-    user_is_creator_of_this_contest, get_inactive_contest,
+    user_is_creator_of_this_contest,
+    get_inactive_contest,
 )
 from api_v1.users.dependencies import (
     get_user_by_id,
@@ -30,14 +31,27 @@ from ..groups.dependencies import (
 
 router = APIRouter(tags=["Контесты"])
 
-@router.patch('/archive/in',dependencies=[Depends(user_is_creator_of_this_contest),])
-async def archived(contest : Contest = Depends(get_inactive_contest),
-        session: AsyncSession = Depends(db_helper.session_getter)):
-    return await crud.archive(session=session,contest=contest)
-@router.patch('/archive/un',dependencies=[Depends(user_is_creator_of_this_contest)])
-async def unarchived(contest : Contest = Depends(get_contest_by_id),
-        session: AsyncSession = Depends(db_helper.session_getter)):
-    return await crud.unarchive(session=session,contest=contest)
+
+@router.patch(
+    "/archive/in",
+    dependencies=[
+        Depends(user_is_creator_of_this_contest),
+    ],
+)
+async def archived(
+    contest: Contest = Depends(get_inactive_contest),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.archive(session=session, contest=contest)
+
+
+@router.patch("/archive/un", dependencies=[Depends(user_is_creator_of_this_contest)])
+async def unarchived(
+    contest: Contest = Depends(get_contest_by_id),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    return await crud.unarchive(session=session, contest=contest)
+
 
 @router.get("/", response_model=list[ContestSchema])
 async def get_contests(

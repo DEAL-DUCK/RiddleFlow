@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from .contest_task import ContestTask
 
 
-
 class ContestStatus(enum.Enum):
     PLANNED = "PLANNED"
     ACTIVE = "ACTIVE"
@@ -53,7 +52,7 @@ class Contest(Base, IdIntPkMixin):
         nullable=False,
     )
     logo_url: Mapped[str] = mapped_column(String(255), nullable=True)
-    is_archived : Mapped[bool] = mapped_column(Boolean,default=False)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
     creator: Mapped["User"] = relationship(
         back_populates="created_contests",
         lazy="selectin",
@@ -71,4 +70,3 @@ class Contest(Base, IdIntPkMixin):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
-
